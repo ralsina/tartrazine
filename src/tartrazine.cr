@@ -5,7 +5,11 @@ module Tartrazine
 
   class State
     property name : String = ""
-    property rules = [] of String
+    property rules = [] of Rule
+  end
+
+  class Rule
+    property pattern : Regex = /.*/
   end
 
   class Lexer
@@ -39,8 +43,18 @@ module Tartrazine
           # Rules contains states 🤷
           rules.children.select { |n| n.name == "state" }.each do |node|
             state = State.new
-            state.name = node["name"]
             l.states << state
+            state.name = node["name"]
+            # And states contain rules 🤷
+            node.children.select { |n| n.name == "rule" }.each do |rule_node|
+              rule = Rule.new
+              state.rules << rule
+              if rule_node["pattern"]?
+                rule.pattern = /#{rule_node["pattern"]}/
+              else
+                puts "Unknown rule type: #{rule_node}"
+              end
+            end
           end
         end
       end
@@ -49,7 +63,7 @@ module Tartrazine
   end
 end
 
-l = Tartrazine::Lexer.from_xml(File.read("lexers/bash.xml"))
+l = Tartrazine::Lexer.from_xml(File.read("lexers/ada.xml"))
 p! l.config, l.states
 
 # Convenience macros to parse XML
