@@ -37,7 +37,7 @@ module Tartrazine
       priority:   0,
     }
 
-    property states = [] of State
+    property states = {} of String => State
 
     def self.from_xml(xml : String) : Lexer
       l = Lexer.new
@@ -59,8 +59,12 @@ module Tartrazine
           # Rules contains states 🤷
           rules.children.select { |n| n.name == "state" }.each do |node|
             state = State.new
-            l.states << state
             state.name = node["name"]
+            if l.states.has_key?(state.name)
+              puts "Duplicate state: #{state.name}"
+            else
+              l.states[state.name] = state
+            end
             # And states contain rules 🤷
             node.children.select { |n| n.name == "rule" }.each do |rule_node|
               if rule_node["pattern"]?
