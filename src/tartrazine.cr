@@ -25,7 +25,7 @@ module Tartrazine
   # ...
 
   class IncludeState < Rule
-    property include : String = ""
+    property state : String = ""
   end
 
   class Lexer
@@ -57,23 +57,27 @@ module Tartrazine
         rules = lexer.children.find { |n| n.name == "rules" }
         if rules
           # Rules contains states 🤷
-          rules.children.select { |n| n.name == "state" }.each do |node|
+          rules.children.select { |n| n.name == "state" }.each do |state_node|
             state = State.new
-            state.name = node["name"]
+            state.name = state_node["name"]
             if l.states.has_key?(state.name)
               puts "Duplicate state: #{state.name}"
             else
               l.states[state.name] = state
             end
             # And states contain rules 🤷
-            node.children.select { |n| n.name == "rule" }.each do |rule_node|
+            state_node.children.select { |n| n.name == "rule" }.each do |rule_node|
               if rule_node["pattern"]?
+                # We have patter rules
                 rule = Rule.new
-                state.rules << rule
                 rule.pattern = /#{rule_node["pattern"]}/
               else
-                puts "Unknown rule type: #{rule_node}"
+                # And rules that include a state
+                rule = IncludeState.new
+                include_node = rule_node.children.find { |n| n.name == "include" }
+                rule.state = include_node["state"] if include_node
               end
+              state.rules << rule
             end
           end
         end
@@ -83,8 +87,8 @@ module Tartrazine
   end
 end
 
-l = Tartrazine::Lexer.from_xml(File.read("lexers/solidity.xml"))
-# p! l.config, l.states
+l = Tartrazine::Lexer.from_xml(File.read("lexers/bash_session.xml"))
+pp! l.states["root"].rules
 
 # Convenience macros to parse XML
 macro xml_to_s(node, name)
