@@ -1,0 +1,17 @@
+name: tartrazine
+version: 0.1.0
+
+authors:
+  - Roberto Alsina <roberto.alsina@gmail.com>
+
+dependencies:
+  xmlt:
+    github: devnote-dev/xmlt
+
+targets:
+  tartrazine:
+    main: src/tartrazine.cr
+
+crystal: '>= 1.13.0'
+
+license: MIT
