@@ -9,7 +9,23 @@ module Tartrazine
   end
 
   class Rule
-    property pattern : Regex = /.*/
+    property pattern : Regex? = nil
+  end
+
+  # This rule includes another state
+  # I have no idea what thet MEANS yet but in the XML
+  # it's this:
+  #   <rule>
+  #     <include state="interp"/>
+  #   </rule>
+  # </state>
+  # <state name="interp">
+  #   <rule pattern="\$\(\(">
+  #     <token type="Keyword"/>
+  # ...
+
+  class IncludeState < Rule
+    property include : String = ""
   end
 
   class Lexer
@@ -47,9 +63,9 @@ module Tartrazine
             state.name = node["name"]
             # And states contain rules 🤷
             node.children.select { |n| n.name == "rule" }.each do |rule_node|
-              rule = Rule.new
-              state.rules << rule
               if rule_node["pattern"]?
+                rule = Rule.new
+                state.rules << rule
                 rule.pattern = /#{rule_node["pattern"]}/
               else
                 puts "Unknown rule type: #{rule_node}"
@@ -63,8 +79,8 @@ module Tartrazine
   end
 end
 
-l = Tartrazine::Lexer.from_xml(File.read("lexers/ada.xml"))
-p! l.config, l.states
+l = Tartrazine::Lexer.from_xml(File.read("lexers/solidity.xml"))
+# p! l.config, l.states
 
 # Convenience macros to parse XML
 macro xml_to_s(node, name)
