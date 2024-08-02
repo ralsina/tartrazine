@@ -24,8 +24,12 @@ module Tartrazine
   #     <token type="Keyword"/>
   # ...
 
-  class IncludeState < Rule
+  class IncludeStateRule < Rule
     property state : String = ""
+  end
+
+  class Emitter
+    property type : String = ""
   end
 
   class Lexer
@@ -73,11 +77,26 @@ module Tartrazine
                 rule.pattern = /#{rule_node["pattern"]}/
               else
                 # And rules that include a state
-                rule = IncludeState.new
+                rule = IncludeStateRule.new
                 include_node = rule_node.children.find { |n| n.name == "include" }
                 rule.state = include_node["state"] if include_node
               end
               state.rules << rule
+
+              # Rules contain maybe an emitter and maybe a transformer
+              # emitters emit tokens, transformers do things to
+              # the state stack. The transformers go last, but
+              # both kinds are optional 😭
+
+              rule_node.children.each do |node|
+                next unless node.element?
+                case node.name
+                when "pop", "push", "include", "multi", "combine"
+                  p! "transformer", node.to_s
+                else
+                  p! "emitter", node.to_s
+                end
+              end
             end
           end
         end
@@ -87,8 +106,7 @@ module Tartrazine
   end
 end
 
-l = Tartrazine::Lexer.from_xml(File.read("lexers/bash_session.xml"))
-pp! l.states["root"].rules
+l = Tartrazine::Lexer.from_xml(File.read("lexers/ada.xml"))
 
 # Convenience macros to parse XML
 macro xml_to_s(node, name)
