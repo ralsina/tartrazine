@@ -28,7 +28,7 @@ module Tartrazine
       # Emit the tokens
       emitters.each do |emitter|
         # Emit the token
-        tokens += emitter.emit(match)
+        tokens += emitter.emit(match, lexer)
       end
       return true, match.end, tokens
     end
@@ -66,7 +66,7 @@ module Tartrazine
     def match(text, pos, lexer) : Tuple(Bool, Int32, Array(Token))
       tokens = [] of Token
       emitters.each do |emitter|
-        tokens += emitter.emit(nil)
+        tokens += emitter.emit(nil, lexer)
       end
       return true, pos, tokens
     end
@@ -79,13 +79,16 @@ module Tartrazine
     def initialize(@type : String, @xml : XML::Node?)
     end
 
-    def emit(match : Regex::MatchData?) : Array(Token)
+    def emit(match : Regex::MatchData?, lexer : Lexer) : Array(Token)
       case type
       when "token"
         raise Exception.new "Can't have a token without a match" if match.nil?
         [Token.new(type: xml["type"], value: match[0])]
+      when "push"
+        lexer.state_stack << xml["state"]
+        return [] of Token
       else
-        raise Exception.new("Unknown emitter type: #{type}")
+        raise Exception.new("Unknown emitter type: #{type}: #{xml}")
       end
     end
   end
@@ -223,9 +226,8 @@ end
 # Parse some plaintext
 puts lexers["plaintext"].tokenize("Hello, world!\n")
 
-pp! lexers["pepe"]
 # Now some bash
-puts lexers["pepe"].tokenize("echo 'Hello, world!'\n")
+puts lexers["Bash"].tokenize("echo 'Hello, world!'\n")
 
 # Convenience macros to parse XML
 macro xml_to_s(node, name)
