@@ -1,0 +1,50 @@
+---input---
+def f(x : T, line = __LINE__) forall T
+if x.is_a?(String)
+pp! x
+end
+end
+
+---tokens---
+'def'         Keyword
+' '           Text.Whitespace
+'f'           Name.Function
+'('           Punctuation
+'x'           Name
+' '           Text.Whitespace
+':'           Punctuation
+' '           Text.Whitespace
+'T'           Name
+','           Punctuation
+' '           Text.Whitespace
+'line'        Name
+' '           Text.Whitespace
+'='           Operator
+' '           Text.Whitespace
+'__LINE__'    Keyword.Pseudo
+')'           Punctuation
+' '           Text.Whitespace
+'forall'      Keyword.Pseudo
+' '           Text.Whitespace
+'T'           Name
+'\n'          Text.Whitespace
+
+'if'          Keyword
+' '           Text.Whitespace
+'x'           Name
+'.is_a?'      Keyword.Pseudo
+'('           Punctuation
+'String'      Name
+')'           Punctuation
+'\n'          Text.Whitespace
+
+'pp!'         Name.Builtin.Pseudo
+' '           Text.Whitespace
+'x'           Name
+'\n'          Text.Whitespace
+
+'end'         Keyword
+'\n'          Text.Whitespace
+
+'end'         Keyword
+'\n'          Text.Whitespace

@@ -1,0 +1,19 @@
+---input---
+```
+code
+```
+* *foo*
+* bar
+
+---tokens---
+'```\ncode\n```\n' Literal.String.Backtick
+
+'*'           Keyword
+' '           Text.Whitespace
+'*foo*'       Generic.Emph
+'\n'          Text.Whitespace
+
+'*'           Keyword
+' '           Text.Whitespace
+'bar'         Text
+'\n'          Text.Whitespace

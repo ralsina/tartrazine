@@ -1,0 +1,10 @@
+---input---
+1 .. 3
+
+---tokens---
+'1'           Literal.Number.Integer
+' '           Text.Whitespace
+'..'          Operator
+' '           Text.Whitespace
+'3'           Literal.Number.Integer
+'\n'          Text.Whitespace

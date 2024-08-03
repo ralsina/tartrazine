@@ -1,0 +1,23 @@
+---input---
+provider "aws" {
+  region = var.aws_region
+}
+
+---tokens---
+'provider'    Keyword.Reserved
+' '           Text.Whitespace
+'"aws"'       Name.Variable
+' '           Text.Whitespace
+'{'           Punctuation
+'\n'          Text.Whitespace
+
+'  '          Text.Whitespace
+'region'      Name.Attribute
+' '           Text.Whitespace
+'='           Operator
+' '           Text.Whitespace
+'var.aws_region' Name.Variable
+'\n'          Text.Whitespace
+
+'}'           Punctuation
+'\n'          Text.Whitespace

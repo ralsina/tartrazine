@@ -1,0 +1,10 @@
+---input---
+a +: b
+
+---tokens---
+'a'           Name
+' '           Text.Whitespace
+'+:'          Operator
+' '           Text.Whitespace
+'b'           Name
+'\n'          Text.Whitespace

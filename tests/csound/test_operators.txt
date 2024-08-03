@@ -1,0 +1,114 @@
+---input---
++
+-
+~
+¬
+!
+*
+/
+^
+%
+<<
+>>
+<
+>
+<=
+>=
+==
+!=
+&
+#
+|
+&&
+||
+?
+:
++=
+-=
+*=
+/=
+
+---tokens---
+'+'           Operator
+'\n'          Text.Whitespace
+
+'-'           Operator
+'\n'          Text.Whitespace
+
+'~'           Operator
+'\n'          Text.Whitespace
+
+'¬'           Operator
+'\n'          Text.Whitespace
+
+'!'           Operator
+'\n'          Text.Whitespace
+
+'*'           Operator
+'\n'          Text.Whitespace
+
+'/'           Operator
+'\n'          Text.Whitespace
+
+'^'           Operator
+'\n'          Text.Whitespace
+
+'%'           Operator
+'\n'          Text.Whitespace
+
+'<<'          Operator
+'\n'          Text.Whitespace
+
+'>>'          Operator
+'\n'          Text.Whitespace
+
+'<'           Operator
+'\n'          Text.Whitespace
+
+'>'           Operator
+'\n'          Text.Whitespace
+
+'<='          Operator
+'\n'          Text.Whitespace
+
+'>='          Operator
+'\n'          Text.Whitespace
+
+'=='          Operator
+'\n'          Text.Whitespace
+
+'!='          Operator
+'\n'          Text.Whitespace
+
+'&'           Operator
+'\n'          Text.Whitespace
+
+'#'           Operator
+'\n'          Text.Whitespace
+
+'|'           Operator
+'\n'          Text.Whitespace
+
+'&&'          Operator
+'\n'          Text.Whitespace
+
+'||'          Operator
+'\n'          Text.Whitespace
+
+'?'           Operator
+'\n'          Text.Whitespace
+
+':'           Operator
+'\n'          Text.Whitespace
+
+'+='          Operator
+'\n'          Text.Whitespace
+
+'-='          Operator
+'\n'          Text.Whitespace
+
+'*='          Operator
+'\n'          Text.Whitespace
+
+'/='          Operator
+'\n'          Text.Whitespace

@@ -1,0 +1,20 @@
+---input---
+delta           A      192.0.2.4 ; comment
+delta2           A      192.0.2.5
+
+---tokens---
+'delta'       Name
+'           ' Text.Whitespace
+'A'           Keyword.Type
+'      '      Text.Whitespace
+'192.0.2.4'   Literal
+' '           Text.Whitespace
+'; comment'   Comment.Single
+'\n'          Text.Whitespace
+
+'delta2'      Name
+'           ' Text.Whitespace
+'A'           Keyword.Type
+'      '      Text.Whitespace
+'192.0.2.5'   Literal
+'\n'          Text.Whitespace

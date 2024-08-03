@@ -1,0 +1,28 @@
+---input---
+a//c1
+ //c2
+label://c3
+a // c4
+label: implicit comment
+
+---tokens---
+'a'           Name.Function
+'//c1'        Comment.Single
+'\n'          Text
+
+' '           Text.Whitespace
+'//c2'        Comment.Single
+'\n'          Text.Whitespace
+
+'label:'      Name.Function
+'//c3'        Comment.Single
+'\n'          Text
+
+'a'           Name.Function
+' '           Text.Whitespace
+'// c4'       Comment.Single
+'\n'          Text
+
+'label:'      Name.Label
+' implicit comment' Comment.Single
+'\n'          Text.Whitespace

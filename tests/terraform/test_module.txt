@@ -1,0 +1,32 @@
+---input---
+module "consul" {
+  source  = "hashicorp/consul/aws"
+  servers = 3
+}
+
+---tokens---
+'module'      Keyword.Reserved
+' '           Text.Whitespace
+'"consul"'    Name.Variable
+' '           Text.Whitespace
+'{'           Punctuation
+'\n'          Text.Whitespace
+
+'  '          Text.Whitespace
+'source'      Name.Attribute
+'  '          Text.Whitespace
+'='           Operator
+' '           Text.Whitespace
+'"hashicorp/consul/aws"' Literal.String.Double
+'\n'          Text.Whitespace
+
+'  '          Text.Whitespace
+'servers'     Name.Attribute
+' '           Text.Whitespace
+'='           Operator
+' '           Text.Whitespace
+'3'           Literal.Number
+'\n'          Text.Whitespace
+
+'}'           Punctuation
+'\n'          Text.Whitespace

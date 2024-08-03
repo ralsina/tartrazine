@@ -1,0 +1,89 @@
+# Most of the interesting types of class declarations
+
+---input---
+class Foo;
+endclass
+
+class Bar;
+endclass : Bar
+
+class Fiz extends Buz;
+endclass : Fiz
+
+class Free #(parameter type T = byte) extends Beer #(T);
+endclass : Free
+
+---tokens---
+'class'       Keyword.Declaration
+' '           Text.Whitespace
+'Foo'         Name.Class
+';'           Punctuation
+'\n'          Text.Whitespace
+
+'endclass'    Keyword.Declaration
+'\n\n'        Text.Whitespace
+
+'class'       Keyword.Declaration
+' '           Text.Whitespace
+'Bar'         Name.Class
+';'           Punctuation
+'\n'          Text.Whitespace
+
+'endclass'    Keyword.Declaration
+' '           Text.Whitespace
+':'           Punctuation
+' '           Text.Whitespace
+'Bar'         Name.Class
+'\n\n'        Text.Whitespace
+
+'class'       Keyword.Declaration
+' '           Text.Whitespace
+'Fiz'         Name.Class
+' '           Text.Whitespace
+'extends'     Keyword.Declaration
+' '           Text.Whitespace
+'Buz'         Name.Class
+';'           Punctuation
+'\n'          Text.Whitespace
+
+'endclass'    Keyword.Declaration
+' '           Text.Whitespace
+':'           Punctuation
+' '           Text.Whitespace
+'Fiz'         Name.Class
+'\n\n'        Text.Whitespace
+
+'class'       Keyword.Declaration
+' '           Text.Whitespace
+'Free'        Name.Class
+' '           Text.Whitespace
+'#'           Punctuation
+'('           Punctuation
+'parameter'   Keyword
+' '           Text.Whitespace
+'type'        Keyword.Type
+' '           Text.Whitespace
+'T'           Name
+' '           Text.Whitespace
+'='           Operator
+' '           Text.Whitespace
+'byte'        Keyword.Type
+')'           Punctuation
+' '           Text.Whitespace
+'extends'     Keyword.Declaration
+' '           Text.Whitespace
+'Beer'        Name.Class
+' '           Text.Whitespace
+'#'           Punctuation
+'('           Punctuation
+'T'           Name
+')'           Punctuation
+';'           Punctuation
+'\n'          Text.Whitespace
+
+'endclass'    Keyword.Declaration
+' '           Text.Whitespace
+':'           Punctuation
+' '           Text.Whitespace
+'Free'        Name.Class
+'\n'          Text.Whitespace

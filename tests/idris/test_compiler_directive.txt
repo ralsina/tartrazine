@@ -1,0 +1,20 @@
+---input---
+%link C "object.o"
+%name Vect xs
+
+---tokens---
+'%link'       Keyword.Reserved
+' '           Text.Whitespace
+'C'           Keyword.Type
+' '           Text.Whitespace
+'"'           Literal.String
+'object.o'    Literal.String
+'"'           Literal.String
+'\n'          Text.Whitespace
+
+'%name'       Keyword.Reserved
+' '           Text.Whitespace
+'Vect'        Keyword.Type
+' '           Text.Whitespace
+'xs'          Text
+'\n'          Text.Whitespace

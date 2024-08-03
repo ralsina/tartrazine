@@ -1,0 +1,16 @@
+---input---
+```python
+import this
+```
+
+---tokens---
+'```'         Literal.String.Backtick
+'python'      Literal.String.Backtick
+'\n'          Text.Whitespace
+
+'import'      Keyword.Namespace
+' '           Text
+'this'        Name.Namespace
+'\n'          Text.Whitespace
+
+'```\n'       Literal.String.Backtick

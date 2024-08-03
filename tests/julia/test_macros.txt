@@ -1,0 +1,56 @@
+# Test that macros are parsed, including ones which are defined as symbols
+
+---input---
+@generated function
+@. a + b
+@~ a + b
+@± a + b
+@mymacro(a, b)
+@+¹ᵀ a
+
+---tokens---
+'@generated'  Name.Decorator
+' '           Text.Whitespace
+'function'    Keyword
+'\n'          Text.Whitespace
+
+'@.'          Name.Decorator
+' '           Text.Whitespace
+'a'           Name
+' '           Text.Whitespace
+'+'           Operator
+' '           Text.Whitespace
+'b'           Name
+'\n'          Text.Whitespace
+
+'@~'          Name.Decorator
+' '           Text.Whitespace
+'a'           Name
+' '           Text.Whitespace
+'+'           Operator
+' '           Text.Whitespace
+'b'           Name
+'\n'          Text.Whitespace
+
+'@±'          Name.Decorator
+' '           Text.Whitespace
+'a'           Name
+' '           Text.Whitespace
+'+'           Operator
+' '           Text.Whitespace
+'b'           Name
+'\n'          Text.Whitespace
+
+'@mymacro'    Name.Decorator
+'('           Punctuation
+'a'           Name
+','           Punctuation
+' '           Text.Whitespace
+'b'           Name
+')'           Punctuation
+'\n'          Text.Whitespace
+
+'@+¹ᵀ'        Name.Decorator
+' '           Text.Whitespace
+'a'           Name
+'\n'          Text.Whitespace

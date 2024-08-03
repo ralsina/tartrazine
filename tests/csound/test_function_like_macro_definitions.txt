@@ -1,0 +1,44 @@
+---input---
+#define MACRO(ARG1#ARG2) #macro_body#
+#define/**/
+MACRO(ARG1'ARG2' ARG3)/**/
+#\#macro
+body\##
+
+---tokens---
+'#define'     Comment.Preproc
+' '           Text.Whitespace
+'MACRO'       Comment.Preproc
+'('           Punctuation
+'ARG1'        Comment.Preproc
+'#'           Punctuation
+'ARG2'        Comment.Preproc
+')'           Punctuation
+' '           Text.Whitespace
+'#'           Punctuation
+'macro_body'  Comment.Preproc
+'#'           Punctuation
+'\n'          Text.Whitespace
+
+'#define'     Comment.Preproc
+'/**/'        Comment.Multiline
+'\n'          Text.Whitespace
+
+'MACRO'       Comment.Preproc
+'('           Punctuation
+'ARG1'        Comment.Preproc
+"'"           Punctuation
+'ARG2'        Comment.Preproc
+"'"           Punctuation
+' '           Text.Whitespace
+'ARG3'        Comment.Preproc
+')'           Punctuation
+'/**/'        Comment.Multiline
+'\n'          Text.Whitespace
+
+'#'           Punctuation
+'\\#'         Comment.Preproc
+'macro\nbody' Comment.Preproc
+'\\#'         Comment.Preproc
+'#'           Punctuation
+'\n'          Text.Whitespace

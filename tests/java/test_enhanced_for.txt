@@ -1,0 +1,22 @@
+---input---
+label:
+for(String var2: var1) {}
+
+---tokens---
+'label'       Name.Label
+':'           Punctuation
+'\n'          Text.Whitespace
+
+'for'         Keyword
+'('           Punctuation
+'String'      Name
+' '           Text.Whitespace
+'var2'        Name
+':'           Punctuation
+' '           Text.Whitespace
+'var1'        Name
+')'           Punctuation
+' '           Text.Whitespace
+'{'           Punctuation
+'}'           Punctuation
+'\n'          Text.Whitespace

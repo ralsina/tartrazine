@@ -1,0 +1,44 @@
+---input---
+terraform {
+  backend "consul" {
+    address = "demo.consul.io"
+    path    = "tfdocs"
+  }
+}
+
+---tokens---
+'terraform'   Name.Builtin
+' '           Text.Whitespace
+'{'           Punctuation
+'\n'          Text.Whitespace
+
+'  '          Text.Whitespace
+'backend'     Keyword.Reserved
+' '           Text.Whitespace
+'"consul"'    Name.Variable
+' '           Text.Whitespace
+'{'           Punctuation
+'\n'          Text.Whitespace
+
+'    '        Text.Whitespace
+'address'     Name.Attribute
+' '           Text.Whitespace
+'='           Operator
+' '           Text.Whitespace
+'"demo.consul.io"' Literal.String.Double
+'\n'          Text.Whitespace
+
+'    '        Text.Whitespace
+'path'        Name.Attribute
+'    '        Text.Whitespace
+'='           Operator
+' '           Text.Whitespace
+'"tfdocs"'    Literal.String.Double
+'\n'          Text.Whitespace
+
+'  '          Text.Whitespace
+'}'           Punctuation
+'\n'          Text.Whitespace
+
+'}'           Punctuation
+'\n'          Text.Whitespace

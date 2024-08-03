@@ -1,0 +1,15 @@
+---input---
+signal sig (arg1, arg2)
+
+---tokens---
+'signal'      Keyword
+' '           Text.Whitespace
+'sig'         Name
+' '           Text.Whitespace
+'('           Punctuation
+'arg1'        Name
+','           Punctuation
+' '           Text.Whitespace
+'arg2'        Name
+')'           Punctuation
+'\n'          Text.Whitespace

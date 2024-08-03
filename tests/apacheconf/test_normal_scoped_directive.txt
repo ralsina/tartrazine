@@ -1,0 +1,14 @@
+---input---
+<VirtualHost "test">
+</VirtualHost>
+
+---tokens---
+'<VirtualHost' Name.Tag
+' '           Text.Whitespace
+'"test"'      Literal.String
+'>'           Name.Tag
+'\n'          Text.Whitespace
+
+'</VirtualHost' Name.Tag
+'>'           Name.Tag
+'\n'          Text.Whitespace

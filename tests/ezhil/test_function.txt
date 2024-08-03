@@ -1,0 +1,100 @@
+---input---
+# (C) முத்தையா அண்ணாமலை 2013, 2015
+நிரல்பாகம்  gcd ( x, y )
+மு = max(x,y)
+ q = min(x,y)
+
+@( q == 0 ) ஆனால்
+       பின்கொடு  மு
+முடி
+பின்கொடு  gcd( மு - q , q )
+முடி
+
+---tokens---
+'# (C) முத்தையா அண்ணாமலை 2013, 2015' Comment.Single
+'\n'          Text.Whitespace
+
+'நிரல்பாகம்'  Keyword
+'  '          Text.Whitespace
+'gcd'         Name
+' '           Text.Whitespace
+'('           Punctuation
+' '           Text.Whitespace
+'x'           Name
+','           Operator
+' '           Text.Whitespace
+'y'           Name
+' '           Text.Whitespace
+')'           Punctuation
+'\n'          Text.Whitespace
+
+'மு'          Name
+' '           Text.Whitespace
+'='           Operator
+' '           Text.Whitespace
+'max'         Name.Builtin
+'('           Punctuation
+'x'           Name
+','           Operator
+'y'           Name
+')'           Punctuation
+'\n'          Text.Whitespace
+
+' '           Text.Whitespace
+'q'           Name
+' '           Text.Whitespace
+'='           Operator
+' '           Text.Whitespace
+'min'         Name.Builtin
+'('           Punctuation
+'x'           Name
+','           Operator
+'y'           Name
+')'           Punctuation
+'\n'          Text.Whitespace
+
+'\n'          Text.Whitespace
+
+'@'           Operator
+'('           Punctuation
+' '           Text.Whitespace
+'q'           Name
+' '           Text.Whitespace
+'=='          Operator
+' '           Text.Whitespace
+'0'           Literal.Number.Integer
+' '           Text.Whitespace
+')'           Punctuation
+' '           Text.Whitespace
+'ஆனால்'       Keyword
+'\n'          Text.Whitespace
+
+'       '     Text.Whitespace
+'பின்கொடு'    Keyword
+'  '          Text.Whitespace
+'மு'          Name
+'\n'          Text.Whitespace
+
+'முடி'        Keyword
+'\n'          Text.Whitespace
+
+'பின்கொடு'    Keyword
+'  '          Text.Whitespace
+'gcd'         Name
+'('           Punctuation
+' '           Text.Whitespace
+'மு'          Name
+' '           Text.Whitespace
+'-'           Operator
+' '           Text.Whitespace
+'q'           Name
+' '           Text.Whitespace
+','           Operator
+' '           Text.Whitespace
+'q'           Name
+' '           Text.Whitespace
+')'           Punctuation
+'\n'          Text.Whitespace
+
+'முடி'        Keyword
+'\n'          Text.Whitespace

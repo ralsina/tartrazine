@@ -1,0 +1,37 @@
+---input---
+def f(using y: Char = if true then 'a' else 2): Int = ???
+
+---tokens---
+'def'         Keyword
+' '           Text.Whitespace
+'f'           Name.Function
+'('           Punctuation
+'using'       Keyword
+' '           Text.Whitespace
+'y'           Name
+':'           Punctuation
+' '           Text.Whitespace
+'Char'        Name.Class
+' '           Text.Whitespace
+'='           Operator
+' '           Text.Whitespace
+'if'          Keyword
+' '           Text.Whitespace
+'true'        Keyword.Constant
+' '           Text.Whitespace
+'then'        Keyword
+' '           Text.Whitespace
+"'a'"         Literal.String.Char
+' '           Text.Whitespace
+'else'        Keyword
+' '           Text.Whitespace
+'2'           Literal.Number.Integer
+')'           Punctuation
+':'           Punctuation
+' '           Text.Whitespace
+'Int'         Name.Class
+' '           Text.Whitespace
+'='           Operator
+' '           Text.Whitespace
+'???'         Operator
+'\n'          Text.Whitespace

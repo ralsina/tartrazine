@@ -1,0 +1,27 @@
+---input---
+var = if true == 1 then -1 else 0 fi
+
+---tokens---
+'var'         Text
+' '           Text.Whitespace
+'='           Operator
+' '           Text.Whitespace
+'if'          Keyword
+' '           Text.Whitespace
+'true'        Text
+' '           Text.Whitespace
+'=='          Operator
+' '           Text.Whitespace
+'1'           Literal.Number
+' '           Text.Whitespace
+'then'        Keyword
+' '           Text.Whitespace
+'-'           Operator
+'1'           Literal.Number
+' '           Text.Whitespace
+'else'        Keyword
+' '           Text.Whitespace
+'0'           Literal.Number
+' '           Text.Whitespace
+'fi'          Keyword
+'\n'          Text.Whitespace

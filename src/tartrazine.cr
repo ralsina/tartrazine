@@ -85,9 +85,11 @@ module Tartrazine
         raise Exception.new "Can't have a token without a match" if match.nil?
         [Token.new(type: xml["type"], value: match[0])]
       when "push"
+        puts "Pushing state #{xml["state"]}"
         lexer.state_stack << xml["state"]
         [] of Token
       when "pop"
+        puts "Popping #{xml["depth"]} states"
         lexer.state_stack.pop(xml["depth"].to_i)
         [] of Token
       else

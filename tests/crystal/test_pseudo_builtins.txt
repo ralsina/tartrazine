@@ -1,0 +1,20 @@
+---input---
+record Cls do
+def_equals s
+end
+
+---tokens---
+'record'      Name.Builtin.Pseudo
+' '           Text.Whitespace
+'Cls'         Name
+' '           Text.Whitespace
+'do'          Keyword
+'\n'          Text.Whitespace
+
+'def_equals'  Name.Builtin.Pseudo
+' '           Text.Whitespace
+'s'           Name
+'\n'          Text.Whitespace
+
+'end'         Keyword
+'\n'          Text.Whitespace

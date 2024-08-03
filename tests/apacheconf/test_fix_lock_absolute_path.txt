@@ -1,0 +1,8 @@
+---input---
+LockFile /var/lock/apache2/accept.lock
+
+---tokens---
+'LockFile'    Name.Builtin
+' '           Text.Whitespace
+'/var/lock/apache2/accept.lock' Literal.String.Other
+'\n'          Text.Whitespace

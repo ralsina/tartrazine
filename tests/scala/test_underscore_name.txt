@@ -1,0 +1,12 @@
+---input---
+val head = _head
+
+---tokens---
+'val'         Keyword.Declaration
+' '           Text.Whitespace
+'head'        Name
+' '           Text.Whitespace
+'='           Operator
+' '           Text.Whitespace
+'_head'       Name
+'\n'          Text.Whitespace

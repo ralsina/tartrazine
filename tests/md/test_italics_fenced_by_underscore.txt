@@ -1,0 +1,15 @@
+---input---
+_italics_
+
+(_italics_)
+
+---tokens---
+'_italics_'   Generic.Emph
+'\n'          Text.Whitespace
+
+'\n'          Text.Whitespace
+
+'('           Text
+'_italics_'   Generic.Emph
+')'           Text
+'\n'          Text.Whitespace

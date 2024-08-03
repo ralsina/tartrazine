@@ -1,0 +1,15 @@
+---input---
+**bold**
+
+(**bold**)
+
+---tokens---
+'**bold**'    Generic.Strong
+'\n'          Text.Whitespace
+
+'\n'          Text.Whitespace
+
+'('           Text
+'**bold**'    Generic.Strong
+')'           Text
+'\n'          Text.Whitespace

@@ -1,0 +1,12 @@
+# Assures lines lead by either # or ! are recognized as a comment
+
+---input---
+! a comment
+# also a comment
+
+---tokens---
+'! a comment' Comment.Single
+'\n'          Text.Whitespace
+
+'# also a comment' Comment.Single
+'\n'          Text.Whitespace

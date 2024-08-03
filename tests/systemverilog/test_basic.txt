@@ -1,0 +1,157 @@
+# Examine tokens emitted by the SV lexer for a trivial module.
+# Not intended to stress any particular corner of the language.
+
+---input---
+// Adder flops the sum of its inputs
+module Adder #(
+    parameter int N = 42
+) (
+    output logic [N-1:0] y,
+    output logic         co,
+
+    input  logic [N-1:0] a,
+    input  logic [N-1:0] b,
+    input  logic         ci,
+
+    input  logic clk
+);
+    always_ff @(posedge clk) begin
+        {co, y} <= a + b + ci;
+    end
+endmodule : Adder
+
+---tokens---
+'// Adder flops the sum of its inputs\n' Comment.Single
+
+'module'      Keyword
+' '           Text.Whitespace
+'Adder'       Name
+' '           Text.Whitespace
+'#'           Punctuation
+'('           Punctuation
+'\n    '      Text.Whitespace
+'parameter'   Keyword
+' '           Text.Whitespace
+'int'         Keyword.Type
+' '           Text.Whitespace
+'N'           Name
+' '           Text.Whitespace
+'='           Operator
+' '           Text.Whitespace
+'42'          Literal.Number.Integer
+'\n'          Text.Whitespace
+
+')'           Punctuation
+' '           Text.Whitespace
+'('           Punctuation
+'\n    '      Text.Whitespace
+'output'      Keyword
+' '           Text.Whitespace
+'logic'       Keyword.Type
+' '           Text.Whitespace
+'['           Punctuation
+'N'           Name
+'-'           Operator
+'1'           Literal.Number.Integer
+':'           Operator
+'0'           Literal.Number.Integer
+']'           Punctuation
+' '           Text.Whitespace
+'y'           Name
+','           Punctuation
+'\n    '      Text.Whitespace
+'output'      Keyword
+' '           Text.Whitespace
+'logic'       Keyword.Type
+'         '   Text.Whitespace
+'co'          Name
+','           Punctuation
+'\n\n    '    Text.Whitespace
+'input'       Keyword
+'  '          Text.Whitespace
+'logic'       Keyword.Type
+' '           Text.Whitespace
+'['           Punctuation
+'N'           Name
+'-'           Operator
+'1'           Literal.Number.Integer
+':'           Operator
+'0'           Literal.Number.Integer
+']'           Punctuation
+' '           Text.Whitespace
+'a'           Name
+','           Punctuation
+'\n    '      Text.Whitespace
+'input'       Keyword
+'  '          Text.Whitespace
+'logic'       Keyword.Type
+' '           Text.Whitespace
+'['           Punctuation
+'N'           Name
+'-'           Operator
+'1'           Literal.Number.Integer
+':'           Operator
+'0'           Literal.Number.Integer
+']'           Punctuation
+' '           Text.Whitespace
+'b'           Name
+','           Punctuation
+'\n    '      Text.Whitespace
+'input'       Keyword
+'  '          Text.Whitespace
+'logic'       Keyword.Type
+'         '   Text.Whitespace
+'ci'          Name
+','           Punctuation
+'\n\n    '    Text.Whitespace
+'input'       Keyword
+'  '          Text.Whitespace
+'logic'       Keyword.Type
+' '           Text.Whitespace
+'clk'         Name
+'\n'          Text.Whitespace
+
+')'           Punctuation
+';'           Punctuation
+'\n    '      Text.Whitespace
+'always_ff'   Keyword
+' '           Text.Whitespace
+'@'           Punctuation
+'('           Punctuation
+'posedge'     Keyword
+' '           Text.Whitespace
+'clk'         Name
+')'           Punctuation
+' '           Text.Whitespace
+'begin'       Keyword
+'\n        '  Text.Whitespace
+'{'           Punctuation
+'co'          Name
+','           Punctuation
+' '           Text.Whitespace
+'y'           Name
+'}'           Punctuation
+' '           Text.Whitespace
+'<'           Operator
+'='           Operator
+' '           Text.Whitespace
+'a'           Name
+' '           Text.Whitespace
+'+'           Operator
+' '           Text.Whitespace
+'b'           Name
+' '           Text.Whitespace
+'+'           Operator
+' '           Text.Whitespace
+'ci'          Name
+';'           Punctuation
+'\n    '      Text.Whitespace
+'end'         Keyword
+'\n'          Text.Whitespace
+
+'endmodule'   Keyword
+' '           Text.Whitespace
+':'           Operator
+' '           Text.Whitespace
+'Adder'       Name
+'\n'          Text.Whitespace

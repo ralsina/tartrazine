@@ -1,0 +1,211 @@
+---input---
+resource "aws_internet_gateway" "base_igw" {
+  vpc_id = aws_vpc.something.id
+  tags = {
+    Name = "igw-${var.something}-${var.something}"
+  }
+}
+
+resource "aws_security_group" "allow_tls" {
+  name        = "allow_tls"
+  description = "Allow TLS inbound traffic"
+  vpc_id      = aws_vpc.main.id
+
+  # Ingress rules
+  ingress {
+    description = "TLS from VPC"
+    from_port   = 443
+    to_port     = 443
+  }
+
+  # Egress rules
+  egress {
+    from_port   = 0
+    to_port     = 0
+    protocol    = "-1"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
+
+  tags = {
+    Name = "allow_tls"
+  }
+}
+
+---tokens---
+'resource'    Keyword.Reserved
+' '           Text.Whitespace
+'"aws_internet_gateway"' Name.Class
+' '           Text.Whitespace
+'"base_igw"'  Name.Variable
+' '           Text.Whitespace
+'{'           Punctuation
+'\n'          Text.Whitespace
+
+'  '          Text.Whitespace
+'vpc_id'      Name.Attribute
+' '           Text.Whitespace
+'='           Operator
+' '           Text.Whitespace
+'aws_vpc.something.id' Name.Variable
+'\n'          Text.Whitespace
+
+'  '          Text.Whitespace
+'tags'        Name.Builtin
+' '           Text.Whitespace
+'='           Operator
+' '           Text.Whitespace
+'{'           Punctuation
+'\n'          Text.Whitespace
+
+'    '        Text.Whitespace
+'Name'        Name.Attribute
+' '           Text.Whitespace
+'='           Operator
+' '           Text.Whitespace
+'"igw-${var.something}-${var.something}"' Literal.String.Double
+'\n'          Text.Whitespace
+
+'  '          Text.Whitespace
+'}'           Punctuation
+'\n'          Text.Whitespace
+
+'}'           Punctuation
+'\n'          Text.Whitespace
+
+'\n'          Text.Whitespace
+
+'resource'    Keyword.Reserved
+' '           Text.Whitespace
+'"aws_security_group"' Name.Class
+' '           Text.Whitespace
+'"allow_tls"' Name.Variable
+' '           Text.Whitespace
+'{'           Punctuation
+'\n'          Text.Whitespace
+
+'  '          Text.Whitespace
+'name'        Name.Attribute
+'        '    Text.Whitespace
+'='           Operator
+' '           Text.Whitespace
+'"allow_tls"' Literal.String.Double
+'\n'          Text.Whitespace
+
+'  '          Text.Whitespace
+'description' Name.Attribute
+' '           Text.Whitespace
+'='           Operator
+' '           Text.Whitespace
+'"Allow TLS inbound traffic"' Literal.String.Double
+'\n'          Text.Whitespace
+
+'  '          Text.Whitespace
+'vpc_id'      Name.Attribute
+'      '      Text.Whitespace
+'='           Operator
+' '           Text.Whitespace
+'aws_vpc.main.id' Name.Variable
+'\n\n  # Ingress rules\n' Comment.Single
+
+'  '          Text.Whitespace
+'ingress'     Name.Builtin
+' '           Text.Whitespace
+'{'           Punctuation
+'\n'          Text.Whitespace
+
+'    '        Text.Whitespace
+'description' Name.Attribute
+' '           Text.Whitespace
+'='           Operator
+' '           Text.Whitespace
+'"TLS from VPC"' Literal.String.Double
+'\n'          Text.Whitespace
+
+'    '        Text.Whitespace
+'from_port'   Name.Attribute
+'   '         Text.Whitespace
+'='           Operator
+' '           Text.Whitespace
+'443'         Literal.Number
+'\n'          Text.Whitespace
+
+'    '        Text.Whitespace
+'to_port'     Name.Attribute
+'     '       Text.Whitespace
+'='           Operator
+' '           Text.Whitespace
+'443'         Literal.Number
+'\n'          Text.Whitespace
+
+'  '          Text.Whitespace
+'}'           Punctuation
+'\n\n  # Egress rules\n' Comment.Single
+
+'  '          Text.Whitespace
+'egress'      Name.Builtin
+' '           Text.Whitespace
+'{'           Punctuation
+'\n'          Text.Whitespace
+
+'    '        Text.Whitespace
+'from_port'   Name.Attribute
+'   '         Text.Whitespace
+'='           Operator
+' '           Text.Whitespace
+'0'           Literal.Number
+'\n'          Text.Whitespace
+
+'    '        Text.Whitespace
+'to_port'     Name.Attribute
+'     '       Text.Whitespace
+'='           Operator
+' '           Text.Whitespace
+'0'           Literal.Number
+'\n'          Text.Whitespace
+
+'    '        Text.Whitespace
+'protocol'    Name.Attribute
+'    '        Text.Whitespace
+'='           Operator
+' '           Text.Whitespace
+'"-1"'        Literal.String.Double
+'\n'          Text.Whitespace
+
+'    '        Text.Whitespace
+'cidr_blocks' Name.Attribute
+' '           Text.Whitespace
+'='           Operator
+' '           Text.Whitespace
+'['           Punctuation
+'"0.0.0.0/0"' Literal.String.Double
+']'           Punctuation
+'\n'          Text.Whitespace
+
+'  '          Text.Whitespace
+'}'           Punctuation
+'\n'          Text.Whitespace
+
+'\n'          Text.Whitespace
+
+'  '          Text.Whitespace
+'tags'        Name.Builtin
+' '           Text.Whitespace
+'='           Operator
+' '           Text.Whitespace
+'{'           Punctuation
+'\n'          Text.Whitespace
+
+'    '        Text.Whitespace
+'Name'        Name.Attribute
+' '           Text.Whitespace
+'='           Operator
+' '           Text.Whitespace
+'"allow_tls"' Literal.String.Double
+'\n'          Text.Whitespace
+
+'  '          Text.Whitespace
+'}'           Punctuation
+'\n'          Text.Whitespace
+
+'}'           Punctuation
+'\n'          Text.Whitespace

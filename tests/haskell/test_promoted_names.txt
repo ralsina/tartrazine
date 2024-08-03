@@ -1,0 +1,10 @@
+---input---
+'x ': '[]
+
+---tokens---
+"'x"          Name
+' '           Text.Whitespace
+"':"          Keyword.Type
+' '           Text.Whitespace
+"'[]"         Keyword.Type
+'\n'          Text.Whitespace

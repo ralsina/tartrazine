@@ -1,0 +1,30 @@
+---input---
+# 	define MACRO#macro_body#
+#define/**/
+MACRO/**/
+#\#macro
+body\##
+
+---tokens---
+'# \tdefine'  Comment.Preproc
+' '           Text.Whitespace
+'MACRO'       Comment.Preproc
+'#'           Punctuation
+'macro_body'  Comment.Preproc
+'#'           Punctuation
+'\n'          Text.Whitespace
+
+'#define'     Comment.Preproc
+'/**/'        Comment.Multiline
+'\n'          Text.Whitespace
+
+'MACRO'       Comment.Preproc
+'/**/'        Comment.Multiline
+'\n'          Text.Whitespace
+
+'#'           Punctuation
+'\\#'         Comment.Preproc
+'macro\nbody' Comment.Preproc
+'\\#'         Comment.Preproc
+'#'           Punctuation
+'\n'          Text.Whitespace

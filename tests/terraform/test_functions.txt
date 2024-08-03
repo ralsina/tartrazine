@@ -1,0 +1,56 @@
+---input---
+provider "aws" {
+  value  = file("path.txt")
+}
+
+provider "aws" {
+  value = jsonencode(element("value"))
+}
+
+---tokens---
+'provider'    Keyword.Reserved
+' '           Text.Whitespace
+'"aws"'       Name.Variable
+' '           Text.Whitespace
+'{'           Punctuation
+'\n'          Text.Whitespace
+
+'  '          Text.Whitespace
+'value'       Name.Attribute
+'  '          Text.Whitespace
+'='           Operator
+' '           Text.Whitespace
+'file'        Name.Function
+'('           Punctuation
+'"path.txt"'  Literal.String.Double
+')'           Punctuation
+'\n'          Text.Whitespace
+
+'}'           Punctuation
+'\n'          Text.Whitespace
+
+'\n'          Text.Whitespace
+
+'provider'    Keyword.Reserved
+' '           Text.Whitespace
+'"aws"'       Name.Variable
+' '           Text.Whitespace
+'{'           Punctuation
+'\n'          Text.Whitespace
+
+'  '          Text.Whitespace
+'value'       Name.Attribute
+' '           Text.Whitespace
+'='           Operator
+' '           Text.Whitespace
+'jsonencode'  Name.Function
+'('           Punctuation
+'element'     Name.Function
+'('           Punctuation
+'"value"'     Literal.String.Double
+')'           Punctuation
+')'           Punctuation
+'\n'          Text.Whitespace
+
+'}'           Punctuation
+'\n'          Text.Whitespace

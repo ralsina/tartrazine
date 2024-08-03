@@ -1,0 +1,46 @@
+---input---
+f"mapping is { {a:b for (a, b) in ((1, 2), (3, 4))} }"
+
+---tokens---
+'f'           Literal.String.Affix
+'"'           Literal.String.Double
+'mapping is ' Literal.String.Double
+'{'           Literal.String.Interpol
+' '           Text.Whitespace
+'{'           Punctuation
+'a'           Name
+':'           Punctuation
+'b'           Name
+' '           Text.Whitespace
+'for'         Keyword
+' '           Text.Whitespace
+'('           Punctuation
+'a'           Name
+','           Punctuation
+' '           Text.Whitespace
+'b'           Name
+')'           Punctuation
+' '           Text.Whitespace
+'in'          Operator.Word
+' '           Text.Whitespace
+'('           Punctuation
+'('           Punctuation
+'1'           Literal.Number.Integer
+','           Punctuation
+' '           Text.Whitespace
+'2'           Literal.Number.Integer
+')'           Punctuation
+','           Punctuation
+' '           Text.Whitespace
+'('           Punctuation
+'3'           Literal.Number.Integer
+','           Punctuation
+' '           Text.Whitespace
+'4'           Literal.Number.Integer
+')'           Punctuation
+')'           Punctuation
+'}'           Punctuation
+' '           Text.Whitespace
+'}'           Literal.String.Interpol
+'"'           Literal.String.Double
+'\n'          Text.Whitespace

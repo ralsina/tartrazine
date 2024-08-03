@@ -1,0 +1,12 @@
+---input---
+Example
+ServerName localhost
+
+---tokens---
+'Example'     Name.Builtin
+'\n'          Text.Whitespace
+
+'ServerName'  Name.Builtin
+' '           Text.Whitespace
+'localhost'   Text
+'\n'          Text.Whitespace

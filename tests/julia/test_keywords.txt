@@ -1,0 +1,101 @@
+# Test keywords are identified
+
+---input---
+mutable struct MutableType end
+struct ImmutableType end
+abstract type AbstractMyType end
+primitive type MyPrimitive 32 end
+(abstract, mutable, type) = true, π, missing
+
+abstract    type AbstractMyType end
+primitive 	type MyPrimitive 32 end
+mutable     struct MutableType end
+
+---tokens---
+'mutable'     Keyword
+' '           Text.Whitespace
+'struct'      Keyword
+' '           Text
+'MutableType' Keyword.Type
+' '           Text.Whitespace
+'end'         Keyword
+'\n'          Text.Whitespace
+
+'struct'      Keyword
+' '           Text
+'ImmutableType' Keyword.Type
+' '           Text.Whitespace
+'end'         Keyword
+'\n'          Text.Whitespace
+
+'abstract'    Keyword
+' '           Text.Whitespace
+'type'        Keyword
+' '           Text
+'AbstractMyType' Keyword.Type
+' '           Text.Whitespace
+'end'         Keyword
+'\n'          Text.Whitespace
+
+'primitive'   Keyword
+' '           Text.Whitespace
+'type'        Keyword
+' '           Text
+'MyPrimitive' Keyword.Type
+' '           Text.Whitespace
+'32'          Literal.Number.Integer
+' '           Text.Whitespace
+'end'         Keyword
+'\n'          Text.Whitespace
+
+'('           Punctuation
+'abstract'    Name
+','           Punctuation
+' '           Text.Whitespace
+'mutable'     Name
+','           Punctuation
+' '           Text.Whitespace
+'type'        Name
+')'           Punctuation
+' '           Text.Whitespace
+'='           Operator
+' '           Text.Whitespace
+'true'        Name.Builtin
+','           Punctuation
+' '           Text.Whitespace
+'π'           Name.Builtin
+','           Punctuation
+' '           Text.Whitespace
+'missing'     Name.Builtin
+'\n'          Text.Whitespace
+
+'\n'          Text.Whitespace
+
+'abstract'    Keyword
+'    '        Text.Whitespace
+'type'        Keyword
+' '           Text
+'AbstractMyType' Keyword.Type
+' '           Text.Whitespace
+'end'         Keyword
+'\n'          Text.Whitespace
+
+'primitive'   Keyword
+' \t'         Text.Whitespace
+'type'        Keyword
+' '           Text
+'MyPrimitive' Keyword.Type
+' '           Text.Whitespace
+'32'          Literal.Number.Integer
+' '           Text.Whitespace
+'end'         Keyword
+'\n'          Text.Whitespace
+
+'mutable'     Keyword
+'     '       Text.Whitespace
+'struct'      Keyword
+' '           Text
+'MutableType' Keyword.Type
+' '           Text.Whitespace
+'end'         Keyword
+'\n'          Text.Whitespace

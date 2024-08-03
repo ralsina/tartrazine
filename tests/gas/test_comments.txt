@@ -1,0 +1,29 @@
+---input---
+lock addq $0, /* comments */ (%rsp) /*
+// comments
+*/ xorq %rax, %rax // comments
+
+---tokens---
+'lock'        Name.Attribute
+' '           Text.Whitespace
+'addq'        Name.Function
+' '           Text.Whitespace
+'$0'          Name.Constant
+','           Punctuation
+' '           Text.Whitespace
+'/* comments */' Comment.Multiline
+' '           Text.Whitespace
+'('           Punctuation
+'%rsp'        Name.Variable
+')'           Punctuation
+' '           Text.Whitespace
+'/*\n// comments\n*/' Comment.Multiline
+' '           Text.Whitespace
+'xorq'        Name.Function
+' '           Text.Whitespace
+'%rax'        Name.Variable
+','           Punctuation
+' '           Text.Whitespace
+'%rax'        Name.Variable
+' '           Text.Whitespace
+'// comments\n' Comment.Single

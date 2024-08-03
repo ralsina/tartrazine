@@ -1,0 +1,62 @@
+---input---
+do
+else
+elseif
+endif
+enduntil
+fi
+if
+ithen
+kthen
+od
+then
+until
+while
+return
+rireturn
+
+---tokens---
+'do'          Keyword
+'\n'          Text.Whitespace
+
+'else'        Keyword
+'\n'          Text.Whitespace
+
+'elseif'      Keyword
+'\n'          Text.Whitespace
+
+'endif'       Keyword
+'\n'          Text.Whitespace
+
+'enduntil'    Keyword
+'\n'          Text.Whitespace
+
+'fi'          Keyword
+'\n'          Text.Whitespace
+
+'if'          Keyword
+'\n'          Text.Whitespace
+
+'ithen'       Keyword
+'\n'          Text.Whitespace
+
+'kthen'       Keyword
+'\n'          Text.Whitespace
+
+'od'          Keyword
+'\n'          Text.Whitespace
+
+'then'        Keyword
+'\n'          Text.Whitespace
+
+'until'       Keyword
+'\n'          Text.Whitespace
+
+'while'       Keyword
+'\n'          Text.Whitespace
+
+'return'      Keyword.Pseudo
+'\n'          Text.Whitespace
+
+'rireturn'    Keyword.Pseudo
+'\n'          Text.Whitespace

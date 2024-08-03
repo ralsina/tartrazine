@@ -1,0 +1,14 @@
+---input---
+"'" + "'"
+
+---tokens---
+'"'           Literal.String
+"'"           Literal.String
+'"'           Literal.String
+' '           Text.Whitespace
+'+'           Operator
+' '           Text.Whitespace
+'"'           Literal.String
+"'"           Literal.String
+'"'           Literal.String
+'\n'          Text.Whitespace

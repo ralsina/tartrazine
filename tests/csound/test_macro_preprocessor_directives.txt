@@ -1,0 +1,20 @@
+---input---
+#ifdef MACRO
+#ifndef MACRO
+#undef MACRO
+
+---tokens---
+'#ifdef'      Comment.Preproc
+' '           Text.Whitespace
+'MACRO'       Comment.Preproc
+'\n'          Text.Whitespace
+
+'#ifndef'     Comment.Preproc
+' '           Text.Whitespace
+'MACRO'       Comment.Preproc
+'\n'          Text.Whitespace
+
+'#undef'      Comment.Preproc
+' '           Text.Whitespace
+'MACRO'       Comment.Preproc
+'\n'          Text.Whitespace

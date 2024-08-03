@@ -1,0 +1,17 @@
+---input---
+export (Array, AudioStream) var streams
+
+---tokens---
+'export'      Keyword
+' '           Text.Whitespace
+'('           Punctuation
+'Array'       Name.Builtin.Type
+','           Punctuation
+' '           Text.Whitespace
+'AudioStream' Name
+')'           Punctuation
+' '           Text.Whitespace
+'var'         Keyword
+' '           Text.Whitespace
+'streams'     Name
+'\n'          Text.Whitespace

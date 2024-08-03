@@ -1,0 +1,172 @@
+# Test that operators --- dotted and unicode --- are identified correctly.
+
+---input---
+a += b.c
+a .÷= .~b.c
+a = !b ⋆ c!
+a = b ? c : d ⊕ e
+a = √(5)
+a -> (a...) .+ 1
+a \ b
+1..2
+a = a === b
+a <: T
+a >: T
+a::T
+[adjoint]'
+(identity)''
+adjoint'''
+transpose'ᵀ
+suffixed +¹ operator
+suffixed +¹²³ operator
+
+---tokens---
+'a'           Name
+' '           Text.Whitespace
+'+='          Operator
+' '           Text.Whitespace
+'b'           Name
+'.'           Operator
+'c'           Name
+'\n'          Text.Whitespace
+
+'a'           Name
+' '           Text.Whitespace
+'.÷='         Operator
+' '           Text.Whitespace
+'.~'          Operator
+'b'           Name
+'.'           Operator
+'c'           Name
+'\n'          Text.Whitespace
+
+'a'           Name
+' '           Text.Whitespace
+'='           Operator
+' '           Text.Whitespace
+'!'           Operator
+'b'           Name
+' '           Text.Whitespace
+'⋆'           Operator
+' '           Text.Whitespace
+'c!'          Name
+'\n'          Text.Whitespace
+
+'a'           Name
+' '           Text.Whitespace
+'='           Operator
+' '           Text.Whitespace
+'b'           Name
+' '           Text.Whitespace
+'?'           Operator
+' '           Text.Whitespace
+'c'           Name
+' '           Text.Whitespace
+':'           Operator
+' '           Text.Whitespace
+'d'           Name
+' '           Text.Whitespace
+'⊕'           Operator
+' '           Text.Whitespace
+'e'           Name
+'\n'          Text.Whitespace
+
+'a'           Name
+' '           Text.Whitespace
+'='           Operator
+' '           Text.Whitespace
+'√'           Operator
+'('           Punctuation
+'5'           Literal.Number.Integer
+')'           Punctuation
+'\n'          Text.Whitespace
+
+'a'           Name
+' '           Text.Whitespace
+'->'          Operator
+' '           Text.Whitespace
+'('           Punctuation
+'a'           Name
+'...'         Operator
+')'           Punctuation
+' '           Text.Whitespace
+'.+'          Operator
+' '           Text.Whitespace
+'1'           Literal.Number.Integer
+'\n'          Text.Whitespace
+
+'a'           Name
+' '           Text.Whitespace
+'\\'          Operator
+' '           Text.Whitespace
+'b'           Name
+'\n'          Text.Whitespace
+
+'1'           Literal.Number.Integer
+'..'          Operator
+'2'           Literal.Number.Integer
+'\n'          Text.Whitespace
+
+'a'           Name
+' '           Text.Whitespace
+'='           Operator
+' '           Text.Whitespace
+'a'           Name
+' '           Text.Whitespace
+'==='         Operator
+' '           Text.Whitespace
+'b'           Name
+'\n'          Text.Whitespace
+
+'a'           Keyword.Type
+' '           Text.Whitespace
+'<:'          Operator
+' '           Text.Whitespace
+'T'           Keyword.Type
+'\n'          Text.Whitespace
+
+'a'           Keyword.Type
+' '           Text.Whitespace
+'>:'          Operator
+' '           Text.Whitespace
+'T'           Keyword.Type
+'\n'          Text.Whitespace
+
+'a'           Name
+'::'          Operator
+'T'           Keyword.Type
+'\n'          Text.Whitespace
+
+'['           Punctuation
+'adjoint'     Name
+']'           Punctuation
+"'"           Operator
+'\n'          Text.Whitespace
+
+'('           Punctuation
+'identity'    Name
+')'           Punctuation
+"''"          Operator
+'\n'          Text.Whitespace
+
+'adjoint'     Name
+"'''"         Operator
+'\n'          Text.Whitespace
+
+'transpose'   Name
+"'ᵀ"          Operator
+'\n'          Text.Whitespace
+
+'suffixed'    Name
+' '           Text.Whitespace
+'+¹'          Operator
+' '           Text.Whitespace
+'operator'    Name
+'\n'          Text.Whitespace
+
+'suffixed'    Name
+' '           Text.Whitespace
+'+¹²³'        Operator
+' '           Text.Whitespace
+'operator'    Name
+'\n'          Text.Whitespace

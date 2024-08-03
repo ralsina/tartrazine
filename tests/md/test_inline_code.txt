@@ -1,0 +1,36 @@
+---input---
+code: `code`
+
+ `**code**`
+
+(`code`)
+
+code (`in brackets`)
+
+---tokens---
+'code:'       Text
+' '           Text
+'`code`'      Literal.String.Backtick
+'\n'          Text.Whitespace
+
+'\n'          Text.Whitespace
+
+' '           Text
+'`**code**`'  Literal.String.Backtick
+'\n'          Text.Whitespace
+
+'\n'          Text.Whitespace
+
+'('           Text
+'`code`'      Literal.String.Backtick
+')'           Text
+'\n'          Text.Whitespace
+
+'\n'          Text.Whitespace
+
+'code'        Text
+' '           Text
+'('           Text
+'`in brackets`' Literal.String.Backtick
+')'           Text
+'\n'          Text.Whitespace

@@ -1,0 +1,16 @@
+---input---
+val (a, b) = 
+
+---tokens---
+'val'         Keyword.Declaration
+' '           Text.Whitespace
+'('           Punctuation
+'a'           Name.Variable
+','           Punctuation
+' '           Text.Whitespace
+'b'           Name.Variable
+')'           Punctuation
+' '           Text.Whitespace
+'='           Operator
+' '           Text.Whitespace
+'\n'          Text.Whitespace

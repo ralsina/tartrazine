@@ -1,0 +1,10 @@
+---input---
+key = value
+
+---tokens---
+'key'         Name.Attribute
+' '           Text.Whitespace
+'='           Operator
+' '           Text.Whitespace
+'value'       Literal.String
+'\n'          Text.Whitespace

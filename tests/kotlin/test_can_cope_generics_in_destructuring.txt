@@ -1,0 +1,27 @@
+---input---
+val (a: List<Something>, b: Set<Wobble>) =
+
+---tokens---
+'val'         Keyword.Declaration
+' '           Text.Whitespace
+'('           Punctuation
+'a'           Name.Variable
+':'           Punctuation
+' '           Text.Whitespace
+'List'        Name
+'<'           Operator
+'Something'   Name
+'>'           Operator
+','           Punctuation
+' '           Text.Whitespace
+'b'           Name.Variable
+':'           Punctuation
+' '           Text.Whitespace
+'Set'         Name
+'<'           Operator
+'Wobble'      Name
+'>'           Operator
+')'           Punctuation
+' '           Text.Whitespace
+'='           Operator
+'\n'          Text.Whitespace

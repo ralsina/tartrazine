@@ -1,0 +1,35 @@
+---input---
+val something = "something"
+"Here is $something"
+"Here is ${something.toUpperList()}"
+
+---tokens---
+'val'         Keyword.Declaration
+' '           Text.Whitespace
+'something'   Name.Variable
+' '           Text.Whitespace
+'='           Operator
+' '           Text.Whitespace
+'"'           Literal.String
+'something'   Literal.String
+'"'           Literal.String
+'\n'          Text.Whitespace
+
+'"'           Literal.String
+'Here is '    Literal.String
+'$'           Literal.String.Interpol
+'something'   Name
+'"'           Literal.String
+'\n'          Text.Whitespace
+
+'"'           Literal.String
+'Here is '    Literal.String
+'${'          Literal.String.Interpol
+'something'   Name
+'.'           Punctuation
+'toUpperList' Name.Attribute
+'('           Punctuation
+')'           Punctuation
+'}'           Literal.String.Interpol
+'"'           Literal.String
+'\n'          Text.Whitespace

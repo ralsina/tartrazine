@@ -1,0 +1,23 @@
+---input---
+"foo": "bar", "foo2": [1, 2, 3]
+
+---tokens---
+'"foo"'       Name.Tag
+':'           Punctuation
+' '           Text.Whitespace
+'"bar"'       Literal.String.Double
+','           Punctuation
+' '           Text.Whitespace
+'"foo2"'      Name.Tag
+':'           Punctuation
+' '           Text.Whitespace
+'['           Punctuation
+'1'           Literal.Number.Integer
+','           Punctuation
+' '           Text.Whitespace
+'2'           Literal.Number.Integer
+','           Punctuation
+' '           Text.Whitespace
+'3'           Literal.Number.Integer
+']'           Punctuation
+'\n'          Text.Whitespace

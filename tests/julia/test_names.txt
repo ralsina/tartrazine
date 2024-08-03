@@ -1,0 +1,148 @@
+# Test that the range of Julia variable names are correctly identified
+
+---input---
+a # single character variable
+a_simple_name
+_leading_underscore
+5implicit_mul
+6_more_mul
+nums1
+nums_2
+nameswith!
+multiple!!
+embedded!_inthemiddle
+embed!1
+prime_suffix′
+for_each # starts with keyword substring
+
+# variables with characters > \u00A1
+ð # category Ll
+Aʺ # category Lm -- \U02BA (MODIFIER LETTER DOUBLE PRIME), not \U2033 (DOUBLE PRIME)
+א # category Lo
+Ð # category Lu
+A̅ # category Mn -- \U0305 (COMBINING OVERLINE)
+ⅿ # category Nl -- \U217F (SMALL ROMAN NUMERAL ONE THOUSAND)
+A₁ # category No
+A² # category No
+€ # category Sc
+© # category So
+
+# number-like names
+𝟙 # category Nd
+𝟏 # category Nd
+
+---tokens---
+'a'           Name
+' '           Text.Whitespace
+'# single character variable' Comment
+'\n'          Text.Whitespace
+
+'a_simple_name' Name
+'\n'          Text.Whitespace
+
+'_leading_underscore' Name
+'\n'          Text.Whitespace
+
+'5'           Literal.Number.Integer
+'implicit_mul' Name
+'\n'          Text.Whitespace
+
+'6'           Literal.Number.Integer
+'_more_mul'   Name
+'\n'          Text.Whitespace
+
+'nums1'       Name
+'\n'          Text.Whitespace
+
+'nums_2'      Name
+'\n'          Text.Whitespace
+
+'nameswith!'  Name
+'\n'          Text.Whitespace
+
+'multiple!!'  Name
+'\n'          Text.Whitespace
+
+'embedded!_inthemiddle' Name
+'\n'          Text.Whitespace
+
+'embed!1'     Name
+'\n'          Text.Whitespace
+
+'prime_suffix′' Name
+'\n'          Text.Whitespace
+
+'for_each'    Name
+' '           Text.Whitespace
+'# starts with keyword substring' Comment
+'\n'          Text.Whitespace
+
+'\n'          Text.Whitespace
+
+'# variables with characters > \\u00A1' Comment
+'\n'          Text.Whitespace
+
+'ð'           Name
+' '           Text.Whitespace
+'# category Ll' Comment
+'\n'          Text.Whitespace
+
+'Aʺ'          Name
+' '           Text.Whitespace
+'# category Lm -- \\U02BA (MODIFIER LETTER DOUBLE PRIME), not \\U2033 (DOUBLE PRIME)' Comment
+'\n'          Text.Whitespace
+
+'א'           Name
+' '           Text.Whitespace
+'# category Lo' Comment
+'\n'          Text.Whitespace
+
+'Ð'           Name
+' '           Text.Whitespace
+'# category Lu' Comment
+'\n'          Text.Whitespace
+
+'A̅'          Name
+' '           Text.Whitespace
+'# category Mn -- \\U0305 (COMBINING OVERLINE)' Comment
+'\n'          Text.Whitespace
+
+'ⅿ'           Name
+' '           Text.Whitespace
+'# category Nl -- \\U217F (SMALL ROMAN NUMERAL ONE THOUSAND)' Comment
+'\n'          Text.Whitespace
+
+'A₁'          Name
+' '           Text.Whitespace
+'# category No' Comment
+'\n'          Text.Whitespace
+
+'A²'          Name
+' '           Text.Whitespace
+'# category No' Comment
+'\n'          Text.Whitespace
+
+'€'           Name
+' '           Text.Whitespace
+'# category Sc' Comment
+'\n'          Text.Whitespace
+
+'©'           Name
+' '           Text.Whitespace
+'# category So' Comment
+'\n'          Text.Whitespace
+
+'\n'          Text.Whitespace
+
+'# number-like names' Comment
+'\n'          Text.Whitespace
+
+'𝟙'           Name
+' '           Text.Whitespace
+'# category Nd' Comment
+'\n'          Text.Whitespace
+
+'𝟏'           Name
+' '           Text.Whitespace
+'# category Nd' Comment
+'\n'          Text.Whitespace

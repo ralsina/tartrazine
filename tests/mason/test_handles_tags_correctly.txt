@@ -1,0 +1,69 @@
+---input---
+<%class>
+has 'foo';
+has 'bar' => (required => 1);
+has 'baz' => (isa => 'Int', default => 17);
+</%class>
+
+---tokens---
+'<%class>'    Name.Tag
+'\n'          Text.Whitespace
+
+''            Name
+'has'         Name
+' '           Text.Whitespace
+"'foo'"       Literal.String
+';'           Punctuation
+'\n'          Text.Whitespace
+
+''            Name
+'has'         Name
+' '           Text.Whitespace
+"'bar'"       Literal.String
+' '           Text.Whitespace
+'='           Operator
+'>'           Operator
+' '           Text.Whitespace
+'('           Punctuation
+''            Name
+'required'    Name
+' '           Text.Whitespace
+'='           Operator
+'>'           Operator
+' '           Text.Whitespace
+'1'           Literal.Number.Integer
+')'           Punctuation
+';'           Punctuation
+'\n'          Text.Whitespace
+
+''            Name
+'has'         Name
+' '           Text.Whitespace
+"'baz'"       Literal.String
+' '           Text.Whitespace
+'='           Operator
+'>'           Operator
+' '           Text.Whitespace
+'('           Punctuation
+''            Name
+'isa'         Name
+' '           Text.Whitespace
+'='           Operator
+'>'           Operator
+' '           Text.Whitespace
+"'Int'"       Literal.String
+','           Punctuation
+' '           Text.Whitespace
+''            Name
+'default'     Name
+' '           Text.Whitespace
+'='           Operator
+'>'           Operator
+' '           Text.Whitespace
+'17'          Literal.Number.Integer
+')'           Punctuation
+';'           Punctuation
+'\n'          Text.Whitespace
+
+'</%class>'   Name.Tag
+'\n'          Text.Whitespace
