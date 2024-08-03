@@ -3,6 +3,12 @@ require "xml"
 module Tartrazine
   VERSION = "0.1.0"
 
+  # This implements a lexer for Pygments RegexLexers as expressed
+  # in Chroma's XML serialization.
+  # 
+  # For explanations on what emitters, transformers, etc do
+  # the Pygments documentation is a good place to start.
+  # https://pygments.org/docs/lexerdevelopment/
   class State
     property name : String = ""
     property rules = [] of Rule
@@ -10,11 +16,11 @@ module Tartrazine
 
   class Rule
     property pattern : Regex? = nil
+    property emitters : Array(Emitter) = [] of Emitter
+    property transformers : Array(TRansformer) = [] of TRansformer
   end
 
-  # This rule includes another state
-  # I have no idea what thet MEANS yet but in the XML
-  # it's this:
+  # This rule includes another state like this:
   #   <rule>
   #     <include state="interp"/>
   #   </rule>
@@ -30,6 +36,11 @@ module Tartrazine
 
   class Emitter
     property type : String = ""
+    property xml : String = ""
+  end
+
+  class Transformer
+    property xml: String = ""
   end
 
   class Lexer
@@ -94,9 +105,13 @@ module Tartrazine
                 next unless node.element?
                 case node.name
                 when "pop", "push", "include", "multi", "combine"
-                  puts "transformer: #{node.to_s}"
+                  transformer = Transformer.new
+                  transformer.xml = node.to_s
+                  rule.transformers << transformer
                 when "bygroups", "combined", "mutators", "token", "using", "usingbygroup", "usingself"
-                  puts "emitter: #{node.to_s}"
+                  emitter = Emitter.new
+                  emitter.xml = node.to_s
+                  rule.emitters << emitter
                 end
               end
             end
