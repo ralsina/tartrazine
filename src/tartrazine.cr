@@ -5,7 +5,7 @@ module Tartrazine
 
   # This implements a lexer for Pygments RegexLexers as expressed
   # in Chroma's XML serialization.
-  # 
+  #
   # For explanations on what emitters, transformers, etc do
   # the Pygments documentation is a good place to start.
   # https://pygments.org/docs/lexerdevelopment/
@@ -15,9 +15,9 @@ module Tartrazine
   end
 
   class Rule
-    property pattern : Regex? = nil
+    property pattern : Regex = Regex.new ""
     property emitters : Array(Emitter) = [] of Emitter
-    property transformers : Array(TRansformer) = [] of TRansformer
+    property transformers : Array(Transformer) = [] of Transformer
   end
 
   # This rule includes another state like this:
@@ -35,13 +35,31 @@ module Tartrazine
   end
 
   class Emitter
-    property type : String = ""
-    property xml : String = ""
+    property type : String
+    property xml : XML::Node
+
+    def initialize(@type : String, @xml : XML::Node?)
+    end
+
+    def emit(match : Regex::MatchData) : Array(Token)
+      case type
+      when "token"
+        return [Token.new(type: xml["type"], value: match[0])]
+      end
+      [] of Token
+    end
   end
 
   class Transformer
-    property xml: String = ""
+    property type : String = ""
+    property xml : String = ""
+
+    def transform
+      puts "Transforming #{type} #{xml}"
+    end
   end
+
+  alias Token = NamedTuple(type: String, value: String)
 
   class Lexer
     property config = {
@@ -53,6 +71,43 @@ module Tartrazine
     }
 
     property states = {} of String => State
+
+    property state_stack = ["root"]
+
+    # Turn the text into a list of tokens.
+    def tokenize(text) : Array(Token)
+      tokens = [] of Token
+      pos = 0
+      while pos < text.size
+        state = states[state_stack.last]
+        matched = false
+        state.rules.each do |rule|
+          case rule
+          when Rule # A normal regex rule
+            match = rule.pattern.match(text, pos)
+
+            # We are matched, move post to after the match
+            next if match.nil?
+            matched = true
+            pos = match.end
+
+            # Emit the tokens
+            rule.emitters.each do |emitter|
+              # Emit the token
+              tokens += emitter.emit(match)
+            end
+            # Transform the state
+            rule.transformers.each do |transformer|
+              transformer.transform
+            end
+          when IncludeStateRule
+            # TODO: something
+          end
+          # TODO: Emit error if no rule matched
+        end
+      end
+      tokens
+    end
 
     def self.from_xml(xml : String) : Lexer
       l = Lexer.new
@@ -86,7 +141,7 @@ module Tartrazine
                 # We have patter rules
                 rule = Rule.new
                 begin
-                  rule.pattern = /#{rule_node["pattern"]}/
+                  rule.pattern = /#{rule_node["pattern"]}/m
                 rescue ex : Exception
                   puts "Bad regex in #{l.config[:name]}: #{ex}"
                 end
@@ -106,12 +161,11 @@ module Tartrazine
                 case node.name
                 when "pop", "push", "include", "multi", "combine"
                   transformer = Transformer.new
+                  transformer.type = node.name
                   transformer.xml = node.to_s
                   rule.transformers << transformer
                 when "bygroups", "combined", "mutators", "token", "using", "usingbygroup", "usingself"
-                  emitter = Emitter.new
-                  emitter.xml = node.to_s
-                  rule.emitters << emitter
+                  rule.emitters << Emitter.new(node.name, node)
                 end
               end
             end
@@ -123,9 +177,16 @@ module Tartrazine
   end
 end
 
+# Try loading all lexers
+
+lexers = {} of String => Tartrazine::Lexer
 Dir.glob("lexers/*.xml").each do |fname|
-  Tartrazine::Lexer.from_xml(File.read(fname))
+  l = Tartrazine::Lexer.from_xml(File.read(fname))
+  lexers[l.config[:name]] = l
 end
+
+# Parse some plaintext
+puts lexers["plaintext"].tokenize("Hello, world!\n")
 
 # Convenience macros to parse XML
 macro xml_to_s(node, name)
