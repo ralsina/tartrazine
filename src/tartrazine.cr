@@ -227,14 +227,12 @@ end
 lexers = {} of String => Tartrazine::Lexer
 Dir.glob("lexers/*.xml").each do |fname|
   l = Tartrazine::Lexer.from_xml(File.read(fname))
-  lexers[l.config[:name]] = l
+  lexers[l.config[:name].downcase] = l
+  l.config[:aliases].each do |key|
+    lexers[key.downcase] = l
+  end
 end
 
-# Parse some plaintext
-puts lexers["plaintext"].tokenize("Hello, world!\n")
-
-# Now some bash
-puts lexers["Bash"].tokenize("echo 'Hello, world!'\n")
 
 # Convenience macros to parse XML
 macro xml_to_s(node, name)
@@ -247,4 +245,21 @@ end
 
 macro xml_to_a(node, name)
 {{node}}.children.select{|n| n.name == "{{name}}".lstrip("_")}.map {|n| n.content.to_s}
+end
+
+
+
+# Let's run some tests
+
+Dir.glob("tests/*/") do |lexername|
+  key = File.basename(lexername).downcase
+  next unless lexers.has_key? key
+  lexer = lexers[key]
+
+  Dir.glob("#{lexername}*.txt") do |testname|
+    test = File.read(testname).split("---input---\n").last.split("--tokens---").first
+    tokens = lexer.tokenize(test)
+    puts "Testing #{key} with #{testname}"
+    # puts tokens
+  end
 end
