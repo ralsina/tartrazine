@@ -91,9 +91,25 @@ module Tartrazine
         lexer.state_stack << xml["state"]
         [] of Token
       when "pop"
-        puts "Popping #{xml["depth"]} states"
-        lexer.state_stack.pop(xml["depth"].to_i)
+        depth = xml["depth"].to_i
+        puts "Popping #{depth} states"
+        if lexer.state_stack.size < depth 
+          puts "Can't pop #{depth} states, only have #{lexer.state_stack.size}"
+        else
+          lexer.state_stack.pop(depth)
+        end
         [] of Token
+      when "bygroups"
+        # This takes the groups in the regex and emits them as tokens
+        # Get all the token nodes
+        raise Exception.new "Can't have a token without a match" if match.nil?
+        tokens = xml.children.select { |n| n.name == "token" }.map { |t| t["type"].to_s }
+        p! match, tokens
+        result = [] of Token
+        tokens.each_with_index do |t, i|
+          result << {type: t, value: match[i]}
+        end
+        result
       else
         raise Exception.new("Unknown emitter type: #{type}: #{xml}")
       end
@@ -233,7 +249,6 @@ Dir.glob("lexers/*.xml").each do |fname|
   end
 end
 
-
 # Convenience macros to parse XML
 macro xml_to_s(node, name)
 {{node}}.children.find{|n| n.name == "{{name}}".lstrip("_")}.try &.content.to_s
@@ -247,19 +262,26 @@ macro xml_to_a(node, name)
 {{node}}.children.select{|n| n.name == "{{name}}".lstrip("_")}.map {|n| n.content.to_s}
 end
 
-
-
 # Let's run some tests
 
+good = 0
+bad = 0
 Dir.glob("tests/*/") do |lexername|
   key = File.basename(lexername).downcase
   next unless lexers.has_key? key
   lexer = lexers[key]
 
   Dir.glob("#{lexername}*.txt") do |testname|
-    test = File.read(testname).split("---input---\n").last.split("--tokens---").first
-    tokens = lexer.tokenize(test)
     puts "Testing #{key} with #{testname}"
-    # puts tokens
+    test = File.read(testname).split("---input---\n").last.split("--tokens---").first
+    begin
+      tokens = lexer.tokenize(test)
+      good += 1
+    rescue ex : Exception
+      puts "Error in #{key} with #{testname}: #{ex}"
+      bad += 1
+      raise ex
+    end
   end
 end
+puts "Good: #{good} Bad: #{bad}"
