@@ -84,6 +84,7 @@ module Tartrazine
       when "token"
         raise Exception.new "Can't have a token without a match" if match.nil?
         [Token.new(type: xml["type"], value: match[0])]
+      # TODO handle #push #push:n #pop and multiple states
       when "push"
         puts "Pushing state #{xml["state"]}"
         lexer.state_stack << xml["state"]
