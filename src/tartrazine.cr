@@ -87,13 +87,15 @@ module Tartrazine
         [Token.new(type: xml["type"], value: match[0])]
         # TODO handle #push #push:n #pop and multiple states
       when "push"
-        puts "Pushing state #{xml["state"]}"
-        lexer.state_stack << xml["state"]
+        # Push without a state means push the current state
+        state = xml["state"]? || lexer.state_stack.last
+        puts "Pushing state #{state}"
+        lexer.state_stack << state
         [] of Token
       when "pop"
         depth = xml["depth"].to_i
         puts "Popping #{depth} states"
-        if lexer.state_stack.size < depth 
+        if lexer.state_stack.size <= depth
           puts "Can't pop #{depth} states, only have #{lexer.state_stack.size}"
         else
           lexer.state_stack.pop(depth)
