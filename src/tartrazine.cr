@@ -1,5 +1,6 @@
-require "xml"
+require "base58"
 require "json"
+require "xml"
 
 module Tartrazine
   VERSION = "0.1.0"
@@ -13,6 +14,13 @@ module Tartrazine
   class State
     property name : String = ""
     property rules = [] of Rule
+
+    def +(other : State)
+      new_state = State.new
+      new_state.name = Random.base58(8)
+      new_state.rules = rules + other.rules
+      new_state
+    end
   end
 
   class Rule
@@ -131,6 +139,13 @@ module Tartrazine
         return [] of Token if match.nil?
         lexer_name = xml["lexer"].downcase
         LEXERS[lexer_name].tokenize(match[0])
+      when "combined"
+        # Combine two states into one anonymous state
+        states = xml.attributes.select { |a| a.name == "state" }.map &.content
+        new_state = states.map {|name| lexer.states[name]}.reduce { |s1, s2| s1 + s2 }
+        lexer.states[new_state.name] = new_state
+        lexer.state_stack << new_state.name
+        [] of Token
       else
         raise Exception.new("Unknown emitter type: #{type}: #{xml}")
       end
@@ -316,7 +331,7 @@ def test_file(testname, lexer)
   rescue ex : Exception
     puts ">>>ERROR"
     p! ex
-    return
+    exit 1
   end
   outp = IO::Memory.new
   i = IO::Memory.new(test)

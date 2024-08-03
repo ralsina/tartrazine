@@ -8,6 +8,10 @@ targets:
   tartrazine:
     main: src/tartrazine.cr
 
-crystal: '>= 1.13.0'
+dependencies:
+  base58:
+    github: crystal-china/base58.cr
+
+crystal: ">= 1.13.0"
 
 license: MIT
