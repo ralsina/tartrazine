@@ -1,4 +1,5 @@
 require "xml"
+require "json"
 
 module Tartrazine
   VERSION = "0.1.0"
@@ -18,6 +19,7 @@ module Tartrazine
     property pattern : Regex = Regex.new ""
     property emitters : Array(Emitter) = [] of Emitter
     property transformers : Array(Transformer) = [] of Transformer
+    property xml : String = "foo"
 
     def match(text, pos, lexer) : Tuple(Bool, Int32, Array(Token))
       tokens = [] of Token
@@ -30,6 +32,7 @@ module Tartrazine
         # Emit the token
         tokens += emitter.emit(match, lexer)
       end
+      p! xml, match.end, tokens
       return true, match.end, tokens
     end
   end
@@ -51,6 +54,7 @@ module Tartrazine
       puts "Including state #{state} from #{lexer.state_stack.last}"
       lexer.states[state].rules.each do |rule|
         matched, new_pos, new_tokens = rule.match(text, pos, lexer)
+        p! xml, new_pos, new_tokens if matched
         return true, new_pos, new_tokens if matched
       end
       return false, pos, [] of Token
@@ -85,12 +89,23 @@ module Tartrazine
       when "token"
         raise Exception.new "Can't have a token without a match" if match.nil?
         [Token.new(type: xml["type"], value: match[0])]
-        # TODO handle #push #push:n #pop and multiple states
       when "push"
-        # Push without a state means push the current state
-        state = xml["state"]? || lexer.state_stack.last
-        puts "Pushing state #{state}"
-        lexer.state_stack << state
+        states_to_push = xml.attributes.select { |a| a.name == "state" }.map &.content
+        if states_to_push.empty?
+          # Push without a state means push the current state
+          states_to_push = [lexer.state_stack.last]
+        end
+        states_to_push.each do |state|
+          if state == "#pop"
+            # Pop the state
+            puts "Popping state"
+            lexer.state_stack.pop
+          else
+            # Really push
+            puts "Pushing state #{state}"
+            lexer.state_stack << state
+          end
+        end
         [] of Token
       when "pop"
         depth = xml["depth"].to_i
@@ -105,11 +120,10 @@ module Tartrazine
         # This takes the groups in the regex and emits them as tokens
         # Get all the token nodes
         raise Exception.new "Can't have a token without a match" if match.nil?
-        tokens = xml.children.select { |n| n.name == "token" }.map { |t| t["type"].to_s }
-        p! match, tokens
+        tokens = xml.children.select { |n| n.name == "token" }.map(&.["type"].to_s)
         result = [] of Token
         tokens.each_with_index do |t, i|
-          result << {type: t, value: match[i]}
+          result << {type: t, value: match[i + 1]}
         end
         result
       else
@@ -149,20 +163,23 @@ module Tartrazine
       matched = false
       while pos < text.size
         state = states[state_stack.last]
+        p! state_stack.last, pos
         state.rules.each do |rule|
           matched, new_pos, new_tokens = rule.match(text, pos, self)
           next unless matched
+          p! rule.xml
+
           pos = new_pos
           tokens += new_tokens
           break # We go back to processing with current state
         end
         # If no rule matches, emit an error token
         unless matched
-          tokens << {type: "Error", value: ""}
+          tokens << {type: "Error", value: "?"}
           pos += 1
         end
       end
-      tokens
+      tokens.reject { |t| t[:type] == "Text" && t[:value] == "" }
     end
 
     def self.from_xml(xml : String) : Lexer
@@ -197,17 +214,23 @@ module Tartrazine
               when nil
                 if rule_node.first_element_child.try &.name == "include"
                   rule = IncludeStateRule.new
+                  rule.xml = rule_node.to_s
                   include_node = rule_node.children.find { |n| n.name == "include" }
                   rule.state = include_node["state"] if include_node
                   state.rules << rule
                 else
                   rule = Always.new
+                  rule.xml = rule_node.to_s
                   state.rules << rule
                 end
               else
                 rule = Rule.new
+                rule.xml = rule_node.to_s
                 begin
-                  rule.pattern = /#{rule_node["pattern"]}/m
+                  rule.pattern = Regex.new(
+                    rule_node["pattern"],
+                    Regex::Options::ANCHORED | Regex::Options::MULTILINE
+                  )
                   state.rules << rule
                 rescue ex : Exception
                   puts "Bad regex in #{l.config[:name]}: #{ex}"
@@ -266,8 +289,44 @@ end
 
 # Let's run some tests
 
-good = 0
-bad = 0
+def chroma_tokenize(lexer, text)
+  output = IO::Memory.new
+  input = IO::Memory.new(text)
+  Process.run(
+    "chroma",
+    ["-f", "json", "-l", lexer],
+    input: input, output: output
+  )
+  Array(Tartrazine::Token).from_json(output.to_s)
+end
+
+def test_file(testname, lexer)
+  test = File.read(testname).split("---input---\n").last.split("---tokens---").first
+  pp! test
+  begin
+    tokens = lexer.tokenize(test)
+  rescue ex : Exception
+    puts ">>>ERROR"
+    return
+  end
+  outp = IO::Memory.new
+  i = IO::Memory.new(test)
+  lname = lexer.config[:name]
+  Process.run(
+    "chroma",
+    ["-f", "json", "-l", lname], input: i, output: outp
+  )
+  chroma_tokens = Array(Tartrazine::Token).from_json(outp.to_s)
+  if chroma_tokens != tokens
+    pp! tokens
+    pp! chroma_tokens
+    puts ">>>BAD"
+  else
+    puts ">>>GOOD"
+  end
+end
+
+
 Dir.glob("tests/*/") do |lexername|
   key = File.basename(lexername).downcase
   next unless lexers.has_key? key
@@ -275,15 +334,6 @@ Dir.glob("tests/*/") do |lexername|
 
   Dir.glob("#{lexername}*.txt") do |testname|
     puts "Testing #{key} with #{testname}"
-    test = File.read(testname).split("---input---\n").last.split("--tokens---").first
-    begin
-      tokens = lexer.tokenize(test)
-      good += 1
-    rescue ex : Exception
-      puts "Error in #{key} with #{testname}: #{ex}"
-      bad += 1
-      raise ex
-    end
+    test_file(testname, lexer)
   end
 end
-puts "Good: #{good} Bad: #{bad}"
