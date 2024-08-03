@@ -86,7 +86,10 @@ module Tartrazine
         [Token.new(type: xml["type"], value: match[0])]
       when "push"
         lexer.state_stack << xml["state"]
-        return [] of Token
+        [] of Token
+      when "pop"
+        lexer.state_stack.pop
+        [] of Token
       else
         raise Exception.new("Unknown emitter type: #{type}: #{xml}")
       end
