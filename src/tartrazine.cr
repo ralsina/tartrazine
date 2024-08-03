@@ -38,7 +38,7 @@ module Tartrazine
       aliases:    [] of String,
       filenames:  [] of String,
       mime_types: [] of String,
-      priority:   0,
+      priority:   0.0,
     }
 
     property states = {} of String => State
@@ -54,7 +54,7 @@ module Tartrazine
             aliases:    xml_to_a(config, _alias) || [] of String,
             filenames:  xml_to_a(config, filename) || [] of String,
             mime_types: xml_to_a(config, mime_type) || [] of String,
-            priority:   xml_to_i(config, priority) || 0,
+            priority:   xml_to_f(config, priority) || 0.0,
           }
         end
 
@@ -74,7 +74,11 @@ module Tartrazine
               if rule_node["pattern"]?
                 # We have patter rules
                 rule = Rule.new
-                rule.pattern = /#{rule_node["pattern"]}/
+                begin
+                  rule.pattern = /#{rule_node["pattern"]}/
+                rescue ex : Exception
+                  puts "Bad regex: #{rule_node["pattern"]}, #{ex}"
+                end
               else
                 # And rules that include a state
                 rule = IncludeStateRule.new
@@ -106,15 +110,17 @@ module Tartrazine
   end
 end
 
-l = Tartrazine::Lexer.from_xml(File.read("lexers/ada.xml"))
+Dir.glob("lexers/*.xml").each do |fname|
+  Tartrazine::Lexer.from_xml(File.read(fname))
+end
 
 # Convenience macros to parse XML
 macro xml_to_s(node, name)
 {{node}}.children.find{|n| n.name == "{{name}}".lstrip("_")}.try &.content.to_s
 end
 
-macro xml_to_i(node, name)
-({{node}}.children.find{|n| n.name == "{{name}}".lstrip("_")}.try &.content.to_s.to_i)
+macro xml_to_f(node, name)
+({{node}}.children.find{|n| n.name == "{{name}}".lstrip("_")}.try &.content.to_s.to_f)
 end
 
 macro xml_to_a(node, name)
