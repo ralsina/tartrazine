@@ -19,22 +19,18 @@ module Tartrazine
     property emitters : Array(Emitter) = [] of Emitter
     property transformers : Array(Transformer) = [] of Transformer
 
-    def match(text, pos) : Tuple(Int32, Array(Token))
+    def match(text, pos, lexer) : Tuple(Bool, Int32, Array(Token))
       tokens = [] of Token
       match = pattern.match(text, pos)
       # We are matched, move post to after the match
-      return pos, [] of Token if match.nil?
+      return false, pos, [] of Token if match.nil?
 
       # Emit the tokens
       emitters.each do |emitter|
         # Emit the token
         tokens += emitter.emit(match)
       end
-      # Transform the state
-      transformers.each do |transformer|
-        transformer.transform
-      end
-      return match.end, tokens
+      return true, match.end, tokens
     end
   end
 
@@ -51,9 +47,28 @@ module Tartrazine
   class IncludeStateRule < Rule
     property state : String = ""
 
-    def match(text, pos) : Tuple(Int32, Array(Token))
-      puts "Including state #{state}"
-      return pos, [] of Token
+    def match(text, pos, lexer) : Tuple(Bool, Int32, Array(Token))
+      puts "Including state #{state} from #{lexer.state_stack.last}"
+      lexer.states[state].rules.each do |rule|
+        matched, new_pos, new_tokens = rule.match(text, pos, lexer)
+        return true, new_pos, new_tokens if matched
+      end
+      return false, pos, [] of Token
+    end
+  end
+
+  # These rules look like this:
+  # <rule>
+  #   <pop depth="1"/>
+  # </rule>
+  # They match, don't move pos, and alter the stack
+  class Always < Rule
+    def match(text, pos, lexer) : Tuple(Bool, Int32, Array(Token))
+      tokens = [] of Token
+      emitters.each do |emitter|
+        tokens += emitter.emit(nil)
+      end
+      return true, pos, tokens
     end
   end
 
@@ -64,9 +79,10 @@ module Tartrazine
     def initialize(@type : String, @xml : XML::Node?)
     end
 
-    def emit(match : Regex::MatchData) : Array(Token)
+    def emit(match : Regex::MatchData?) : Array(Token)
       case type
       when "token"
+        raise Exception.new "Can't have a token without a match" if match.nil?
         [Token.new(type: xml["type"], value: match[0])]
       else
         raise Exception.new("Unknown emitter type: #{type}")
@@ -102,18 +118,18 @@ module Tartrazine
     def tokenize(text) : Array(Token)
       tokens = [] of Token
       pos = 0
+      matched = false
       while pos < text.size
         state = states[state_stack.last]
-        matched = false
         state.rules.each do |rule|
-          new_pos, new_tokens = rule.match(text, pos)
+          matched, new_pos, new_tokens = rule.match(text, pos, self)
+          next unless matched
           pos = new_pos
           tokens += new_tokens
-          matched = true
           break # We go back to processing with current state
         end
         # If no rule matches, emit an error token
-        if !matched
+        unless matched
           tokens << {type: "Error", value: ""}
           pos += 1
         end
@@ -149,36 +165,43 @@ module Tartrazine
             end
             # And states contain rules 🤷
             state_node.children.select { |n| n.name == "rule" }.each do |rule_node|
-              if rule_node["pattern"]?
-                # We have patter rules
+              case rule_node["pattern"]?
+              when nil
+                if rule_node.first_element_child.try &.name == "include"
+                  rule = IncludeStateRule.new
+                  include_node = rule_node.children.find { |n| n.name == "include" }
+                  rule.state = include_node["state"] if include_node
+                  state.rules << rule
+                else
+                  rule = Always.new
+                  state.rules << rule
+                end
+              else
                 rule = Rule.new
                 begin
                   rule.pattern = /#{rule_node["pattern"]}/m
+                  state.rules << rule
                 rescue ex : Exception
                   puts "Bad regex in #{l.config[:name]}: #{ex}"
+                  next
                 end
-              else
-                # And rules that include a state
-                rule = IncludeStateRule.new
-                include_node = rule_node.children.find { |n| n.name == "include" }
-                rule.state = include_node["state"] if include_node
               end
-              state.rules << rule
 
+              next if rule.nil?
               # Rules contain maybe an emitter and maybe a transformer
               # emitters emit tokens, transformers do things to
               # the state stack.
               rule_node.children.each do |node|
                 next unless node.element?
-                case node.name
-                when "pop", "push", "multi", "combine" # "include",
-                  transformer = Transformer.new
-                  transformer.type = node.name
-                  transformer.xml = node.to_s
-                  rule.transformers << transformer
-                when "bygroups", "combined", "mutators", "token", "using", "usingbygroup", "usingself"
-                  rule.emitters << Emitter.new(node.name, node)
-                end
+                # case node.name
+                # when "pop", "push", "multi", "combine" # "include",
+                #   transformer = Transformer.new
+                #   transformer.type = node.name
+                #   transformer.xml = node.to_s
+                #   rule.transformers << transformer
+                # else
+                rule.emitters << Emitter.new(node.name, node)
+                # end
               end
             end
           end
@@ -200,8 +223,9 @@ end
 # Parse some plaintext
 puts lexers["plaintext"].tokenize("Hello, world!\n")
 
+pp! lexers["pepe"]
 # Now some bash
-puts lexers["Bash"].tokenize("echo 'Hello, world!'\n")
+puts lexers["pepe"].tokenize("echo 'Hello, world!'\n")
 
 # Convenience macros to parse XML
 macro xml_to_s(node, name)
