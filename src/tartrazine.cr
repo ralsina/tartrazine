@@ -18,6 +18,24 @@ module Tartrazine
     property pattern : Regex = Regex.new ""
     property emitters : Array(Emitter) = [] of Emitter
     property transformers : Array(Transformer) = [] of Transformer
+
+    def match(text, pos) : Tuple(Int32, Array(Token))
+      tokens = [] of Token
+      match = pattern.match(text, pos)
+      # We are matched, move post to after the match
+      return pos, [] of Token if match.nil?
+
+      # Emit the tokens
+      emitters.each do |emitter|
+        # Emit the token
+        tokens += emitter.emit(match)
+      end
+      # Transform the state
+      transformers.each do |transformer|
+        transformer.transform
+      end
+      return match.end, tokens
+    end
   end
 
   # This rule includes another state like this:
@@ -32,6 +50,11 @@ module Tartrazine
 
   class IncludeStateRule < Rule
     property state : String = ""
+
+    def match(text, pos) : Tuple(Int32, Array(Token))
+      puts "Including state #{state}"
+      return pos, [] of Token
+    end
   end
 
   class Emitter
@@ -44,9 +67,10 @@ module Tartrazine
     def emit(match : Regex::MatchData) : Array(Token)
       case type
       when "token"
-        return [Token.new(type: xml["type"], value: match[0])]
+        [Token.new(type: xml["type"], value: match[0])]
+      else
+        raise Exception.new("Unknown emitter type: #{type}")
       end
-      [] of Token
     end
   end
 
@@ -82,28 +106,16 @@ module Tartrazine
         state = states[state_stack.last]
         matched = false
         state.rules.each do |rule|
-          case rule
-          when Rule # A normal regex rule
-            match = rule.pattern.match(text, pos)
-
-            # We are matched, move post to after the match
-            next if match.nil?
-            matched = true
-            pos = match.end
-
-            # Emit the tokens
-            rule.emitters.each do |emitter|
-              # Emit the token
-              tokens += emitter.emit(match)
-            end
-            # Transform the state
-            rule.transformers.each do |transformer|
-              transformer.transform
-            end
-          when IncludeStateRule
-            # TODO: something
-          end
-          # TODO: Emit error if no rule matched
+          new_pos, new_tokens = rule.match(text, pos)
+          pos = new_pos
+          tokens += new_tokens
+          matched = true
+          break # We go back to processing with current state
+        end
+        # If no rule matches, emit an error token
+        if !matched
+          tokens << {type: "Error", value: ""}
+          pos += 1
         end
       end
       tokens
@@ -159,7 +171,7 @@ module Tartrazine
               rule_node.children.each do |node|
                 next unless node.element?
                 case node.name
-                when "pop", "push", "include", "multi", "combine"
+                when "pop", "push", "multi", "combine" # "include",
                   transformer = Transformer.new
                   transformer.type = node.name
                   transformer.xml = node.to_s
@@ -187,6 +199,9 @@ end
 
 # Parse some plaintext
 puts lexers["plaintext"].tokenize("Hello, world!\n")
+
+# Now some bash
+puts lexers["Bash"].tokenize("echo 'Hello, world!'\n")
 
 # Convenience macros to parse XML
 macro xml_to_s(node, name)
