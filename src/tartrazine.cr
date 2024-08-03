@@ -88,7 +88,7 @@ module Tartrazine
         lexer.state_stack << xml["state"]
         [] of Token
       when "pop"
-        lexer.state_stack.pop
+        lexer.state_stack.pop(xml["depth"].to_i)
         [] of Token
       else
         raise Exception.new("Unknown emitter type: #{type}: #{xml}")
