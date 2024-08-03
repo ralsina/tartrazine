@@ -126,6 +126,11 @@ module Tartrazine
           result << {type: t, value: match[i + 1]}
         end
         result
+      when "using"
+        # Shunt to another lexer entirely
+        return [] of Token if match.nil?
+        lexer_name = xml["lexer"].downcase
+        LEXERS[lexer_name].tokenize(match[0])
       else
         raise Exception.new("Unknown emitter type: #{type}: #{xml}")
       end
@@ -142,6 +147,8 @@ module Tartrazine
   end
 
   alias Token = NamedTuple(type: String, value: String)
+
+  LEXERS = {} of String => Tartrazine::Lexer
 
   class Lexer
     property config = {
@@ -265,7 +272,8 @@ end
 
 # Try loading all lexers
 
-lexers = {} of String => Tartrazine::Lexer
+lexers = Tartrazine::LEXERS
+
 Dir.glob("lexers/*.xml").each do |fname|
   l = Tartrazine::Lexer.from_xml(File.read(fname))
   lexers[l.config[:name].downcase] = l
@@ -307,6 +315,7 @@ def test_file(testname, lexer)
     tokens = lexer.tokenize(test)
   rescue ex : Exception
     puts ">>>ERROR"
+    p! ex
     return
   end
   outp = IO::Memory.new
@@ -326,7 +335,10 @@ def test_file(testname, lexer)
   end
 end
 
+# test_file("tests/c/test_preproc_file2.txt", lexers["c"])
+# exit 0
 
+total = 0
 Dir.glob("tests/*/") do |lexername|
   key = File.basename(lexername).downcase
   next unless lexers.has_key? key
@@ -334,6 +346,8 @@ Dir.glob("tests/*/") do |lexername|
 
   Dir.glob("#{lexername}*.txt") do |testname|
     puts "Testing #{key} with #{testname}"
+    total += 1
     test_file(testname, lexer)
   end
 end
+puts ">>>TOTAL #{total}"
