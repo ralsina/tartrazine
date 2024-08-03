@@ -61,7 +61,8 @@ module Tartrazine
   # <rule>
   #   <pop depth="1"/>
   # </rule>
-  # They match, don't move pos, and alter the stack
+  # They match, don't move pos, probably alter
+  # the stack, probably not generate tokens
   class Always < Rule
     def match(text, pos, lexer) : Tuple(Bool, Int32, Array(Token))
       tokens = [] of Token
@@ -84,7 +85,7 @@ module Tartrazine
       when "token"
         raise Exception.new "Can't have a token without a match" if match.nil?
         [Token.new(type: xml["type"], value: match[0])]
-      # TODO handle #push #push:n #pop and multiple states
+        # TODO handle #push #push:n #pop and multiple states
       when "push"
         puts "Pushing state #{xml["state"]}"
         lexer.state_stack << xml["state"]
