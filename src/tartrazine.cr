@@ -77,7 +77,7 @@ module Tartrazine
                 begin
                   rule.pattern = /#{rule_node["pattern"]}/
                 rescue ex : Exception
-                  puts "Bad regex: #{rule_node["pattern"]}, #{ex}"
+                  puts "Bad regex in #{l.config[:name]}: #{ex}"
                 end
               else
                 # And rules that include a state
@@ -89,16 +89,14 @@ module Tartrazine
 
               # Rules contain maybe an emitter and maybe a transformer
               # emitters emit tokens, transformers do things to
-              # the state stack. The transformers go last, but
-              # both kinds are optional 😭
-
+              # the state stack.
               rule_node.children.each do |node|
                 next unless node.element?
                 case node.name
                 when "pop", "push", "include", "multi", "combine"
-                  p! "transformer", node.to_s
-                else
-                  p! "emitter", node.to_s
+                  puts "transformer: #{node.to_s}"
+                when "bygroups", "combined", "mutators", "token", "using", "usingbygroup", "usingself"
+                  puts "emitter: #{node.to_s}"
                 end
               end
             end
