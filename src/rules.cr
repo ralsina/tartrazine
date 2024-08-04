@@ -1,3 +1,5 @@
+require "./actions"
+
 # These are lexer rules. They match with the text being parsed
 # and perform actions, either emitting tokens or changing the
 # state of the lexer.
@@ -5,7 +7,7 @@ module Tartrazine
   # This rule matches via a regex pattern
   class Rule
     property pattern : Regex = Regex.new ""
-    property emitters : Array(Emitter) = [] of Emitter
+    property actions : Array(Action) = [] of Action
     property xml : String = "foo"
 
     def match(text, pos, lexer) : Tuple(Bool, Int32, Array(Token))
@@ -16,9 +18,9 @@ module Tartrazine
       # pp! match, pattern.inspect, text, pos
       return false, pos, [] of Token if match.nil? || match.end == 0
       # Emit the tokens
-      emitters.each do |emitter|
+      actions.each do |action|
         # Emit the token
-        tokens += emitter.emit(match, lexer)
+        tokens += action.emit(match, lexer)
       end
       # p! xml, match.end, tokens
       return true, match.end, tokens
@@ -27,13 +29,13 @@ module Tartrazine
     def initialize(node : XML::Node, flags)
       @xml = node.to_s
       @pattern = Regex.new(node["pattern"], flags)
-      add_emitters(node)
+      add_actions(node)
     end
 
-    def add_emitters(node : XML::Node)
+    def add_actions(node : XML::Node)
       node.children.each do |node|
         next unless node.element?
-        @emitters << Emitter.new(node.name, node)
+        @actions << Action.new(node.name, node)
       end
     end
   end
@@ -57,24 +59,23 @@ module Tartrazine
       @xml = node.to_s
       include_node = node.children.find { |n| n.name == "include" }
       @state = include_node["state"] if include_node
-      add_emitters(node)
+      add_actions(node)
     end
   end
 
   # This rule always matches, unconditionally
-  class Always < Rule
+  class UnconditionalRule < Rule
     def match(text, pos, lexer) : Tuple(Bool, Int32, Array(Token))
       tokens = [] of Token
-      emitters.each do |emitter|
-        tokens += emitter.emit(nil, lexer)
+      actions.each do |action|
+        tokens += action.emit(nil, lexer)
       end
       return true, pos, tokens
     end
 
     def initialize(node : XML::Node)
       @xml = node.to_s
-      add_emitters(node)
+      add_actions(node)
     end
   end
-
 end
