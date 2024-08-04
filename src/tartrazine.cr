@@ -1,11 +1,14 @@
+require "./actions"
+require "./rules"
 require "base58"
 require "json"
+require "log"
 require "xml"
-require "./rules"
-require "./actions"
 
 module Tartrazine
   VERSION = "0.1.0"
+
+  Log = ::Log.for("tartrazine")
 
   # This implements a lexer for Pygments RegexLexers as expressed
   # in Chroma's XML serialization.
@@ -61,12 +64,12 @@ module Tartrazine
       end
       while pos < text.size
         state = states[@state_stack.last]
-        # puts "Stack is #{@state_stack} State is #{state.name}, pos is #{pos}, text is #{text[pos..pos + 10]}"
+        Log.trace { "Stack is #{@state_stack} State is #{state.name}, pos is #{pos}, text is #{text[pos..pos + 10]}" }
         state.rules.each do |rule|
           matched, new_pos, new_tokens = rule.match(text, pos, self)
-          # puts "NOT MATCHED: #{rule.xml}"
+          Log.trace { "NOT MATCHED: #{rule.xml}"}
           next unless matched
-          # puts "MATCHED: #{rule.xml}"
+          Log.trace { "MATCHED: #{rule.xml}" }
 
           pos = new_pos
           tokens += new_tokens
@@ -74,7 +77,7 @@ module Tartrazine
         end
         # If no rule matches, emit an error token
         unless matched
-          # p! "Error at #{pos}"
+          Log.trace { "Error at #{pos}" }
           tokens << {type: "Error", value: "#{text[pos]}"}
           pos += 1
         end

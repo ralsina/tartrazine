@@ -15,14 +15,14 @@ module Tartrazine
       match = pattern.match(text, pos)
       # We don't match if the match doesn't move the cursor
       # because that causes infinite loops
-      # pp! match, pattern.inspect, text, pos
+      Log.trace { "#{match}, #{pattern.inspect}, #{text}, #{pos}" }
       return false, pos, [] of Token if match.nil? || match.end == 0
       # Emit the tokens
       actions.each do |action|
         # Emit the token
         tokens += action.emit(match, lexer)
       end
-      # p! xml, match.end, tokens
+      Log.trace { "#{xml}, #{match.end}, #{tokens}" }
       return true, match.end, tokens
     end
 
@@ -46,10 +46,10 @@ module Tartrazine
     property state : String = ""
 
     def match(text, pos, lexer) : Tuple(Bool, Int32, Array(Token))
-      # puts "Including state #{state} from #{lexer.state_stack.last}"
+      Log.trace { "Including state #{state} from #{lexer.state_stack.last}" }
       lexer.states[state].rules.each do |rule|
         matched, new_pos, new_tokens = rule.match(text, pos, lexer)
-        # p! xml, new_pos, new_tokens if matched
+        Log.trace { "#{xml}, #{new_pos}, #{new_tokens}" } if matched 
         return true, new_pos, new_tokens if matched
       end
       return false, pos, [] of Token

@@ -40,20 +40,20 @@ module Tartrazine
         states_to_push.each do |state|
           if state == "#pop"
             # Pop the state
-            # puts "Popping state"
+            Log.trace { "Popping state"}
             lexer.state_stack.pop
           else
             # Really push
             lexer.state_stack << state
-            # puts "Pushed #{lexer.state_stack}"
+            Log.trace {"Pushed #{lexer.state_stack}"}
           end
         end
         [] of Token
       when "pop"
         depth = xml["depth"].to_i
-        # puts "Popping #{depth} states"
+        Log.trace { "Popping #{depth} states" }
         if lexer.state_stack.size <= depth
-          # puts "Can't pop #{depth} states, only have #{lexer.state_stack.size}"
+          Log.trace { "Can't pop #{depth} states, only have #{lexer.state_stack.size}" }
         else
           lexer.state_stack.pop(depth)
         end
@@ -81,14 +81,14 @@ module Tartrazine
         # Shunt to another lexer entirely
         return [] of Token if match.nil?
         lexer_name = xml["lexer"].downcase
-        # pp! "to tokenize:", match[match_group]
+        Log.trace { "to tokenize: #{match[match_group]}" }
         Tartrazine.get_lexer(lexer_name).tokenize(match[match_group], usingself: true)
       when "usingself"
         # Shunt to another copy of this lexer
         return [] of Token if match.nil?
 
         new_lexer = Lexer.from_xml(lexer.xml)
-        # pp! "to tokenize:", match[match_group]
+        Log.trace { "to tokenize: #{match[match_group]}" }
         new_lexer.tokenize(match[match_group], usingself: true)
       when "combined"
         # Combine two states into one anonymous state
