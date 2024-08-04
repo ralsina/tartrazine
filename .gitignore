@@ -3,3 +3,6 @@
 /bin/
 /.shards/
 *.dwarf
+chroma/
+pygments/
+shard.lock
