@@ -79,15 +79,18 @@ module Tartrazine
           pos += 1
         end
       end
-      tokens.reject { |t| t[:value] == "" }
+      tokens.reject { |token| token[:value] == "" }
     end
 
+    # ameba:disable Metrics/CyclomaticComplexity
     def self.from_xml(xml : String) : Lexer
       l = Lexer.new
       l.xml = xml
       lexer = XML.parse(xml).first_element_child
       if lexer
-        config = lexer.children.find { |n| n.name == "config" }
+        config = lexer.children.find { |node|
+          node.name == "config"
+        }
         if config
           l.config = {
             name:          xml_to_s(config, name) || "",
@@ -96,17 +99,22 @@ module Tartrazine
             mime_types:    xml_to_a(config, mime_type) || [] of String,
             priority:      xml_to_f(config, priority) || 0.0,
             not_multiline: xml_to_s(config, not_multiline) == "true",
-            # FIXME: This has no effect yet (see )
+            # FIXME: Because Crystal's multiline flag forces dot_all this
+            # doesn't work perfectly yet.
             dot_all:          xml_to_s(config, dot_all) == "true",
             case_insensitive: xml_to_s(config, case_insensitive) == "true",
             ensure_nl:        xml_to_s(config, ensure_nl) == "true",
           }
         end
 
-        rules = lexer.children.find { |n| n.name == "rules" }
+        rules = lexer.children.find { |node|
+          node.name == "rules"
+        }
         if rules
           # Rules contains states 🤷
-          rules.children.select { |n| n.name == "state" }.each do |state_node|
+          rules.children.select { |node|
+            node.name == "state"
+          }.each do |state_node|
             state = State.new
             state.name = state_node["name"]
             if l.states.has_key?(state.name)
@@ -115,7 +123,9 @@ module Tartrazine
               l.states[state.name] = state
             end
             # And states contain rules 🤷
-            state_node.children.select { |n| n.name == "rule" }.each do |rule_node|
+            state_node.children.select { |node|
+              node.name == "rule"
+            }.each do |rule_node|
               case rule_node["pattern"]?
               when nil
                 if rule_node.first_element_child.try &.name == "include"

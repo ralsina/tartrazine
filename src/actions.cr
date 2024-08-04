@@ -23,13 +23,16 @@ module Tartrazine
       end
     end
 
+    # ameba:disable Metrics/CyclomaticComplexity
     def emit(match : Regex::MatchData?, lexer : Lexer, match_group = 0) : Array(Token)
       case type
       when "token"
         raise Exception.new "Can't have a token without a match" if match.nil?
         [Token.new(type: xml["type"], value: match[match_group])]
       when "push"
-        states_to_push = xml.attributes.select { |a| a.name == "state" }.map &.content
+        states_to_push = xml.attributes.select { |attrib|
+          attrib.name == "state"
+        }.map &.content
         if states_to_push.empty?
           # Push without a state means push the current state
           states_to_push = [lexer.state_stack.last]
@@ -89,8 +92,14 @@ module Tartrazine
         new_lexer.tokenize(match[match_group], usingself: true)
       when "combined"
         # Combine two states into one anonymous state
-        states = xml.attributes.select { |a| a.name == "state" }.map &.content
-        new_state = states.map { |name| lexer.states[name] }.reduce { |s1, s2| s1 + s2 }
+        states = xml.attributes.select { |attrib|
+          attrib.name == "state"
+        }.map &.content
+        new_state = states.map { |name|
+          lexer.states[name]
+        }.reduce { |state1, state2|
+          state1 + state2
+        }
         lexer.states[new_state.name] = new_state
         lexer.state_stack << new_state.name
         [] of Token

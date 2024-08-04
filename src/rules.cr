@@ -33,9 +33,9 @@ module Tartrazine
     end
 
     def add_actions(node : XML::Node)
-      node.children.each do |node|
-        next unless node.element?
-        @actions << Action.new(node.name, node)
+      node.children.each do |child|
+        next unless child.element?
+        @actions << Action.new(child.name, child)
       end
     end
   end
@@ -57,7 +57,9 @@ module Tartrazine
 
     def initialize(node : XML::Node)
       @xml = node.to_s
-      include_node = node.children.find { |n| n.name == "include" }
+      include_node = node.children.find { |child|
+        child.name == "include"
+      }
       @state = include_node["state"] if include_node
       add_actions(node)
     end
