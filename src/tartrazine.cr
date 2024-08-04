@@ -1,7 +1,7 @@
 require "base58"
 require "json"
 require "xml"
-
+require "./rules"
 module Tartrazine
   VERSION = "0.1.0"
 
@@ -23,67 +23,6 @@ module Tartrazine
     end
   end
 
-  class Rule
-    property pattern : Regex = Regex.new ""
-    property emitters : Array(Emitter) = [] of Emitter
-    property xml : String = "foo"
-
-    def match(text, pos, lexer) : Tuple(Bool, Int32, Array(Token))
-      tokens = [] of Token
-      match = pattern.match(text, pos)
-      # We don't match if the match doesn't move the cursor
-      # because that causes infinite loops
-      # pp! match, pattern.inspect, text, pos
-      return false, pos, [] of Token if match.nil? || match.end == 0
-      # Emit the tokens
-      emitters.each do |emitter|
-        # Emit the token
-        tokens += emitter.emit(match, lexer)
-      end
-      # p! xml, match.end, tokens
-      return true, match.end, tokens
-    end
-  end
-
-  # This rule includes another state like this:
-  #   <rule>
-  #     <include state="interp"/>
-  #   </rule>
-  # </state>
-  # <state name="interp">
-  #   <rule pattern="\$\(\(">
-  #     <token type="Keyword"/>
-  # ...
-
-  class IncludeStateRule < Rule
-    property state : String = ""
-
-    def match(text, pos, lexer) : Tuple(Bool, Int32, Array(Token))
-      # puts "Including state #{state} from #{lexer.state_stack.last}"
-      lexer.states[state].rules.each do |rule|
-        matched, new_pos, new_tokens = rule.match(text, pos, lexer)
-        # p! xml, new_pos, new_tokens if matched
-        return true, new_pos, new_tokens if matched
-      end
-      return false, pos, [] of Token
-    end
-  end
-
-  # These rules look like this:
-  # <rule>
-  #   <pop depth="1"/>
-  # </rule>
-  # They match, don't move pos, probably alter
-  # the stack, probably not generate tokens
-  class Always < Rule
-    def match(text, pos, lexer) : Tuple(Bool, Int32, Array(Token))
-      tokens = [] of Token
-      emitters.each do |emitter|
-        tokens += emitter.emit(nil, lexer)
-      end
-      return true, pos, tokens
-    end
-  end
 
   class Emitter
     property type : String
@@ -274,35 +213,18 @@ module Tartrazine
               case rule_node["pattern"]?
               when nil
                 if rule_node.first_element_child.try &.name == "include"
-                  rule = IncludeStateRule.new
-                  rule.xml = rule_node.to_s
-                  include_node = rule_node.children.find { |n| n.name == "include" }
-                  rule.state = include_node["state"] if include_node
-                  state.rules << rule
+                  rule = IncludeStateRule.new(rule_node)
                 else
-                  rule = Always.new
-                  rule.xml = rule_node.to_s
-                  state.rules << rule
+                  rule = Always.new(rule_node)
                 end
               else
                 flags = Regex::Options::ANCHORED
                 flags |= Regex::Options::MULTILINE unless l.config[:not_multiline]
                 flags |= Regex::Options::IGNORE_CASE if l.config[:case_insensitive]
                 flags |= Regex::Options::DOTALL if l.config[:dot_all]
-                rule = Rule.new
-                rule.xml = rule_node.to_s
-                rule.pattern = Regex.new(rule_node["pattern"], flags)
-                state.rules << rule
+                rule = Rule.new(rule_node, flags)
               end
-
-              next if rule.nil?
-              # Rules contain maybe an emitter and maybe a transformer
-              # emitters emit tokens, transformers do things to
-              # the state stack.
-              rule_node.children.each do |node|
-                next unless node.element?
-                rule.emitters << Emitter.new(node.name, node)
-              end
+              state.rules << rule
             end
           end
         end
