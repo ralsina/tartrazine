@@ -74,7 +74,7 @@ end
 
 # Helper that creates lexer and tokenizes
 def tokenize(lexer_name, text)
-  lexer = Tartrazine::Lexer.from_xml(File.read("lexers/#{lexer_name}.xml"))
+  lexer = Tartrazine.get_lexer(lexer_name)
   collapse_tokens(lexer.tokenize(text))
 end
 

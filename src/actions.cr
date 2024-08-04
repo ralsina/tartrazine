@@ -66,8 +66,8 @@ module Tartrazine
         #
         raise Exception.new "Can't have a token without a match" if match.nil?
 
-        # Each group matches an action
-
+        # Each group matches an action. If the group match is empty,
+        # the action is skipped.
         result = [] of Token
         @actions.each_with_index do |e, i|
           next if match[i + 1]?.nil?
@@ -79,7 +79,7 @@ module Tartrazine
         return [] of Token if match.nil?
         lexer_name = xml["lexer"].downcase
         # pp! "to tokenize:", match[match_group]
-        LEXERS[lexer_name].tokenize(match[match_group], usingself: true)
+        Tartrazine.get_lexer(lexer_name).tokenize(match[match_group], usingself: true)
       when "usingself"
         # Shunt to another copy of this lexer
         return [] of Token if match.nil?

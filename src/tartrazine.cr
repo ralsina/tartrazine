@@ -13,6 +13,10 @@ module Tartrazine
   # For explanations on what actions, transformers, etc do
   # the Pygments documentation is a good place to start.
   # https://pygments.org/docs/lexerdevelopment/
+
+  # A Lexer state. A state has a name and a list of rules.
+  # The state machine has a state stack containing references
+  # to states to decide which rules to apply.
   class State
     property name : String = ""
     property rules = [] of Rule
@@ -25,9 +29,8 @@ module Tartrazine
     end
   end
 
+  # A token, the output of the tokenizer
   alias Token = NamedTuple(type: String, value: String)
-
-  LEXERS = {} of String => Tartrazine::Lexer
 
   class Lexer
     property config = {
@@ -135,22 +138,9 @@ module Tartrazine
       l
     end
   end
-end
 
-# Try loading all lexers
-
-lexers = Tartrazine::LEXERS
-
-Dir.glob("lexers/*.xml").each do |fname|
-  begin
-    l = Tartrazine::Lexer.from_xml(File.read(fname))
-  rescue ex : Exception
-    # p! ex
-    next
-  end
-  lexers[l.config[:name].downcase] = l
-  l.config[:aliases].each do |key|
-    lexers[key.downcase] = l
+  def self.get_lexer(name : String) : Lexer
+    Lexer.from_xml(File.read("lexers/#{name}.xml"))
   end
 end
 
@@ -166,29 +156,3 @@ end
 macro xml_to_a(node, name)
 {{node}}.children.select{|n| n.name == "{{name}}".lstrip("_")}.map {|n| n.content.to_s}
 end
-
-# # #<Regex::Error:Regex match error: match limit exceeded>
-# next if testname == "tests/fortran/test_string_cataback.txt"
-
-# # Difference is different unicode representation of a string literal
-# next if testname == "tests/java/test_string_literals.txt"
-# next if testname == "tests/systemd/example1.txt"
-# next if testname == "tests/json/test_strings.txt"
-
-# # Tartrazine agrees with pygments, disagrees with chroma
-# next if testname == "tests/java/test_default.txt"
-# next if testname == "tests/java/test_numeric_literals.txt"
-# next if testname == "tests/java/test_multiline_string.txt"
-
-# # Tartrazine disagrees with pygments and chroma, but it's fine
-# next if testname == "tests/php/test_string_escaping_run.txt"
-
-# # Chroma's output is bad, but so is Tartrazine's
-# next if "tests/html/javascript_unclosed.txt" == testname
-
-# # KNOWN BAD -- TO FIX
-# next if "tests/html/css_backtracking.txt" == testname
-# next if "tests/php/anonymous_class.txt" == testname
-# next if "tests/c/test_string_resembling_decl_end.txt" == testname
-# next if "tests/mcfunction/data.txt" == testname
-# next if "tests/mcfunction/selectors.txt" == testname
