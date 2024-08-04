@@ -32,9 +32,9 @@ module Tartrazine
     def match(text, pos, lexer) : Tuple(Bool, Int32, Array(Token))
       tokens = [] of Token
       match = pattern.match(text, pos)
-      # We are matched, move post to after the match
-      return false, pos, [] of Token if match.nil?
-
+      # We don't match if the match doesn't move the cursor
+      # because that causes infinite loops
+      return false, pos, [] of Token if match.nil? || match.end == pos
       # Emit the tokens
       emitters.each do |emitter|
         # Emit the token
@@ -88,15 +88,29 @@ module Tartrazine
   class Emitter
     property type : String
     property xml : XML::Node
+    property emitters : Array(Emitter) = [] of Emitter
 
     def initialize(@type : String, @xml : XML::Node?)
+      # Some emitters may have emitters in them, like this:
+      # <bygroups>
+      # <token type="GenericPrompt"/>
+      # <token type="Text"/>
+      # <using lexer="bash"/>
+      # </bygroups>
+      #
+      # The token emitters match with the first 2 groups in the regex
+      # the using emitter matches the 3rd and shunts it to another lexer
+      @xml.children.each do |node|
+        next unless node.element?
+        @emitters << Emitter.new(node.name, node)
+      end
     end
 
-    def emit(match : Regex::MatchData?, lexer : Lexer) : Array(Token)
+    def emit(match : Regex::MatchData?, lexer : Lexer, match_group = 0) : Array(Token)
       case type
       when "token"
         raise Exception.new "Can't have a token without a match" if match.nil?
-        [Token.new(type: xml["type"], value: match[0])]
+        [Token.new(type: xml["type"], value: match[match_group])]
       when "push"
         states_to_push = xml.attributes.select { |a| a.name == "state" }.map &.content
         if states_to_push.empty?
@@ -110,8 +124,8 @@ module Tartrazine
             lexer.state_stack.pop
           else
             # Really push
-            puts "Pushing state #{state}"
             lexer.state_stack << state
+            puts "Pushed #{lexer.state_stack}"
           end
         end
         [] of Token
@@ -125,24 +139,35 @@ module Tartrazine
         end
         [] of Token
       when "bygroups"
-        # This takes the groups in the regex and emits them as tokens
-        # Get all the token nodes
+        # FIXME: handle
+        # ><bygroups>
+        # <token type="Punctuation"/>
+        # None
+        # <token type="LiteralStringRegex"/>
+        # 
+        # where that None means skipping a group
+        # 
         raise Exception.new "Can't have a token without a match" if match.nil?
-        tokens = xml.children.select { |n| n.name == "token" }.map(&.["type"].to_s)
+
+        # Each group matches an emitter
+        
         result = [] of Token
-        tokens.each_with_index do |t, i|
-          result << {type: t, value: match[i + 1]}
+        @emitters.each_with_index do |e, i|
+          next if match[i + 1]?.nil?
+          result += e.emit(match, lexer, i + 1)
         end
         result
+      # TODO: Implement usingself
       when "using"
         # Shunt to another lexer entirely
         return [] of Token if match.nil?
         lexer_name = xml["lexer"].downcase
-        LEXERS[lexer_name].tokenize(match[0])
+        pp! "to tokenize:", match[match_group]
+        LEXERS[lexer_name].tokenize(match[match_group])
       when "combined"
         # Combine two states into one anonymous state
         states = xml.attributes.select { |a| a.name == "state" }.map &.content
-        new_state = states.map {|name| lexer.states[name]}.reduce { |s1, s2| s1 + s2 }
+        new_state = states.map { |name| lexer.states[name] }.reduce { |s1, s2| s1 + s2 }
         lexer.states[new_state.name] = new_state
         lexer.state_stack << new_state.name
         [] of Token
@@ -180,16 +205,18 @@ module Tartrazine
 
     # Turn the text into a list of tokens.
     def tokenize(text) : Array(Token)
+      @state_stack = ["root"]
       tokens = [] of Token
       pos = 0
       matched = false
       while pos < text.size
-        state = states[state_stack.last]
+        state = states[@state_stack.last]
+        puts "Stack is #{@state_stack} State is #{state.name}, pos is #{pos}"
         p! state_stack.last, pos
         state.rules.each do |rule|
           matched, new_pos, new_tokens = rule.match(text, pos, self)
           next unless matched
-          p! rule.xml
+          puts "MATCHED: #{rule.xml}"
 
           pos = new_pos
           tokens += new_tokens
@@ -197,7 +224,7 @@ module Tartrazine
         end
         # If no rule matches, emit an error token
         unless matched
-          tokens << {type: "Error", value: "?"}
+          tokens << {type: "Error", value: "#{text[pos]}"}
           pos += 1
         end
       end
@@ -266,15 +293,7 @@ module Tartrazine
               # the state stack.
               rule_node.children.each do |node|
                 next unless node.element?
-                # case node.name
-                # when "pop", "push", "multi", "combine" # "include",
-                #   transformer = Transformer.new
-                #   transformer.type = node.name
-                #   transformer.xml = node.to_s
-                #   rule.transformers << transformer
-                # else
                 rule.emitters << Emitter.new(node.name, node)
-                # end
               end
             end
           end
@@ -327,11 +346,11 @@ def test_file(testname, lexer)
   test = File.read(testname).split("---input---\n").last.split("---tokens---").first
   pp! test
   begin
-    tokens = lexer.tokenize(test)
+    tokens = collapse_tokens(lexer.tokenize(test))
   rescue ex : Exception
     puts ">>>ERROR"
     p! ex
-    exit 1
+    return
   end
   outp = IO::Memory.new
   i = IO::Memory.new(test)
@@ -340,7 +359,7 @@ def test_file(testname, lexer)
     "chroma",
     ["-f", "json", "-l", lname], input: i, output: outp
   )
-  chroma_tokens = Array(Tartrazine::Token).from_json(outp.to_s)
+  chroma_tokens = collapse_tokens(Array(Tartrazine::Token).from_json(outp.to_s))
   if chroma_tokens != tokens
     pp! tokens
     pp! chroma_tokens
@@ -350,9 +369,32 @@ def test_file(testname, lexer)
   end
 end
 
-# test_file("tests/c/test_preproc_file2.txt", lexers["c"])
-# exit 0
+def collapse_tokens(tokens : Array(Tartrazine::Token))
+  result = [] of Tartrazine::Token
 
+  tokens.each do |token|
+    if result.empty?
+      result << token
+      next
+    end
+    last = result.last
+    if last[:type] == token[:type]
+      new_token = {type: last[:type], value: last[:value] + token[:value]}
+      result.pop
+      result << new_token
+    else
+      result << token
+    end
+  end
+  result
+end
+
+
+# test_file(
+#   "tests/console/test_newline_in_ls_no_ps2.txt", 
+#   lexers["console"])
+# exit 0
+ 
 total = 0
 Dir.glob("tests/*/") do |lexername|
   key = File.basename(lexername).downcase
