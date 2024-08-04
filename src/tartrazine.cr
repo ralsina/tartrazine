@@ -26,7 +26,6 @@ module Tartrazine
   class Rule
     property pattern : Regex = Regex.new ""
     property emitters : Array(Emitter) = [] of Emitter
-    property transformers : Array(Transformer) = [] of Transformer
     property xml : String = "foo"
 
     def match(text, pos, lexer) : Tuple(Bool, Int32, Array(Token))
@@ -60,7 +59,7 @@ module Tartrazine
     property state : String = ""
 
     def match(text, pos, lexer) : Tuple(Bool, Int32, Array(Token))
-      puts "Including state #{state} from #{lexer.state_stack.last}"
+      # puts "Including state #{state} from #{lexer.state_stack.last}"
       lexer.states[state].rules.each do |rule|
         matched, new_pos, new_tokens = rule.match(text, pos, lexer)
         # p! xml, new_pos, new_tokens if matched
@@ -121,20 +120,20 @@ module Tartrazine
         states_to_push.each do |state|
           if state == "#pop"
             # Pop the state
-            puts "Popping state"
+            # puts "Popping state"
             lexer.state_stack.pop
           else
             # Really push
             lexer.state_stack << state
-            puts "Pushed #{lexer.state_stack}"
+            # puts "Pushed #{lexer.state_stack}"
           end
         end
         [] of Token
       when "pop"
         depth = xml["depth"].to_i
-        puts "Popping #{depth} states"
+        # puts "Popping #{depth} states"
         if lexer.state_stack.size <= depth
-          puts "Can't pop #{depth} states, only have #{lexer.state_stack.size}"
+          # puts "Can't pop #{depth} states, only have #{lexer.state_stack.size}"
         else
           lexer.state_stack.pop(depth)
         end
@@ -184,15 +183,6 @@ module Tartrazine
     end
   end
 
-  class Transformer
-    property type : String = ""
-    property xml : String = ""
-
-    def transform
-      puts "Transforming #{type} #{xml}"
-    end
-  end
-
   alias Token = NamedTuple(type: String, value: String)
 
   LEXERS = {} of String => Tartrazine::Lexer
@@ -226,12 +216,12 @@ module Tartrazine
       end
       while pos < text.size
         state = states[@state_stack.last]
-        puts "Stack is #{@state_stack} State is #{state.name}, pos is #{pos}, text is #{text[pos..pos + 10]}"
+        # puts "Stack is #{@state_stack} State is #{state.name}, pos is #{pos}, text is #{text[pos..pos + 10]}"
         state.rules.each do |rule|
           matched, new_pos, new_tokens = rule.match(text, pos, self)
-          puts "NOT MATCHED: #{rule.xml}"
+          # puts "NOT MATCHED: #{rule.xml}"
           next unless matched
-          puts "MATCHED: #{rule.xml}"
+          # puts "MATCHED: #{rule.xml}"
 
           pos = new_pos
           tokens += new_tokens
@@ -275,7 +265,7 @@ module Tartrazine
             state = State.new
             state.name = state_node["name"]
             if l.states.has_key?(state.name)
-              puts "Duplicate state: #{state.name}"
+              raise Exception.new("Duplicate state: #{state.name}")
             else
               l.states[state.name] = state
             end
@@ -352,103 +342,30 @@ macro xml_to_a(node, name)
 {{node}}.children.select{|n| n.name == "{{name}}".lstrip("_")}.map {|n| n.content.to_s}
 end
 
-# Let's run some tests
 
-def chroma_tokenize(lexer, text)
-  output = IO::Memory.new
-  input = IO::Memory.new(text)
-  Process.run(
-    "chroma",
-    ["-f", "json", "-l", lexer],
-    input: input, output: output
-  )
-  Array(Tartrazine::Token).from_json(output.to_s)
-end
+    # # #<Regex::Error:Regex match error: match limit exceeded>
+    # next if testname == "tests/fortran/test_string_cataback.txt"
 
-def test_file(testname, lexer)
-  test = File.read(testname).split("---input---\n").last.split("---tokens---").first
-  begin
-    tokens = collapse_tokens(lexer.tokenize(test))
-  rescue ex : Exception
-    puts ">>>ERROR"
-    raise ex
-    return
-  end
-  outp = IO::Memory.new
-  i = IO::Memory.new(test)
-  lname = lexer.config[:name]
-  Process.run(
-    "chroma",
-    ["-f", "json", "-l", lname], input: i, output: outp
-  )
-  chroma_tokens = collapse_tokens(Array(Tartrazine::Token).from_json(outp.to_s))
-  if chroma_tokens != tokens
-    puts ">>>BAD - #{testname}"
-  else
-    puts ">>>GOOD"
-  end
-end
+    # # Difference is different unicode representation of a string literal
+    # next if testname == "tests/java/test_string_literals.txt"
+    # next if testname == "tests/systemd/example1.txt"
+    # next if testname == "tests/json/test_strings.txt"
 
-def collapse_tokens(tokens : Array(Tartrazine::Token))
-  result = [] of Tartrazine::Token
+    # # Tartrazine agrees with pygments, disagrees with chroma
+    # next if testname == "tests/java/test_default.txt"
+    # next if testname == "tests/java/test_numeric_literals.txt"
+    # next if testname == "tests/java/test_multiline_string.txt"
 
-  tokens.each do |token|
-    if result.empty?
-      result << token
-      next
-    end
-    last = result.last
-    if last[:type] == token[:type]
-      new_token = {type: last[:type], value: last[:value] + token[:value]}
-      result.pop
-      result << new_token
-    else
-      result << token
-    end
-  end
-  result
-end
+    # # Tartrazine disagrees with pygments and chroma, but it's fine
+    # next if testname == "tests/php/test_string_escaping_run.txt"
 
-total = 0
-Dir.glob("tests/*/") do |lexername|
-  key = File.basename(lexername).downcase
-  # next if key == "console"
-  next unless lexers.has_key? key
-  lexer = lexers[key]
+    # # Chroma's output is bad, but so is Tartrazine's
+    # next if "tests/html/javascript_unclosed.txt" == testname
 
-  Dir.glob("#{lexername}*.txt") do |testname|
-    # #<Regex::Error:Regex match error: match limit exceeded>
-    next if testname == "tests/fortran/test_string_cataback.txt"
+    # # KNOWN BAD -- TO FIX
+    # next if "tests/html/css_backtracking.txt" == testname
+    # next if "tests/php/anonymous_class.txt" == testname
+    # next if "tests/c/test_string_resembling_decl_end.txt" == testname
+    # next if "tests/mcfunction/data.txt" == testname
+    # next if "tests/mcfunction/selectors.txt" == testname
 
-    # Difference is different unicode representation of a string literal
-    next if testname == "tests/java/test_string_literals.txt"
-    next if testname == "tests/systemd/example1.txt"
-    next if testname == "tests/json/test_strings.txt"
-
-    # Tartrazine agrees with pygments, disagrees with chroma
-    next if testname == "tests/java/test_default.txt"
-    next if testname == "tests/java/test_numeric_literals.txt"
-    next if testname == "tests/java/test_multiline_string.txt"
-
-    # Tartrazine disagrees with pygments and chroma, but it's fine
-    next if testname == "tests/php/test_string_escaping_run.txt"
-
-    # Chroma's output is bad, but so is Tartrazine's
-    next if "tests/html/javascript_unclosed.txt" == testname
-
-    # KNOWN BAD -- TO FIX
-    next if "tests/html/css_backtracking.txt" == testname
-    next if "tests/php/anonymous_class.txt" == testname
-    next if "tests/c/test_string_resembling_decl_end.txt" == testname
-    next if "tests/mcfunction/data.txt" == testname
-    next if "tests/mcfunction/selectors.txt" == testname
-
-    # I disagree with these tests
-    # next if testname.starts_with? "tests/console"
-
-    puts "Testing #{key} with #{testname}"
-    total += 1
-    test_file(testname, lexer)
-  end
-end
-puts ">>>TOTAL #{total}"
