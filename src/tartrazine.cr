@@ -225,7 +225,7 @@ module Tartrazine
       matched = false
       while pos < text.size
         state = states[@state_stack.last]
-        puts "Stack is #{@state_stack} State is #{state.name}, pos is #{pos}"
+        puts "Stack is #{@state_stack} State is #{state.name}, pos is #{pos}, text is #{text[pos..pos+10]}"
         p! state_stack.last, pos
         state.rules.each do |rule|
           matched, new_pos, new_tokens = rule.match(text, pos, self)
@@ -295,7 +295,7 @@ module Tartrazine
                 begin
                   rule.pattern = Regex.new(
                     rule_node["pattern"],
-                    Regex::Options::ANCHORED #| Regex::Options::MULTILINE
+                    Regex::Options::ANCHORED | Regex::Options::MULTILINE
                   )
                   state.rules << rule
                 rescue ex : Exception
@@ -407,10 +407,10 @@ def collapse_tokens(tokens : Array(Tartrazine::Token))
 end
 
 
-# test_file(
-#   "tests/qbasic/test_keywords_with_dollar.txt", 
-#   lexers["qbasic"])
-#   exit 0
+test_file(
+  "tests/properties/test_comments.txt", 
+  lexers["properties"])
+  exit 0
 
 
 
