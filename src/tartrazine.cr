@@ -3,6 +3,7 @@ require "json"
 require "xml"
 require "./rules"
 require "./actions"
+
 module Tartrazine
   VERSION = "0.1.0"
 
@@ -23,8 +24,6 @@ module Tartrazine
       new_state
     end
   end
-
-
 
   alias Token = NamedTuple(type: String, value: String)
 
@@ -168,30 +167,28 @@ macro xml_to_a(node, name)
 {{node}}.children.select{|n| n.name == "{{name}}".lstrip("_")}.map {|n| n.content.to_s}
 end
 
+# # #<Regex::Error:Regex match error: match limit exceeded>
+# next if testname == "tests/fortran/test_string_cataback.txt"
 
-    # # #<Regex::Error:Regex match error: match limit exceeded>
-    # next if testname == "tests/fortran/test_string_cataback.txt"
+# # Difference is different unicode representation of a string literal
+# next if testname == "tests/java/test_string_literals.txt"
+# next if testname == "tests/systemd/example1.txt"
+# next if testname == "tests/json/test_strings.txt"
 
-    # # Difference is different unicode representation of a string literal
-    # next if testname == "tests/java/test_string_literals.txt"
-    # next if testname == "tests/systemd/example1.txt"
-    # next if testname == "tests/json/test_strings.txt"
+# # Tartrazine agrees with pygments, disagrees with chroma
+# next if testname == "tests/java/test_default.txt"
+# next if testname == "tests/java/test_numeric_literals.txt"
+# next if testname == "tests/java/test_multiline_string.txt"
 
-    # # Tartrazine agrees with pygments, disagrees with chroma
-    # next if testname == "tests/java/test_default.txt"
-    # next if testname == "tests/java/test_numeric_literals.txt"
-    # next if testname == "tests/java/test_multiline_string.txt"
+# # Tartrazine disagrees with pygments and chroma, but it's fine
+# next if testname == "tests/php/test_string_escaping_run.txt"
 
-    # # Tartrazine disagrees with pygments and chroma, but it's fine
-    # next if testname == "tests/php/test_string_escaping_run.txt"
+# # Chroma's output is bad, but so is Tartrazine's
+# next if "tests/html/javascript_unclosed.txt" == testname
 
-    # # Chroma's output is bad, but so is Tartrazine's
-    # next if "tests/html/javascript_unclosed.txt" == testname
-
-    # # KNOWN BAD -- TO FIX
-    # next if "tests/html/css_backtracking.txt" == testname
-    # next if "tests/php/anonymous_class.txt" == testname
-    # next if "tests/c/test_string_resembling_decl_end.txt" == testname
-    # next if "tests/mcfunction/data.txt" == testname
-    # next if "tests/mcfunction/selectors.txt" == testname
-
+# # KNOWN BAD -- TO FIX
+# next if "tests/html/css_backtracking.txt" == testname
+# next if "tests/php/anonymous_class.txt" == testname
+# next if "tests/c/test_string_resembling_decl_end.txt" == testname
+# next if "tests/mcfunction/data.txt" == testname
+# next if "tests/mcfunction/selectors.txt" == testname
