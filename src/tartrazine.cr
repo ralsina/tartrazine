@@ -67,7 +67,7 @@ module Tartrazine
         Log.trace { "Stack is #{@state_stack} State is #{state.name}, pos is #{pos}, text is #{text[pos..pos + 10]}" }
         state.rules.each do |rule|
           matched, new_pos, new_tokens = rule.match(text, pos, self)
-          Log.trace { "NOT MATCHED: #{rule.xml}"}
+          Log.trace { "NOT MATCHED: #{rule.xml}" }
           next unless matched
           Log.trace { "MATCHED: #{rule.xml}" }
 

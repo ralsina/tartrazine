@@ -40,12 +40,12 @@ module Tartrazine
         states_to_push.each do |state|
           if state == "#pop"
             # Pop the state
-            Log.trace { "Popping state"}
+            Log.trace { "Popping state" }
             lexer.state_stack.pop
           else
             # Really push
             lexer.state_stack << state
-            Log.trace {"Pushed #{lexer.state_stack}"}
+            Log.trace { "Pushed #{lexer.state_stack}" }
           end
         end
         [] of Token

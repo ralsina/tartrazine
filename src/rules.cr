@@ -49,7 +49,7 @@ module Tartrazine
       Log.trace { "Including state #{state} from #{lexer.state_stack.last}" }
       lexer.states[state].rules.each do |rule|
         matched, new_pos, new_tokens = rule.match(text, pos, lexer)
-        Log.trace { "#{xml}, #{new_pos}, #{new_tokens}" } if matched 
+        Log.trace { "#{xml}, #{new_pos}, #{new_tokens}" } if matched
         return true, new_pos, new_tokens if matched
       end
       return false, pos, [] of Token
