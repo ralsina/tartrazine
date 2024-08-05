@@ -96,14 +96,12 @@ module Tartrazine
         }
         if config
           l.config = {
-            name:          xml_to_s(config, name) || "",
-            aliases:       xml_to_a(config, _alias) || [] of String,
-            filenames:     xml_to_a(config, filename) || [] of String,
-            mime_types:    xml_to_a(config, mime_type) || [] of String,
-            priority:      xml_to_f(config, priority) || 0.0,
-            not_multiline: xml_to_s(config, not_multiline) == "true",
-            # FIXME: Because Crystal's multiline flag forces dot_all this
-            # doesn't work perfectly yet.
+            name:             xml_to_s(config, name) || "",
+            aliases:          xml_to_a(config, _alias) || [] of String,
+            filenames:        xml_to_a(config, filename) || [] of String,
+            mime_types:       xml_to_a(config, mime_type) || [] of String,
+            priority:         xml_to_f(config, priority) || 0.0,
+            not_multiline:    xml_to_s(config, not_multiline) == "true",
             dot_all:          xml_to_s(config, dot_all) == "true",
             case_insensitive: xml_to_s(config, case_insensitive) == "true",
             ensure_nl:        xml_to_s(config, ensure_nl) == "true",
