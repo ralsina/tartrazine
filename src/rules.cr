@@ -6,7 +6,7 @@ require "./actions"
 module Tartrazine
   # This rule matches via a regex pattern
   class Rule
-    property pattern : Regex = Regex.new ""
+    property pattern : Regex = Re2.new ""
     property actions : Array(Action) = [] of Action
     property xml : String = "foo"
 
@@ -26,9 +26,9 @@ module Tartrazine
       return true, match.end, tokens
     end
 
-    def initialize(node : XML::Node, flags)
+    def initialize(node : XML::Node, multiline, dotall, ignorecase)
       @xml = node.to_s
-      @pattern = Regex.new(node["pattern"], flags)
+      @pattern = Re2.new(node["pattern"], multiline, dotall, ignorecase)
       add_actions(node)
     end
 

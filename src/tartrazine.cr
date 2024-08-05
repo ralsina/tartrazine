@@ -137,11 +137,10 @@ module Tartrazine
                   rule = UnconditionalRule.new(rule_node)
                 end
               else
-                flags = Regex::Options::ANCHORED
-                flags |= Regex::Options::MULTILINE unless l.config[:not_multiline]
-                flags |= Regex::Options::IGNORE_CASE if l.config[:case_insensitive]
-                flags |= Regex::Options::DOTALL if l.config[:dot_all]
-                rule = Rule.new(rule_node, flags)
+                rule = Rule.new(rule_node,
+                  multiline: !l.config[:not_multiline],
+                  dotall: l.config[:dot_all],
+                  ignorecase: l.config[:case_insensitive])
               end
               state.rules << rule
             end
@@ -154,6 +153,25 @@ module Tartrazine
 
   def self.get_lexer(name : String) : Lexer
     Lexer.from_xml(File.read("lexers/#{name}.xml"))
+  end
+
+  # This is a hack to workaround that Crystal seems to disallow
+  # having regexes multiline but not dot_all
+  class Re2 < Regex
+    @source = "fa"
+    @options = Regex::Options::None
+    @jit = true
+
+    def initialize(pattern : String, multiline = false, dotall = false, ignorecase = false)
+      flags = LibPCRE2::UTF | LibPCRE2::DUPNAMES |
+              LibPCRE2::UCP | LibPCRE2::ANCHORED
+      flags |= LibPCRE2::MULTILINE if multiline
+      flags |= LibPCRE2::DOTALL if dotall
+      flags |= LibPCRE2::CASELESS if ignorecase
+      @re = Regex::PCRE2.compile(pattern, flags) do |error_message|
+        raise Exception.new(error_message)
+      end
+    end
   end
 end
 
