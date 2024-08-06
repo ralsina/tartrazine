@@ -31,6 +31,9 @@ is a subset of Pygments'.
 
 Currently Tartrazine supports ... 241 languages.
 
+It has 332 themes (64 from Chroma, the rest are base16 themes via
+[Sixteen](https://github.com/ralsina/sixteen)
+
 ## Installation
 
 This will have a CLI tool that can be installed, but it's not
