@@ -54,25 +54,34 @@ module Tartrazine
 
     property state_stack = ["root"]
 
-    # Turn the text into a list of tokens.
+    # Turn the text into a list of tokens. The `usingself` parameter
+    # is true when the lexer is being used to tokenize a string
+    # from a larger text that is already being tokenized.
+    # So, when it's true, we don't modify the text.
     def tokenize(text, usingself = false) : Array(Token)
       @state_stack = ["root"]
       tokens = [] of Token
       pos = 0
       matched = false
+
+      # Respect the `ensure_nl` config option
       if text.size > 0 && text[-1] != '\n' && config[:ensure_nl] && !usingself
         text += "\n"
       end
+
+      # Loop through the text, applying rules
       while pos < text.size
         state = states[@state_stack.last]
         Log.trace { "Stack is #{@state_stack} State is #{state.name}, pos is #{pos}, text is #{text[pos..pos + 10]}" }
         state.rules.each do |rule|
           matched, new_pos, new_tokens = rule.match(text, pos, self)
           if matched
+            # Move position forward, save the tokens,
+            # tokenize from the new position
             Log.trace { "MATCHED: #{rule.xml}" }
             pos = new_pos
             tokens += new_tokens
-            break # We go back to processing with current state
+            break
           end
           Log.trace { "NOT MATCHED: #{rule.xml}" }
         end
