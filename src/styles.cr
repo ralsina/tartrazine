@@ -3,6 +3,7 @@ require "xml"
 
 module Tartrazine
   def self.theme(name : String) : Theme
+    return Theme.from_base16(name[7..]) if name.starts_with? "base16_"
     path = File.join("styles", "#{name}.xml")
     Theme.from_xml(File.read(path))
   end
@@ -27,6 +28,9 @@ module Tartrazine
     # is already complete and should not inherit
     # anything
     property? complete : Bool = false
+
+    def initialize(@color=nil, @background=nil, @border=nil, @bold=nil, @italic=nil, @underline=nil)
+    end
 
     macro merge_prop(prop)
       new.{{prop}} = other.{{prop}}.nil? ? self.{{prop}} : other.{{prop}}
@@ -82,36 +86,39 @@ module Tartrazine
     # Load from a base16 theme name using Sixteen
     def self.from_base16(name : String) : Theme
       t = Sixteen.theme(name)
+      theme = Theme.new
+      theme.name = name
       # The color assignments are adapted from
       # https://github.com/mohd-akram/base16-pygments/
 
-      t.styles["Background"] = Style.new(color: t["base05"], background: t["base00"])
-      t.styles["Text"] = Style.new(color: t["base05"])
-      t.styles["Error"] = Style.new(color: t["base08"])
-      t.styles["Comment"] = Style.new(color: t["base03"])
-      t.styles["CommentPreProc"] = Style.new(color: t["base0f"])
-      t.styles["CommentPreProcFile"] = Style.new(color: t["base0b"])
-      t.styles["Keyword"] = Style.new(color: t["base0e"])
-      t.styles["KeywordType"] = Style.new(color: t["base08"])
-      t.styles["NameAttribute"] = Style.new(color: t["base0d"])
-      t.styles["NameBuiltin"] = Style.new(color: t["base08"])
-      t.styles["NameBuiltinPseudo"] = Style.new(color: t["base08"])
-      t.styles["NameClass"] = Style.new(color: t["base0d"])
-      t.styles["NameConstant"] = Style.new(color: t["base09"])
-      t.styles["NameDecorator"] = Style.new(color: t["base09"])
-      t.styles["NameFunction"] = Style.new(color: t["base0d"])
-      t.styles["NameNamespace"] = Style.new(color: t["base0d"])
-      t.styles["NameTag"] = Style.new(color: t["base0e"])
-      t.styles["NameVariable"] = Style.new(color: t["base0d"])
-      t.styles["NameVariableInstance"] = Style.new(color: t["base08"])
-      t.styles["Number"] = Style.new(color: t["base09"])
-      t.styles["Operator"] = Style.new(color: t["base0c"])
-      t.styles["OperatorWord"] = Style.new(color: t["base0e"])
-      t.styles["Literal"] = Style.new(color: t["base0b"])
-      t.styles["String"] = Style.new(color: t["base0b"])
-      t.styles["StringInterpol"] = Style.new(color: t["base0f"])
-      t.styles["StringRegex"] = Style.new(color: t["base0c"])
-      t.styles["StringSymbol"] = Style.new(color: t["base09"])
+      theme.styles["Background"] = Style.new(color: t.palette["base05"], background: t.palette["base00"])
+      theme.styles["Text"] = Style.new(color: t.palette["base05"])
+      theme.styles["Error"] = Style.new(color: t.palette["base08"])
+      theme.styles["Comment"] = Style.new(color: t.palette["base03"])
+      theme.styles["CommentPreProc"] = Style.new(color: t.palette["base0F"])
+      theme.styles["CommentPreProcFile"] = Style.new(color: t.palette["base0B"])
+      theme.styles["Keyword"] = Style.new(color: t.palette["base0E"])
+      theme.styles["KeywordType"] = Style.new(color: t.palette["base08"])
+      theme.styles["NameAttribute"] = Style.new(color: t.palette["base0D"])
+      theme.styles["NameBuiltin"] = Style.new(color: t.palette["base08"])
+      theme.styles["NameBuiltinPseudo"] = Style.new(color: t.palette["base08"])
+      theme.styles["NameClass"] = Style.new(color: t.palette["base0D"])
+      theme.styles["NameConstant"] = Style.new(color: t.palette["base09"])
+      theme.styles["NameDecorator"] = Style.new(color: t.palette["base09"])
+      theme.styles["NameFunction"] = Style.new(color: t.palette["base0D"])
+      theme.styles["NameNamespace"] = Style.new(color: t.palette["base0D"])
+      theme.styles["NameTag"] = Style.new(color: t.palette["base0E"])
+      theme.styles["NameVariable"] = Style.new(color: t.palette["base0D"])
+      theme.styles["NameVariableInstance"] = Style.new(color: t.palette["base08"])
+      theme.styles["Number"] = Style.new(color: t.palette["base09"])
+      theme.styles["Operator"] = Style.new(color: t.palette["base0C"])
+      theme.styles["OperatorWord"] = Style.new(color: t.palette["base0E"])
+      theme.styles["Literal"] = Style.new(color: t.palette["base0B"])
+      theme.styles["String"] = Style.new(color: t.palette["base0B"])
+      theme.styles["StringInterpol"] = Style.new(color: t.palette["base0F"])
+      theme.styles["StringRegex"] = Style.new(color: t.palette["base0C"])
+      theme.styles["StringSymbol"] = Style.new(color: t.palette["base09"])
+      theme
     end
 
     # Load from a Chroma XML file
