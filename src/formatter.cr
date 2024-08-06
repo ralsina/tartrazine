@@ -1,5 +1,6 @@
-require "./tartrazine.cr"
+require "./constantes.cr"
 require "./styles.cr"
+require "./tartrazine.cr"
 
 module Tartrazine
   # This is the base class for all formatters.
@@ -54,6 +55,7 @@ module Tartrazine
 
     # Given a token type, return the CSS class to use.
     def get_css_class(token, theme)
+      token = Abbreviations[token]
       return token if theme.styles.has_key?(token)
 
       # Themes don't contain information for each specific
