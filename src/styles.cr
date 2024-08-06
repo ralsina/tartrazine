@@ -1,3 +1,5 @@
+require "xml"
+
 module Tartrazine
   class Style
     # These properties are tri-state.
@@ -20,10 +22,46 @@ module Tartrazine
   class Theme
     property name : String = ""
 
-    styles = Hash{String => Style}
+    property styles = {} of String => Style
 
     # Get the style for a token.
     def style(token)
     end
+
+    # Load from a Chroma XML file
+    def self.from_xml(xml : String) : Theme
+      document = XML.parse(xml)
+      theme = Theme.new
+      style = document.first_element_child
+      raise Exception.new("Error loading theme") if style.nil?
+      theme.name = style["name"]
+      style.children.select { |node| node.name == "entry" }.each do |node|
+        s = Style.new
+        style = node["style"].split
+
+        s.bold = nil
+        s.bold = true if style.includes?("bold")
+        s.bold = false if style.includes?("nobold")
+
+        s.italic = nil
+        s.italic = true if style.includes?("italic")
+        s.italic = false if style.includes?("noitalic")
+
+        s.underline = nil
+        s.underline = true if style.includes?("underline")
+        s.underline = false if style.includes?("nounderline")
+
+        s.color = style.find { |w| w.starts_with?("#") }.try &.split("#").last
+        s.background = style.find { |w| w.starts_with?("bg:#") }.try &.split("#").last
+        s.border = style.find { |w| w.starts_with?("border:#") }.try &.split("#").last
+
+        theme.styles[node["type"]] = s
+      end
+      theme
+    end
   end
 end
+
+t = Tartrazine::Theme.from_xml(File.read("styles/catppuccin-frappe.xml"))
+
+pp! t.styles["Name"]
