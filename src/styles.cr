@@ -1,3 +1,4 @@
+require "sixteen"
 require "xml"
 
 module Tartrazine
@@ -76,6 +77,41 @@ module Tartrazine
         parents << parts[..i].join("")
       end
       parents
+    end
+
+    # Load from a base16 theme name using Sixteen
+    def self.from_base16(name : String) : Theme
+      t = Sixteen.theme(name)
+      # The color assignments are adapted from
+      # https://github.com/mohd-akram/base16-pygments/
+
+      t.styles["Background"] = Style.new(color: t["base05"], background: t["base00"])
+      t.styles["Text"] = Style.new(color: t["base05"])
+      t.styles["Error"] = Style.new(color: t["base08"])
+      t.styles["Comment"] = Style.new(color: t["base03"])
+      t.styles["CommentPreProc"] = Style.new(color: t["base0f"])
+      t.styles["CommentPreProcFile"] = Style.new(color: t["base0b"])
+      t.styles["Keyword"] = Style.new(color: t["base0e"])
+      t.styles["KeywordType"] = Style.new(color: t["base08"])
+      t.styles["NameAttribute"] = Style.new(color: t["base0d"])
+      t.styles["NameBuiltin"] = Style.new(color: t["base08"])
+      t.styles["NameBuiltinPseudo"] = Style.new(color: t["base08"])
+      t.styles["NameClass"] = Style.new(color: t["base0d"])
+      t.styles["NameConstant"] = Style.new(color: t["base09"])
+      t.styles["NameDecorator"] = Style.new(color: t["base09"])
+      t.styles["NameFunction"] = Style.new(color: t["base0d"])
+      t.styles["NameNamespace"] = Style.new(color: t["base0d"])
+      t.styles["NameTag"] = Style.new(color: t["base0e"])
+      t.styles["NameVariable"] = Style.new(color: t["base0d"])
+      t.styles["NameVariableInstance"] = Style.new(color: t["base08"])
+      t.styles["Number"] = Style.new(color: t["base09"])
+      t.styles["Operator"] = Style.new(color: t["base0c"])
+      t.styles["OperatorWord"] = Style.new(color: t["base0e"])
+      t.styles["Literal"] = Style.new(color: t["base0b"])
+      t.styles["String"] = Style.new(color: t["base0b"])
+      t.styles["StringInterpol"] = Style.new(color: t["base0f"])
+      t.styles["StringRegex"] = Style.new(color: t["base0c"])
+      t.styles["StringSymbol"] = Style.new(color: t["base09"])
     end
 
     # Load from a Chroma XML file
