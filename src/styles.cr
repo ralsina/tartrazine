@@ -51,9 +51,9 @@ module Tartrazine
         s.underline = true if style.includes?("underline")
         s.underline = false if style.includes?("nounderline")
 
-        s.color = style.find { |w| w.starts_with?("#") }.try &.split("#").last
-        s.background = style.find { |w| w.starts_with?("bg:#") }.try &.split("#").last
-        s.border = style.find { |w| w.starts_with?("border:#") }.try &.split("#").last
+        s.color = style.find(&.starts_with?("#")).try &.split("#").last
+        s.background = style.find(&.starts_with?("bg:#")).try &.split("#").last
+        s.border = style.find(&.starts_with?("border:#")).try &.split("#").last
 
         theme.styles[node["type"]] = s
       end
