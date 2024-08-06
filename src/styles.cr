@@ -101,7 +101,3 @@ module Tartrazine
     end
   end
 end
-
-t = Tartrazine::Theme.from_xml(File.read("styles/catppuccin-frappe.xml"))
-
-pp! t.style("CommentPreprocFile")
