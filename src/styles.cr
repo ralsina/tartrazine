@@ -1,6 +1,11 @@
 require "xml"
 
 module Tartrazine
+  def self.theme(name : String) : Theme
+    path = File.join("styles", "#{name}.xml")
+    Theme.from_xml(File.read(path))
+  end
+
   class Style
     # These properties are tri-state.
     # true means it's set
@@ -52,11 +57,7 @@ module Tartrazine
       return s if s.complete?
 
       # Form the hierarchy of parent styles
-      parents = ["Background"]
-      parts = token.underscore.split("_").map(&.capitalize)
-      parts.each_with_index do |_, i|
-        parents << parts[..i].join("")
-      end
+      parents = style_parents(token)
 
       s = parents.map do |parent|
         styles[parent]
@@ -66,6 +67,15 @@ module Tartrazine
       s.complete = true
       styles[token] = s
       s
+    end
+
+    def style_parents(token)
+      parents = ["Background"]
+      parts = token.underscore.split("_").map(&.capitalize)
+      parts.each_with_index do |_, i|
+        parents << parts[..i].join("")
+      end
+      parents
     end
 
     # Load from a Chroma XML file

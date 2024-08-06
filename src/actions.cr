@@ -82,7 +82,7 @@ module Tartrazine
         return [] of Token if match.nil?
         lexer_name = xml["lexer"].downcase
         Log.trace { "to tokenize: #{match[match_group]}" }
-        Tartrazine.get_lexer(lexer_name).tokenize(match[match_group], usingself: true)
+        Tartrazine.lexer(lexer_name).tokenize(match[match_group], usingself: true)
       when "usingself"
         # Shunt to another copy of this lexer
         return [] of Token if match.nil?

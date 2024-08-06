@@ -6,6 +6,7 @@ require "log"
 require "xml"
 
 module Tartrazine
+  extend self
   VERSION = "0.1.0"
 
   Log = ::Log.for("tartrazine")
@@ -13,7 +14,7 @@ module Tartrazine
   # This implements a lexer for Pygments RegexLexers as expressed
   # in Chroma's XML serialization.
   #
-  # For explanations on what actions, transformers, etc do
+  # For explanations on what actions and states do
   # the Pygments documentation is a good place to start.
   # https://pygments.org/docs/lexerdevelopment/
 
@@ -82,7 +83,29 @@ module Tartrazine
           pos += 1
         end
       end
-      tokens.reject { |token| token[:value] == "" }
+      Lexer.collapse_tokens(tokens)
+    end
+
+    # Collapse consecutive tokens of the same type for easier comparison
+    # and smaller output
+    def self.collapse_tokens(tokens : Array(Tartrazine::Token)) : Array(Tartrazine::Token)
+      result = [] of Tartrazine::Token
+      tokens = tokens.reject { |token| token[:value] == "" }
+      tokens.each do |token|
+        if result.empty?
+          result << token
+          next
+        end
+        last = result.last
+        if last[:type] == token[:type]
+          new_token = {type: last[:type], value: last[:value] + token[:value]}
+          result.pop
+          result << new_token
+        else
+          result << token
+        end
+      end
+      result
     end
 
     # ameba:disable Metrics/CyclomaticComplexity
@@ -149,7 +172,7 @@ module Tartrazine
     end
   end
 
-  def self.get_lexer(name : String) : Lexer
+  def self.lexer(name : String) : Lexer
     Lexer.from_xml(File.read("lexers/#{name}.xml"))
   end
 

@@ -74,8 +74,8 @@ end
 
 # Helper that creates lexer and tokenizes
 def tokenize(lexer_name, text)
-  lexer = Tartrazine.get_lexer(lexer_name)
-  collapse_tokens(lexer.tokenize(text))
+  lexer = Tartrazine.lexer(lexer_name)
+  lexer.tokenize(text)
 end
 
 # Helper that tokenizes using chroma to validate the lexer
@@ -87,26 +87,5 @@ def chroma_tokenize(lexer_name, text)
     ["-f", "json", "-l", lexer_name],
     input: input, output: output
   )
-  collapse_tokens(Array(Tartrazine::Token).from_json(output.to_s))
-end
-
-# Collapse consecutive tokens of the same type for easier comparison
-def collapse_tokens(tokens : Array(Tartrazine::Token))
-  result = [] of Tartrazine::Token
-
-  tokens.each do |token|
-    if result.empty?
-      result << token
-      next
-    end
-    last = result.last
-    if last[:type] == token[:type]
-      new_token = {type: last[:type], value: last[:value] + token[:value]}
-      result.pop
-      result << new_token
-    else
-      result << token
-    end
-  end
-  result
+  Tartrazine::Lexer.collapse_tokens(Array(Tartrazine::Token).from_json(output.to_s))
 end

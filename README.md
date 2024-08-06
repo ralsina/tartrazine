@@ -4,10 +4,11 @@ Tartrazine is a library to syntax-highlight code. It is
 a port of [Pygments](https://pygments.org/) to
 [Crystal](https://crystal-lang.org/). Kind of.
 
-It's not currently usable unless what you need is a way
-to turn your files into a pile of json describing its
-constituent tokens, because I have not implemented any
-formatters, yet, only the part that parses the code (the lexers).
+It's not currently usable because it's not finished, but:
+
+* The lexers work for the implemented languages
+* The provided styles work
+* There is a very very simple HTML formatter
 
 # A port of what? Why "kind of"?
 
@@ -32,15 +33,21 @@ Currently Tartrazine supports ... 241 languages.
 
 ## Installation
 
-If you need to ask how to install this, it's not ready for you yet.
+This will have a CLI tool that can be installed, but it's not
+there yet.
+
 
 ## Usage
 
-If you need to ask how to use this, it's not ready for you yet.
+This works:
 
-## Development
+```crystal
+require "tartrazine"
 
-TODO: Write development instructions here
+lexer = Tartrazine.lexer("crystal")
+theme = Tartrazine.theme("catppuccin-macchiato")
+puts Tartrazine::Html.new.format(File.read(ARGV[0]), lexer, theme)
+```
 
 ## Contributing
 
