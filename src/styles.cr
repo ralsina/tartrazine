@@ -7,9 +7,7 @@ module Tartrazine
     # false means it's not set
     # nil means inherit from parent style
     property bold : Bool?
-    property nobold : Bool?
     property italic : Bool?
-    property notalic : Bool?
     property underline : Bool?
 
     # These properties are either set or nil
@@ -17,6 +15,27 @@ module Tartrazine
     property background : String?
     property border : String?
     property color : String?
+
+    # Styles are incomplete by default and inherit
+    # from parents. If this is true, this style
+    # is already complete and should not inherit
+    # anything
+    property? complete : Bool = false
+
+    macro merge_prop(prop)
+      new.{{prop}} = other.{{prop}}.nil? ? self.{{prop}} : other.{{prop}}
+    end
+
+    def +(other : Style)
+      new = Style.new
+      merge_prop bold
+      merge_prop italic
+      merge_prop underline
+      merge_prop background
+      merge_prop border
+      merge_prop color
+      new
+    end
   end
 
   class Theme
@@ -26,6 +45,27 @@ module Tartrazine
 
     # Get the style for a token.
     def style(token)
+      styles[token] = Style.new unless styles.has_key?(token)
+      s = styles[token]
+
+      # We already got the data from the style hierarchy
+      return s if s.complete?
+
+      # Form the hierarchy of parent styles
+      parents = ["Background"]
+      parts = token.underscore.split("_").map(&.capitalize)
+      parts.each_with_index do |_, i|
+        parents << parts[..i].join("")
+      end
+
+      s = parents.map do |parent|
+        styles[parent]
+      end.reduce(s) do |acc, style|
+        acc + style
+      end
+      s.complete = true
+      styles[token] = s
+      s
     end
 
     # Load from a Chroma XML file
@@ -64,4 +104,4 @@ end
 
 t = Tartrazine::Theme.from_xml(File.read("styles/catppuccin-frappe.xml"))
 
-pp! t.styles["Name"]
+pp! t.style("CommentPreprocFile")
