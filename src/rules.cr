@@ -1,3 +1,4 @@
+require "./cre2/cre2"
 require "./actions"
 
 # These are lexer rules. They match with the text being parsed
@@ -7,29 +8,32 @@ module Tartrazine
   # This rule matches via a regex pattern
 
   class Rule
-    property pattern : Regex = Re2.new ""
+    property pattern : Re3 = Re3.new ""
     property actions : Array(Action) = [] of Action
     property xml : String = "foo"
 
     def match(text, pos, lexer) : Tuple(Bool, Int32, Array(Token))
-      match = pattern.match(text, pos)
+      return false, pos, [] of Token
+      matched, matches = pattern.match(text, pos)
       # We don't match if the match doesn't move the cursor
       # because that causes infinite loops
-      return false, pos, [] of Token if match.nil? || match.end == 0
+
+      return false, pos, [] of Token unless matched
       # Log.trace { "#{match}, #{pattern.inspect}, #{text}, #{pos}" }
       tokens = [] of Token
       # Emit the tokens
       actions.each do |action|
         # Emit the token
-        tokens += action.emit(match, lexer)
+        tokens += action.emit(matches, lexer)
       end
-      Log.trace { "#{xml}, #{match.end}, #{tokens}" }
-      return true, match.end, tokens
+      # Log.trace { "#{xml}, #{match.end}, #{tokens}" }
+      return true, matches[0].length, tokens
     end
 
     def initialize(node : XML::Node, multiline, dotall, ignorecase)
       @xml = node.to_s
-      @pattern = Re2.new(
+      p! node["pattern"]
+      @pattern = Re3.new(
         node["pattern"],
         multiline,
         dotall,
@@ -76,7 +80,7 @@ module Tartrazine
     def match(text, pos, lexer) : Tuple(Bool, Int32, Array(Token))
       tokens = [] of Token
       actions.each do |action|
-        tokens += action.emit(nil, lexer)
+        tokens += action.emit(Pointer(LibCre2::StringPiece).malloc(1), lexer)
       end
       return true, pos, tokens
     end
@@ -106,4 +110,38 @@ module Tartrazine
       end
     end
   end
+
+  class Re3
+    @matches = Pointer(LibCre2::StringPiece).malloc(50)
+    @opts : LibCre2::Options
+
+    @re : LibCre2::CRe2
+
+    def group_count
+      LibCre2.num_capturing_groups(@re)
+    end
+
+    def initialize(pattern : String, multiline = false, dotall = false,
+                   ignorecase = false, anchored = false)
+      @opts = LibCre2.opt_new
+      LibCre2.opt_posix_syntax(@opts, false)
+      LibCre2.opt_longest_match(@opts, true)
+      LibCre2.opt_perl_classes(@opts, true)
+      LibCre2.opt_encoding(@opts, 1)
+      LibCre2.opt_one_line(@opts, !multiline)
+      LibCre2.opt_case_sensitive(@opts, !ignorecase)
+      pattern = "(m?)#{pattern}" if multiline
+      @re = LibCre2.new(pattern, pattern.size, @opts)
+    end
+
+    def match(text, pos)
+      matched = LibCre2.match(@re, text, text.size, pos, text.size,
+        LibCre2::CRE2_ANCHOR_START, @matches, 50)
+      return {matched != 0, @matches}
+    end
+  end
 end
+
+re = Tartrazine::Re3.new("(require-instance|fraction-digits|error-app-tag|error-message|min-elements|max-elements|yin-element|ordered-by|position|modifier|default|pattern|length|status|units|value|range|type|path|enum|base|bit)(?=[^\w\-\:])")
+p! re.match("value ", 0)
+

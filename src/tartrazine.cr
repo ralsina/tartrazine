@@ -63,8 +63,6 @@ module Tartrazine
       tokens = [] of Token
       pos = 0
       matched = false
-      time = 0
-      count = 0
 
       # Respect the `ensure_nl` config option
       if text.size > 0 && text[-1] != '\n' && config[:ensure_nl] && !usingself
