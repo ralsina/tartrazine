@@ -14,6 +14,7 @@ lib LibCre2
   fun opt_perl_classes = cre2_opt_perl_classes(op : Options, flag : Bool) : Nil
   fun opt_word_boundary = cre2_opt_word_boundary(op : Options, flag : Bool) : Nil
   fun opt_one_line = cre2_opt_one_line(op : Options, flag : Bool) : Nil
+  fun opt_dot_nl = cre2_opt_dot_nl(op : Options, flag : Bool) : Nil
   fun opt_encoding = cre2_opt_encoding(op : Options, encoding : Int32) : Nil
   fun opt_max_mem = cre2_opt_max_mem(op : Options, flag : Bool) : Nil
 

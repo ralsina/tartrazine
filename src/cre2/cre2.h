@@ -21,6 +21,7 @@ void cre2_opt_case_sensitive(cre2_options *opt, int flag);
 void cre2_opt_perl_classes(cre2_options *opt, int flag);
 void cre2_opt_word_boundary(cre2_options *opt, int flag);
 void cre2_opt_one_line(cre2_options *opt, int flag);
+void cre2_opt_dot_nl(cre2_options *opt, int flag);
 void cre2_opt_encoding(cre2_options *opt, encoding_t enc);
 void cre2_opt_max_mem(cre2_options *opt, int m);
 

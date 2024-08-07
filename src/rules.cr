@@ -125,12 +125,16 @@ module Tartrazine
                    ignorecase = false, anchored = false)
       @opts = LibCre2.opt_new
       LibCre2.opt_posix_syntax(@opts, false)
-      LibCre2.opt_longest_match(@opts, true)
-      LibCre2.opt_perl_classes(@opts, true)
+      LibCre2.opt_longest_match(@opts, false)
+      # These 3 are ignored when posix_syntax is false
+      # LibCre2.opt_one_line(@opts, !multiline)
+      # LibCre2.opt_perl_classes(@opts, true)
+      # LibCre2.opt_word_boundary(@opts, true)
       LibCre2.opt_encoding(@opts, 1)
-      LibCre2.opt_one_line(@opts, !multiline)
       LibCre2.opt_case_sensitive(@opts, !ignorecase)
+      LibCre2.opt_dot_nl(@opts, dotall)
       pattern = "(m?)#{pattern}" if multiline
+      p! pattern
       @re = LibCre2.new(pattern, pattern.size, @opts)
     end
 
@@ -142,6 +146,10 @@ module Tartrazine
   end
 end
 
-re = Tartrazine::Re3.new("(require-instance|fraction-digits|error-app-tag|error-message|min-elements|max-elements|yin-element|ordered-by|position|modifier|default|pattern|length|status|units|value|range|type|path|enum|base|bit)(?=[^\w\-\:])")
-p! re.match("value ", 0)
+
+# I can't find a combination of flags that makes this match "#foo"
+# and without that this is never going to work.
+re = Tartrazine::Re3.new("#.*$", multiline: true, dotall: false)
+m = re.match("#foo\nbar", 0)
+p m[0], m[1][0]
 
