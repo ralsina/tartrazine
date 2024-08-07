@@ -1,3 +1,4 @@
+require "./**" 
 require "sixteen"
 require "xml"
 

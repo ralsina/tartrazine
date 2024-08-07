@@ -1,6 +1,4 @@
-require "./constants.cr"
-require "./styles.cr"
-require "./tartrazine.cr"
+require "./**"
 require "colorize"
 
 module Tartrazine
