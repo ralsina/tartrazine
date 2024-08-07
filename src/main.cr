@@ -1,4 +1,4 @@
-require "./**" 
+require "./**"
 
 lexer = Tartrazine.lexer("crystal")
 theme = Tartrazine.theme(ARGV[1])

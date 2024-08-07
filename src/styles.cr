@@ -29,7 +29,7 @@ module Tartrazine
     # anything
     property? complete : Bool = false
 
-    def initialize(@color=nil, @background=nil, @border=nil, @bold=nil, @italic=nil, @underline=nil)
+    def initialize(@color = nil, @background = nil, @border = nil, @bold = nil, @italic = nil, @underline = nil)
     end
 
     macro merge_prop(prop)
@@ -95,8 +95,8 @@ module Tartrazine
       theme.styles["Text"] = Style.new(color: t.palette["base05"])
       theme.styles["Error"] = Style.new(color: t.palette["base08"])
       theme.styles["Comment"] = Style.new(color: t.palette["base03"])
-      theme.styles["CommentPreProc"] = Style.new(color: t.palette["base0F"])
-      theme.styles["CommentPreProcFile"] = Style.new(color: t.palette["base0B"])
+      theme.styles["CommentPreproc"] = Style.new(color: t.palette["base0F"])
+      theme.styles["CommentPreprocFile"] = Style.new(color: t.palette["base0B"])
       theme.styles["Keyword"] = Style.new(color: t.palette["base0E"])
       theme.styles["KeywordType"] = Style.new(color: t.palette["base08"])
       theme.styles["NameAttribute"] = Style.new(color: t.palette["base0D"])
@@ -110,14 +110,14 @@ module Tartrazine
       theme.styles["NameTag"] = Style.new(color: t.palette["base0E"])
       theme.styles["NameVariable"] = Style.new(color: t.palette["base0D"])
       theme.styles["NameVariableInstance"] = Style.new(color: t.palette["base08"])
-      theme.styles["Number"] = Style.new(color: t.palette["base09"])
+      theme.styles["LiteralNumber"] = Style.new(color: t.palette["base09"])
       theme.styles["Operator"] = Style.new(color: t.palette["base0C"])
       theme.styles["OperatorWord"] = Style.new(color: t.palette["base0E"])
       theme.styles["Literal"] = Style.new(color: t.palette["base0B"])
-      theme.styles["String"] = Style.new(color: t.palette["base0B"])
-      theme.styles["StringInterpol"] = Style.new(color: t.palette["base0F"])
-      theme.styles["StringRegex"] = Style.new(color: t.palette["base0C"])
-      theme.styles["StringSymbol"] = Style.new(color: t.palette["base09"])
+      theme.styles["LiteralString"] = Style.new(color: t.palette["base0B"])
+      theme.styles["LiteralStringInterpol"] = Style.new(color: t.palette["base0F"])
+      theme.styles["LiteralStringRegex"] = Style.new(color: t.palette["base0C"])
+      theme.styles["LiteralStringSymbol"] = Style.new(color: t.palette["base09"])
       theme
     end
 

@@ -1,4 +1,4 @@
-require "./constantes.cr"
+require "./constants.cr"
 require "./styles.cr"
 require "./tartrazine.cr"
 
@@ -15,7 +15,7 @@ module Tartrazine
     def get_style_defs(theme : Theme) : String
       output = String.build do |outp|
         theme.styles.each do |token, style|
-          outp << ".#{token} {"
+          outp << ".#{get_css_class(token, theme)} {"
           # These are set or nil
           outp << "color: #{style.color};" if style.color
           outp << "background-color: #{style.background};" if style.background
@@ -43,7 +43,7 @@ module Tartrazine
         outp << "<html><head><style>"
         outp << get_style_defs(theme)
         outp << "</style></head><body>"
-        outp << "<pre class=\"Background\"><code class=\"Background\">"
+        outp << "<pre class=\"#{get_css_class("Background", theme)}\"><code class=\"#{get_css_class("Background", theme)}\">"
         lexer.tokenize(text).each do |token|
           fragment = "<span class=\"#{get_css_class(token[:type], theme)}\">#{token[:value]}</span>"
           outp << fragment
@@ -55,16 +55,15 @@ module Tartrazine
 
     # Given a token type, return the CSS class to use.
     def get_css_class(token, theme)
-      token = Abbreviations[token]
-      return token if theme.styles.has_key?(token)
+      return Abbreviations[token] if theme.styles.has_key?(token)
 
       # Themes don't contain information for each specific
       # token type. However, they may contain information
       # for a parent style. Worst case, we go to the root
       # (Background) style.
-      theme.style_parents(token).reverse.find { |parent|
+      Abbreviations[theme.style_parents(token).reverse.find { |parent|
         theme.styles.has_key?(parent)
-      }
+      }]
     end
   end
 end
