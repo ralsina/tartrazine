@@ -5,18 +5,19 @@ require "./actions"
 # state of the lexer.
 module Tartrazine
   # This rule matches via a regex pattern
+
   class Rule
     property pattern : Regex = Re2.new ""
     property actions : Array(Action) = [] of Action
     property xml : String = "foo"
 
     def match(text, pos, lexer) : Tuple(Bool, Int32, Array(Token))
-      tokens = [] of Token
       match = pattern.match(text, pos)
       # We don't match if the match doesn't move the cursor
       # because that causes infinite loops
-      Log.trace { "#{match}, #{pattern.inspect}, #{text}, #{pos}" }
       return false, pos, [] of Token if match.nil? || match.end == 0
+      # Log.trace { "#{match}, #{pattern.inspect}, #{text}, #{pos}" }
+      tokens = [] of Token
       # Emit the tokens
       actions.each do |action|
         # Emit the token
@@ -28,7 +29,12 @@ module Tartrazine
 
     def initialize(node : XML::Node, multiline, dotall, ignorecase)
       @xml = node.to_s
-      @pattern = Re2.new(node["pattern"], multiline, dotall, ignorecase)
+      @pattern = Re2.new(
+        node["pattern"],
+        multiline,
+        dotall,
+        ignorecase,
+        anchored: true)
       add_actions(node)
     end
 
@@ -78,6 +84,26 @@ module Tartrazine
     def initialize(node : XML::Node)
       @xml = node.to_s
       add_actions(node)
+    end
+  end
+
+  # This is a hack to workaround that Crystal seems to disallow
+  # having regexes multiline but not dot_all
+  class Re2 < Regex
+    @source = "fa"
+    @options = Regex::Options::None
+    @jit = true
+
+    def initialize(pattern : String, multiline = false, dotall = false, ignorecase = false, anchored = false)
+      flags = LibPCRE2::UTF | LibPCRE2::DUPNAMES |
+              LibPCRE2::UCP
+      flags |= LibPCRE2::MULTILINE if multiline
+      flags |= LibPCRE2::DOTALL if dotall
+      flags |= LibPCRE2::CASELESS if ignorecase
+      flags |= LibPCRE2::ANCHORED if anchored
+      @re = Regex::PCRE2.compile(pattern, flags) do |error_message|
+        raise Exception.new(error_message)
+      end
     end
   end
 end
