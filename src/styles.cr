@@ -4,8 +4,12 @@ require "xml"
 module Tartrazine
   def self.theme(name : String) : Theme
     return Theme.from_base16(name[7..]) if name.starts_with? "base16_"
-    path = File.join("styles", "#{name}.xml")
-    Theme.from_xml(File.read(path))
+    Theme.from_xml(ThemeFiles.get("/#{name}.xml").gets_to_end)
+  end
+
+  class ThemeFiles
+    extend BakedFileSystem
+    bake_folder "../styles", __DIR__
   end
 
   class Style

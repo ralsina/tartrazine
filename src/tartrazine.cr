@@ -33,6 +33,12 @@ module Tartrazine
     end
   end
 
+  class LexerFiles
+    extend BakedFileSystem
+
+    bake_folder "../lexers", __DIR__
+  end
+
   # A token, the output of the tokenizer
   alias Token = NamedTuple(type: String, value: String)
 
@@ -63,8 +69,6 @@ module Tartrazine
       tokens = [] of Token
       pos = 0
       matched = false
-      time = 0
-      count = 0
 
       # Respect the `ensure_nl` config option
       if text.size > 0 && text[-1] != '\n' && config[:ensure_nl] && !usingself
@@ -74,22 +78,22 @@ module Tartrazine
       # Loop through the text, applying rules
       while pos < text.size
         state = states[@state_stack.last]
-        Log.trace { "Stack is #{@state_stack} State is #{state.name}, pos is #{pos}, text is #{text[pos..pos + 10]}" }
+        # Log.trace { "Stack is #{@state_stack} State is #{state.name}, pos is #{pos}, text is #{text[pos..pos + 10]}" }
         state.rules.each do |rule|
           matched, new_pos, new_tokens = rule.match(text, pos, self)
           if matched
             # Move position forward, save the tokens,
             # tokenize from the new position
-            Log.trace { "MATCHED: #{rule.xml}" }
+            # Log.trace { "MATCHED: #{rule.xml}" }
             pos = new_pos
             tokens += new_tokens
             break
           end
-          Log.trace { "NOT MATCHED: #{rule.xml}" }
+          # Log.trace { "NOT MATCHED: #{rule.xml}" }
         end
         # If no rule matches, emit an error token
         unless matched
-          Log.trace { "Error at #{pos}" }
+          # Log.trace { "Error at #{pos}" }
           tokens << {type: "Error", value: "#{text[pos]}"}
           pos += 1
         end
@@ -184,7 +188,7 @@ module Tartrazine
   end
 
   def self.lexer(name : String) : Lexer
-    Lexer.from_xml(File.read("lexers/#{name}.xml"))
+    Lexer.from_xml(LexerFiles.get("/#{name}.xml").gets_to_end)
   end
 end
 
