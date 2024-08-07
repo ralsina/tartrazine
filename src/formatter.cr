@@ -44,7 +44,12 @@ module Tartrazine
           theme.styles.has_key?(parent)
         }]
       end
-      text.colorize(*rgb(s.color)).back(*rgb(s.background)).to_s
+      colorized = text.colorize(*rgb(s.color))
+      # Intentionally not setting background color
+      colorized.mode(:bold) if s.bold
+      colorized.mode(:italic) if s.italic
+      colorized.mode(:underline) if s.underline
+      colorized.to_s
     end
 
     def rgb(c : String?)
