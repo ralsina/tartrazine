@@ -13,7 +13,6 @@ module Tartrazine
     property xml : String = "foo"
 
     def match(text, pos, lexer) : Tuple(Bool, Int32, Array(Token))
-      return false, pos, [] of Token
       matched, matches = pattern.match(text, pos)
       # We don't match if the match doesn't move the cursor
       # because that causes infinite loops
@@ -32,7 +31,6 @@ module Tartrazine
 
     def initialize(node : XML::Node, multiline, dotall, ignorecase)
       @xml = node.to_s
-      p! node["pattern"]
       @pattern = Re3.new(
         node["pattern"],
         multiline,
@@ -133,8 +131,7 @@ module Tartrazine
       LibCre2.opt_encoding(@opts, 1)
       LibCre2.opt_case_sensitive(@opts, !ignorecase)
       LibCre2.opt_dot_nl(@opts, dotall)
-      pattern = "(m?)#{pattern}" if multiline
-      p! pattern
+      pattern = "(?m)#{pattern}" if multiline
       @re = LibCre2.new(pattern, pattern.size, @opts)
     end
 
@@ -147,9 +144,8 @@ module Tartrazine
 end
 
 
-# I can't find a combination of flags that makes this match "#foo"
-# and without that this is never going to work.
-re = Tartrazine::Re3.new("#.*$", multiline: true, dotall: false)
-m = re.match("#foo\nbar", 0)
-p m[0], m[1][0]
+# re2 doesn't support this (should match "x")
+# re = Tartrazine::Re3.new("x(?!foo)", multiline: true, dotall: false)
+# m = re.match("xfoo", 0)
+# p m[0], m[1][0]
 
