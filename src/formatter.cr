@@ -1,6 +1,7 @@
 require "./constants.cr"
 require "./styles.cr"
 require "./tartrazine.cr"
+require "colorize"
 
 module Tartrazine
   # This is the base class for all formatters.
@@ -9,6 +10,63 @@ module Tartrazine
 
     def format(text : String, lexer : Lexer, theme : Theme) : String
       raise Exception.new("Not implemented")
+    end
+
+    def get_style_defs(theme : Theme) : String
+      raise Exception.new("Not implemented")
+    end
+  end
+
+  class Ansi < Formatter
+    def format(text : String, lexer : Lexer, theme : Theme) : String
+      output = String.build do |outp|
+        lexer.tokenize(text).each do |token|
+          outp << self.colorize(token[:value], token[:type], theme)
+        end
+      end
+      output
+    end
+
+    def colorize(text : String, token : String, theme : Theme) : String
+      style = theme.styles.fetch(token, nil)
+      return text if style.nil?
+      if theme.styles.has_key?(token)
+        s = theme.styles[token]
+      else
+        # Themes don't contain information for each specific
+        # token type. However, they may contain information
+        # for a parent style. Worst case, we go to the root
+        # (Background) style.
+        s = theme.styles[theme.style_parents(token).reverse.find { |parent|
+          theme.styles.has_key?(parent)
+        }]
+      end
+      text.colorize(*rgb(s.color)).back(*rgb(s.background)).to_s
+    end
+
+    def rgb(c : String?)
+      return {0_u8, 0_u8, 0_u8} unless c
+      r = c[0..1].to_u8(16)
+      g = c[2..3].to_u8(16)
+      b = c[4..5].to_u8(16)
+      {r, g, b}
+    end
+  end
+
+  class Html < Formatter
+    def format(text : String, lexer : Lexer, theme : Theme) : String
+      output = String.build do |outp|
+        outp << "<html><head><style>"
+        outp << get_style_defs(theme)
+        outp << "</style></head><body>"
+        outp << "<pre class=\"#{get_css_class("Background", theme)}\"><code class=\"#{get_css_class("Background", theme)}\">"
+        lexer.tokenize(text).each do |token|
+          fragment = "<span class=\"#{get_css_class(token[:type], theme)}\">#{token[:value]}</span>"
+          outp << fragment
+        end
+        outp << "</code></pre></body></html>"
+      end
+      output
     end
 
     # ameba:disable Metrics/CyclomaticComplexity
@@ -32,23 +90,6 @@ module Tartrazine
 
           outp << "}"
         end
-      end
-      output
-    end
-  end
-
-  class Html < Formatter
-    def format(text : String, lexer : Lexer, theme : Theme) : String
-      output = String.build do |outp|
-        outp << "<html><head><style>"
-        outp << get_style_defs(theme)
-        outp << "</style></head><body>"
-        outp << "<pre class=\"#{get_css_class("Background", theme)}\"><code class=\"#{get_css_class("Background", theme)}\">"
-        lexer.tokenize(text).each do |token|
-          fragment = "<span class=\"#{get_css_class(token[:type], theme)}\">#{token[:value]}</span>"
-          outp << fragment
-        end
-        outp << "</code></pre></body></html>"
       end
       output
     end
