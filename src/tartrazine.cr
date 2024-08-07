@@ -1,5 +1,6 @@
 require "./actions"
 require "./rules"
+require "./styles"
 require "baked_file_system"
 require "base58"
 require "json"
