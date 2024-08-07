@@ -1,4 +1,9 @@
-require "./**" 
+require "./actions"
+require "./constants"
+require "./formatter"
+require "./rules"
+require "./styles"
+require "./tartrazine"
 require "sixteen"
 require "xml"
 

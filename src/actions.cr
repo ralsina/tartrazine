@@ -1,3 +1,9 @@
+require "./actions"
+require "./constants"
+require "./formatter"
+require "./rules"
+require "./styles"
+require "./tartrazine"
 # These are Lexer actions. When a rule matches, it will
 # perform a list of actions. These actions can emit tokens
 # or change the state machine.

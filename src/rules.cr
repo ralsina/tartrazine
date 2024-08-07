@@ -1,4 +1,9 @@
 require "./actions"
+require "./constants"
+require "./formatter"
+require "./rules"
+require "./styles"
+require "./tartrazine"
 
 # These are lexer rules. They match with the text being parsed
 # and perform actions, either emitting tokens or changing the
