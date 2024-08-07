@@ -6,3 +6,4 @@
 chroma/
 pygments/
 shard.lock
+.vscode/
