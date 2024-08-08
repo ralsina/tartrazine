@@ -97,7 +97,7 @@ module Tartrazine
   class Re2 < Regex
     @source = "fa"
     @options = Regex::Options::None
-    @jit = true
+    @jit = true 
 
     def initialize(pattern : String, multiline = false, dotall = false, ignorecase = false, anchored = false)
       flags = LibPCRE2::UTF | LibPCRE2::DUPNAMES |
@@ -106,6 +106,7 @@ module Tartrazine
       flags |= LibPCRE2::DOTALL if dotall
       flags |= LibPCRE2::CASELESS if ignorecase
       flags |= LibPCRE2::ANCHORED if anchored
+      flags |= LibPCRE2::NO_UTF_CHECK | LibPCRE2::JIT_COMPLETE
       @re = Regex::PCRE2.compile(pattern, flags) do |error_message|
         raise Exception.new(error_message)
       end
