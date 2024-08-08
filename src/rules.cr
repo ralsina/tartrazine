@@ -106,7 +106,7 @@ module Tartrazine
       flags |= LibPCRE2::DOTALL if dotall
       flags |= LibPCRE2::CASELESS if ignorecase
       flags |= LibPCRE2::ANCHORED if anchored
-      flags |= LibPCRE2::NO_UTF_CHECK | LibPCRE2::JIT_PARTIAL_SOFT
+      flags |= LibPCRE2::NO_UTF_CHECK
       @re = Regex::PCRE2.compile(pattern, flags) do |error_message|
         raise Exception.new(error_message)
       end
