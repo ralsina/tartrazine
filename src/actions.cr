@@ -26,7 +26,7 @@ module Tartrazine
     end
 
     # ameba:disable Metrics/CyclomaticComplexity
-    def emit(match : Regex::MatchData | CRe2::MatchDataLike | Nil,
+    def emit(match : MatchData,
              lexer : Lexer, match_group = 0) : Array(Token)
       case type
       when "token"

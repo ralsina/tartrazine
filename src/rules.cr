@@ -1,5 +1,5 @@
 require "./actions"
-require "cre2"
+# require "cre2"
 
 # These are lexer rules. They match with the text being parsed
 # and perform actions, either emitting tokens or changing the
@@ -7,8 +7,12 @@ require "cre2"
 module Tartrazine
   # This rule matches via a regex pattern
 
+  # alias Regex = CRe2::Regex
+  # alias MatchData = CRe2::MatchDataLike | Regex::MatchData | Nil
+  alias MatchData = Regex::MatchData | Nil
+
   class Rule
-    property pattern : Regex = CRe2::Regex.new ""
+    property pattern : Regex = Regex.new ""
     property actions : Array(Action) = [] of Action
     property xml : String = "foo"
 
@@ -35,8 +39,7 @@ module Tartrazine
       options |= Regex::Options::MULTILINE if multiline
       options |= Regex::Options::DOTALL if dotall
       options |= Regex::Options::IGNORE_CASE if ignorecase
-      @pattern = CRe2::Regex.new(
-        node["pattern"], options)
+      @pattern = Regex.new(node["pattern"], options)
       add_actions(node)
     end
 
