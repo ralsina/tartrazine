@@ -30,7 +30,7 @@ module Tartrazine
              lexer : Lexer, match_group = 0) : Array(Token)
       case type
       when "token"
-        raise Exception.new "Can't have a token without a match" if (match.nil? || match[0].size == 0)
+        raise Exception.new "Can't have a token without a match" if match.nil? || match[0].size == 0
         [Token.new(type: xml["type"], value: match[0])]
       when "push"
         states_to_push = xml.attributes.select { |attrib|
@@ -70,7 +70,7 @@ module Tartrazine
         #
         # where that None means skipping a group
         #
-        raise Exception.new "Can't have a bygroups without a match" if (match.nil? || match[0].size == 0)
+        raise Exception.new "Can't have a bygroups without a match" if match.nil? || match[0].size == 0
 
         # Each group matches an action. If the group match is empty,
         # the action is skipped.
@@ -82,18 +82,19 @@ module Tartrazine
         result
       when "using"
         # Shunt to another lexer entirely
-        return [] of Token if (match.nil? || match[0].size == 0)
+        return [] of Token if match.nil? || match[0].size == 0
         lexer_name = xml["lexer"].downcase
         # Log.trace { "to tokenize: #{match[match_group]}" }
         to_tokenize = match[match_group]
         Tartrazine.lexer(lexer_name).tokenize(to_tokenize, usingself: true)
       when "usingself"
         # Shunt to another copy of this lexer
-        return [] of Token if (match.nil? || match[0].size == 0)
+        return [] of Token if match.nil? || match[0].size == 0
 
         new_lexer = Lexer.from_xml(lexer.xml)
         # Log.trace { "to tokenize: #{match[match_group]}" }
-        new_lexer.tokenize(match[match_group], usingself: true)
+        to_tokenize = match[match_group]
+        new_lexer.tokenize(to_tokenize, usingself: true)
       when "combined"
         # Combine two states into one anonymous state
         states = xml.attributes.select { |attrib|

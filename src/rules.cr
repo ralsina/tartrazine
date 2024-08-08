@@ -8,7 +8,7 @@ module Tartrazine
   # This rule matches via a regex pattern
 
   class Rule
-    property pattern : CRe2::Regex = CRe2::Regex.new ""
+    property pattern : Regex = CRe2::Regex.new ""
     property actions : Array(Action) = [] of Action
     property xml : String = "foo"
 
