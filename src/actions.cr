@@ -26,11 +26,12 @@ module Tartrazine
     end
 
     # ameba:disable Metrics/CyclomaticComplexity
-    def emit(matches : Pointer(LibCre2::StringPiece), lexer : Lexer, match_group = 0) : Array(Token)
+    def emit(match : Regex::MatchData | CRe2::MatchDataLike | Nil,
+             lexer : Lexer, match_group = 0) : Array(Token)
       case type
       when "token"
-        raise Exception.new "Can't have a token without a match" if matches[0].length == 0
-        [Token.new(type: xml["type"], value: String.new(Slice.new(matches[0].data, matches[0].length)))]
+        raise Exception.new "Can't have a token without a match" if (match.nil? || match[0].size == 0)
+        [Token.new(type: xml["type"], value: match[0])]
       when "push"
         states_to_push = xml.attributes.select { |attrib|
           attrib.name == "state"
@@ -69,31 +70,30 @@ module Tartrazine
         #
         # where that None means skipping a group
         #
-        raise Exception.new "Can't have a bygroups without a match" if matches[0].length == 0
+        raise Exception.new "Can't have a bygroups without a match" if (match.nil? || match[0].size == 0)
 
         # Each group matches an action. If the group match is empty,
         # the action is skipped.
         result = [] of Token
         @actions.each_with_index do |e, i|
-          next if matches[i].length == 0
-          result += e.emit(matches, lexer, i)
+          next if match[i].size == 0
+          result += e.emit(match, lexer, i)
         end
         result
       when "using"
         # Shunt to another lexer entirely
-        return [] of Token if matches[0].length == 0
+        return [] of Token if (match.nil? || match[0].size == 0)
         lexer_name = xml["lexer"].downcase
         # Log.trace { "to tokenize: #{match[match_group]}" }
-        to_tokenize = String.new(Slice.new(matches[match_group].data, matches[match_group].length))
+        to_tokenize = match[match_group]
         Tartrazine.lexer(lexer_name).tokenize(to_tokenize, usingself: true)
       when "usingself"
         # Shunt to another copy of this lexer
-        return [] of Token if matches[0].length == 0
+        return [] of Token if (match.nil? || match[0].size == 0)
 
         new_lexer = Lexer.from_xml(lexer.xml)
         # Log.trace { "to tokenize: #{match[match_group]}" }
-        to_tokenize = String.new(Slice.new(matches[match_group].data, matches[match_group].length))
-        new_lexer.tokenize(to_tokenize, usingself: true)
+        new_lexer.tokenize(match[match_group], usingself: true)
       when "combined"
         # Combine two states into one anonymous state
         states = xml.attributes.select { |attrib|
