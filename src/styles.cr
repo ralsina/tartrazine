@@ -104,7 +104,7 @@ module Tartrazine
       # https://github.com/mohd-akram/base16-pygments/
 
       theme.styles["Background"] = Style.new(color: t["base05"], background: t["base00"])
-      theme.styles["Highlight"] = Style.new(color: t["base0D"], background: t["base01"])
+      theme.styles["LineHighlight"] = Style.new(color: t["base0D"], background: t["base01"])
       theme.styles["Text"] = Style.new(color: t["base05"])
       theme.styles["Error"] = Style.new(color: t["base08"])
       theme.styles["Comment"] = Style.new(color: t["base03"])
@@ -163,7 +163,29 @@ module Tartrazine
 
         theme.styles[node["type"]] = s
       end
+      # We really want a LineHighlight class
+      if !theme.styles.has_key?("LineHighlight")
+        theme.styles["LineHighlight"] = Style.new
+        theme.styles["LineHighlight"].background = make_highlight_color(theme.styles["Background"].background)
+      end
       theme
+    end
+
+    # If the color is dark, make it brighter and viceversa
+    def self.make_highlight_color(base_color)
+      return nil if base_color.nil?
+      color = Color.new(base_color.hex)
+      if base_color.light?
+        color.r = [(base_color.r / 1.2), 255].min.to_u8
+        color.g = [(base_color.g / 1.2), 255].min.to_u8
+        color.b = [(base_color.b / 1.2), 255].min.to_u8
+      else
+        color.r = [(base_color.r * 1.2), 255].min.to_u8
+        color.g = [(base_color.g * 1.2), 255].min.to_u8
+        color.b = [(base_color.b * 1.2), 255].min.to_u8
+      end
+      color.hex = "#{color.r.to_s(16)}#{color.g.to_s(16)}#{color.b.to_s(16)}"
+      color
     end
   end
 end

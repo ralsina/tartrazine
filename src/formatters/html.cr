@@ -46,8 +46,7 @@ module Tartrazine
         outp << "<pre class=\"#{get_css_class("Background", theme)}\"><code class=\"#{get_css_class("Background", theme)}\">"
         lines.each_with_index(offset: line_number_start - 1) do |line, i|
           line_label = line_numbers? ? "#{i + 1}".rjust(4).ljust(5) : ""
-
-          line_class = highlighted?(i + 1) ? "class=\"#{get_css_class("Highlight", theme)}\"" : ""
+          line_class = highlighted?(i + 1) ? "class=\"#{get_css_class("LineHighlight", theme)}\"" : ""
           outp << "<span id=\"#{line_number_id_prefix}#{i + 1}\" #{line_class}>#{line_label}</span>"
           line.each do |token|
             fragment = "<span class=\"#{get_css_class(token[:type], theme)}\">#{token[:value]}</span>"

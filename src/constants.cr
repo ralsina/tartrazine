@@ -1,6 +1,5 @@
 module Tartrazine
   Abbreviations = {
-    "Highlight"                => "hl",
     "NameTag"                  => "nt",
     "NameBuiltin"              => "nb",
     "NameVariable"             => "nv",
