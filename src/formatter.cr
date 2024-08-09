@@ -44,7 +44,8 @@ module Tartrazine
           theme.styles.has_key?(parent)
         }]
       end
-      colorized = text.colorize(s.color.try &.colorize)
+      colorized = text.colorize
+      s.color.try { |c| colorized = colorized.fore(c.colorize) }
       # Intentionally not setting background color
       colorized.mode(:bold) if s.bold
       colorized.mode(:italic) if s.italic
