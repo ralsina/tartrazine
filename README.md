@@ -36,9 +36,7 @@ It has 332 themes (64 from Chroma, the rest are base16 themes via
 
 ## Installation
 
-This will have a CLI tool that can be installed, but it's not
-there yet.
-
+This has a CLI but it's not generally usable.
 
 ## Usage
 

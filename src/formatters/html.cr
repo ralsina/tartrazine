@@ -10,7 +10,7 @@ module Tartrazine
     # property with_classes : Bool = true
     property tab_width = 8
 
-    # property surrounding_pre : Bool = true
+    property? surrounding_pre : Bool = true
     # property wrap_long_lines : Bool = false
     property? line_numbers : Bool = false
     property line_number_start : Int32 = 1
@@ -43,7 +43,10 @@ module Tartrazine
     def format_text(text : String, lexer : Lexer, theme : Theme) : String
       lines = group_tokens_in_lines(lexer.tokenize(text))
       output = String.build do |outp|
-        outp << "<pre class=\"#{get_css_class("Background", theme)}\"><code class=\"#{get_css_class("Background", theme)}\">"
+        if surrounding_pre?
+          outp << "<pre class=\"#{get_css_class("Background", theme)}\">"
+        end
+        "<code class=\"#{get_css_class("Background", theme)}\">"
         lines.each_with_index(offset: line_number_start - 1) do |line, i|
           line_label = line_numbers? ? "#{i + 1}".rjust(4).ljust(5) : ""
           line_class = highlighted?(i + 1) ? "class=\"#{get_css_class("LineHighlight", theme)}\"" : ""
