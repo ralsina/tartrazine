@@ -8,7 +8,8 @@ module Tartrazine
     property class_prefix : String = ""
 
     # property with_classes : Bool = true
-    # property tab_width = 8
+    property tab_width = 8
+
     # property surrounding_pre : Bool = true
     # property wrap_long_lines : Bool = false
     # property line_numbers : Bool = false
@@ -67,6 +68,7 @@ module Tartrazine
           outp << "font-style: normal;" if style.italic == false
           outp << "text-decoration: underline;" if style.underline
           outp << "text-decoration: none;" if style.underline == false
+          outp << "tab-size: #{tab_width};" if token == "Background"
 
           outp << "}"
         end
