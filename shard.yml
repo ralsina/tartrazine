@@ -15,7 +15,6 @@ dependencies:
     github: crystal-china/base58.cr
   sixteen:
     github: ralsina/sixteen
-    branch: main
 
 crystal: ">= 1.13.0"
 

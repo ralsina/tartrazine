@@ -83,9 +83,9 @@ module Tartrazine
         theme.styles.each do |token, style|
           outp << ".#{get_css_class(token, theme)} {"
           # These are set or nil
-          outp << "color: #{style.color};" if style.color
-          outp << "background-color: #{style.background};" if style.background
-          outp << "border: 1px solid #{style.border};" if style.border
+          outp << "color: #{style.color.try &.hex};" if style.color
+          outp << "background-color: #{style.background.try &.hex};" if style.background
+          outp << "border: 1px solid #{style.border.try &.hex};" if style.border
 
           # These are true/false/nil
           outp << "border: none;" if style.border == false

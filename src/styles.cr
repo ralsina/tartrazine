@@ -8,6 +8,8 @@ require "sixteen"
 require "xml"
 
 module Tartrazine
+  alias Color = Sixteen::Color
+
   def self.theme(name : String) : Theme
     return Theme.from_base16(name[7..]) if name.starts_with? "base16_"
     Theme.from_xml(ThemeFiles.get("/#{name}.xml").gets_to_end)
@@ -29,9 +31,9 @@ module Tartrazine
 
     # These properties are either set or nil
     # (inherit from parent style)
-    property background : String?
-    property border : String?
-    property color : String?
+    property background : Color?
+    property border : Color?
+    property color : Color?
 
     # Styles are incomplete by default and inherit
     # from parents. If this is true, this style
@@ -101,33 +103,33 @@ module Tartrazine
       # The color assignments are adapted from
       # https://github.com/mohd-akram/base16-pygments/
 
-      theme.styles["Background"] = Style.new(color: t.palette["base05"], background: t.palette["base00"])
-      theme.styles["Text"] = Style.new(color: t.palette["base05"])
-      theme.styles["Error"] = Style.new(color: t.palette["base08"])
-      theme.styles["Comment"] = Style.new(color: t.palette["base03"])
-      theme.styles["CommentPreproc"] = Style.new(color: t.palette["base0F"])
-      theme.styles["CommentPreprocFile"] = Style.new(color: t.palette["base0B"])
-      theme.styles["Keyword"] = Style.new(color: t.palette["base0E"])
-      theme.styles["KeywordType"] = Style.new(color: t.palette["base08"])
-      theme.styles["NameAttribute"] = Style.new(color: t.palette["base0D"])
-      theme.styles["NameBuiltin"] = Style.new(color: t.palette["base08"])
-      theme.styles["NameBuiltinPseudo"] = Style.new(color: t.palette["base08"])
-      theme.styles["NameClass"] = Style.new(color: t.palette["base0D"])
-      theme.styles["NameConstant"] = Style.new(color: t.palette["base09"])
-      theme.styles["NameDecorator"] = Style.new(color: t.palette["base09"])
-      theme.styles["NameFunction"] = Style.new(color: t.palette["base0D"])
-      theme.styles["NameNamespace"] = Style.new(color: t.palette["base0D"])
-      theme.styles["NameTag"] = Style.new(color: t.palette["base0E"])
-      theme.styles["NameVariable"] = Style.new(color: t.palette["base0D"])
-      theme.styles["NameVariableInstance"] = Style.new(color: t.palette["base08"])
-      theme.styles["LiteralNumber"] = Style.new(color: t.palette["base09"])
-      theme.styles["Operator"] = Style.new(color: t.palette["base0C"])
-      theme.styles["OperatorWord"] = Style.new(color: t.palette["base0E"])
-      theme.styles["Literal"] = Style.new(color: t.palette["base0B"])
-      theme.styles["LiteralString"] = Style.new(color: t.palette["base0B"])
-      theme.styles["LiteralStringInterpol"] = Style.new(color: t.palette["base0F"])
-      theme.styles["LiteralStringRegex"] = Style.new(color: t.palette["base0C"])
-      theme.styles["LiteralStringSymbol"] = Style.new(color: t.palette["base09"])
+      theme.styles["Background"] = Style.new(color: t["base05"], background: t["base00"])
+      theme.styles["Text"] = Style.new(color: t["base05"])
+      theme.styles["Error"] = Style.new(color: t["base08"])
+      theme.styles["Comment"] = Style.new(color: t["base03"])
+      theme.styles["CommentPreproc"] = Style.new(color: t["base0F"])
+      theme.styles["CommentPreprocFile"] = Style.new(color: t["base0B"])
+      theme.styles["Keyword"] = Style.new(color: t["base0E"])
+      theme.styles["KeywordType"] = Style.new(color: t["base08"])
+      theme.styles["NameAttribute"] = Style.new(color: t["base0D"])
+      theme.styles["NameBuiltin"] = Style.new(color: t["base08"])
+      theme.styles["NameBuiltinPseudo"] = Style.new(color: t["base08"])
+      theme.styles["NameClass"] = Style.new(color: t["base0D"])
+      theme.styles["NameConstant"] = Style.new(color: t["base09"])
+      theme.styles["NameDecorator"] = Style.new(color: t["base09"])
+      theme.styles["NameFunction"] = Style.new(color: t["base0D"])
+      theme.styles["NameNamespace"] = Style.new(color: t["base0D"])
+      theme.styles["NameTag"] = Style.new(color: t["base0E"])
+      theme.styles["NameVariable"] = Style.new(color: t["base0D"])
+      theme.styles["NameVariableInstance"] = Style.new(color: t["base08"])
+      theme.styles["LiteralNumber"] = Style.new(color: t["base09"])
+      theme.styles["Operator"] = Style.new(color: t["base0C"])
+      theme.styles["OperatorWord"] = Style.new(color: t["base0E"])
+      theme.styles["Literal"] = Style.new(color: t["base0B"])
+      theme.styles["LiteralString"] = Style.new(color: t["base0B"])
+      theme.styles["LiteralStringInterpol"] = Style.new(color: t["base0F"])
+      theme.styles["LiteralStringRegex"] = Style.new(color: t["base0C"])
+      theme.styles["LiteralStringSymbol"] = Style.new(color: t["base09"])
       theme
     end
 
@@ -154,9 +156,9 @@ module Tartrazine
         s.underline = true if style.includes?("underline")
         s.underline = false if style.includes?("nounderline")
 
-        s.color = style.find(&.starts_with?("#")).try &.split("#").last
-        s.background = style.find(&.starts_with?("bg:#")).try &.split("#").last
-        s.border = style.find(&.starts_with?("border:#")).try &.split("#").last
+        s.color = style.find(&.starts_with?("#")).try { |v| Color.new v.split("#").last }
+        s.background = style.find(&.starts_with?("bg:#")).try { |v| Color.new v.split("#").last }
+        s.border = style.find(&.starts_with?("border:#")).try { |v| Color.new v.split("#").last }
 
         theme.styles[node["type"]] = s
       end
