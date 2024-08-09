@@ -2,23 +2,18 @@ require "../formatter"
 
 module Tartrazine
   class Html < Formatter
-    # Not all of these options are implemented
-
-    property? standalone : Bool = false
-    property class_prefix : String = ""
-
+    # property line_number_in_table : Bool = false
     # property with_classes : Bool = true
+    property class_prefix : String = ""
+    property highlight_lines : Array(Range(Int32, Int32)) = [] of Range(Int32, Int32)
+    property line_number_id_prefix : String = "line-"
+    property line_number_start : Int32 = 1
     property tab_width = 8
-
+    property? line_numbers : Bool = false
+    property? linkable_line_numbers : Bool = true
+    property? standalone : Bool = false
     property? surrounding_pre : Bool = true
     property? wrap_long_lines : Bool = false
-    property? line_numbers : Bool = false
-    property line_number_start : Int32 = 1
-    property line_number_id_prefix : String = "line-"
-    property? linkable_line_numbers : Bool = true
-
-    # property line_number_in_table : Bool = false
-    property highlight_lines : Array(Range(Int32, Int32)) = [] of Range(Int32, Int32)
 
     def format(text : String, lexer : Lexer, theme : Theme) : String
       text = format_text(text, lexer, theme)

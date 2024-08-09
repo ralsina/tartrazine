@@ -11,8 +11,16 @@ module Tartrazine
   alias Color = Sixteen::Color
 
   def self.theme(name : String) : Theme
-    return Theme.from_base16(name[7..]) if name.starts_with? "base16_"
-    Theme.from_xml(ThemeFiles.get("/#{name}.xml").gets_to_end)
+    begin
+    return Theme.from_base16(name)
+    rescue ex : Exception
+      raise ex unless ex.message.try &.includes? "Theme not found"
+    end
+    begin
+      return Theme.from_xml(ThemeFiles.get("/#{name}.xml").gets_to_end)
+    rescue
+      raise Exception.new("Theme #{name} not found")
+    end
   end
 
   class ThemeFiles
