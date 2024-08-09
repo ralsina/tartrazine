@@ -11,13 +11,13 @@ module Tartrazine
     property tab_width = 8
 
     property? surrounding_pre : Bool = true
-    # property wrap_long_lines : Bool = false
+    property? wrap_long_lines : Bool = false
     property? line_numbers : Bool = false
     property line_number_start : Int32 = 1
     property line_number_id_prefix : String = "line-"
+    property? linkable_line_numbers : Bool = true
 
     # property line_number_in_table : Bool = false
-    # property linkable_line_numbers : Bool = false
     property highlight_lines : Array(Range(Int32, Int32)) = [] of Range(Int32, Int32)
 
     def format(text : String, lexer : Lexer, theme : Theme) : String
@@ -44,13 +44,15 @@ module Tartrazine
       lines = group_tokens_in_lines(lexer.tokenize(text))
       output = String.build do |outp|
         if surrounding_pre?
-          outp << "<pre class=\"#{get_css_class("Background", theme)}\">"
+          pre_style= wrap_long_lines? ? "style=\"white-space: pre-wrap; word-break: break-word;\"" : ""
+          outp << "<pre class=\"#{get_css_class("Background", theme)}\" #{pre_style}>"
         end
         "<code class=\"#{get_css_class("Background", theme)}\">"
         lines.each_with_index(offset: line_number_start - 1) do |line, i|
           line_label = line_numbers? ? "#{i + 1}".rjust(4).ljust(5) : ""
           line_class = highlighted?(i + 1) ? "class=\"#{get_css_class("LineHighlight", theme)}\"" : ""
-          outp << "<span id=\"#{line_number_id_prefix}#{i + 1}\" #{line_class}>#{line_label}</span>"
+          line_id = linkable_line_numbers? ? "id=\"#{line_number_id_prefix}#{i + 1}\"" : ""
+          outp << "<span #{line_id} #{line_class}>#{line_label}</span>"
           line.each do |token|
             fragment = "<span class=\"#{get_css_class(token[:type], theme)}\">#{token[:value]}</span>"
             outp << fragment
