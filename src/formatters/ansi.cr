@@ -26,7 +26,7 @@ module Tartrazine
         }]
       end
       colorized = text.colorize
-      s.color.try { |c| colorized = colorized.fore(c.colorize) }
+      s.color.try { |col| colorized = colorized.fore(col.colorize) }
       # Intentionally not setting background color
       colorized.mode(:bold) if s.bold
       colorized.mode(:italic) if s.italic

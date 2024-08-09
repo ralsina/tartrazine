@@ -5,8 +5,8 @@ module Tartrazine
     # Not all of these options are implemented
 
     property? standalone : Bool = false
+    property class_prefix : String = ""
 
-    # property class_prefix : String = ""
     # property with_classes : Bool = true
     # property tab_width = 8
     # property surrounding_pre : Bool = true
@@ -76,13 +76,13 @@ module Tartrazine
 
     # Given a token type, return the CSS class to use.
     def get_css_class(token, theme)
-      return Abbreviations[token] if theme.styles.has_key?(token)
+      return class_prefix + Abbreviations[token] if theme.styles.has_key?(token)
 
       # Themes don't contain information for each specific
       # token type. However, they may contain information
       # for a parent style. Worst case, we go to the root
       # (Background) style.
-      Abbreviations[theme.style_parents(token).reverse.find { |parent|
+      class_prefix + Abbreviations[theme.style_parents(token).reverse.find { |parent|
         theme.styles.has_key?(parent)
       }]
     end
