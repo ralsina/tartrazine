@@ -13,10 +13,12 @@ module Tartrazine
     # property surrounding_pre : Bool = true
     # property wrap_long_lines : Bool = false
     # property line_numbers : Bool = false
+    property line_number_start : Int32 = 1
+    property line_number_id_prefix : String = "line-"
+
     # property line_number_in_table : Bool = false
     # property linkable_line_numbers : Bool = false
     # property highlight_lines : Array(Range(Int32, Int32)) = [] of Range(Int32, Int32)
-    # property base_line_number : Int32 = 1
 
     def format(text : String, lexer : Lexer, theme : Theme) : String
       text = format_text(text, lexer, theme)
@@ -39,11 +41,16 @@ module Tartrazine
     end
 
     def format_text(text : String, lexer : Lexer, theme : Theme) : String
+      lines = group_tokens_in_lines(lexer.tokenize(text))
       output = String.build do |outp|
         outp << "<pre class=\"#{get_css_class("Background", theme)}\"><code class=\"#{get_css_class("Background", theme)}\">"
-        lexer.tokenize(text).each do |token|
-          fragment = "<span class=\"#{get_css_class(token[:type], theme)}\">#{token[:value]}</span>"
-          outp << fragment
+        lines.each_with_index(offset: line_number_start - 1) do |line, i|
+          outp << "<span id=\"#{line_number_id_prefix}#{i + 1}\">"
+          line.each do |token|
+            fragment = "<span class=\"#{get_css_class(token[:type], theme)}\">#{token[:value]}</span>"
+            outp << fragment
+          end
+          outp << "</span>"
         end
         outp << "</code></pre>"
       end
@@ -87,6 +94,29 @@ module Tartrazine
       class_prefix + Abbreviations[theme.style_parents(token).reverse.find { |parent|
         theme.styles.has_key?(parent)
       }]
+    end
+
+    def group_tokens_in_lines(tokens : Array(Token)) : Array(Array(Token))
+      split_tokens = [] of Token
+      tokens.each do |token|
+        if token[:value].includes?("\n")
+          values = token[:value].split("\n")
+          values.each_with_index do |value, index|
+            value += "\n" if index < values.size - 1
+            split_tokens << {type: token[:type], value: value}
+          end
+        else
+          split_tokens << token
+        end
+      end
+      lines = [Array(Token).new]
+      split_tokens.each do |token|
+        lines.last << token
+        if token[:value].includes?("\n")
+          lines << Array(Token).new
+        end
+      end
+      lines
     end
   end
 end
