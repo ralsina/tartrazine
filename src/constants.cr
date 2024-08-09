@@ -1,6 +1,7 @@
 module Tartrazine
   Abbreviations = {
     "Background"               => "b",
+    "Highlight"                => "h",
     "Text"                     => "t",
     "CommentSingle"            => "cs",
     "CommentSpecial"           => "cs",

@@ -104,6 +104,7 @@ module Tartrazine
       # https://github.com/mohd-akram/base16-pygments/
 
       theme.styles["Background"] = Style.new(color: t["base05"], background: t["base00"])
+      theme.styles["Highlight"] = Style.new(color: t["base0D"], background: t["base01"])
       theme.styles["Text"] = Style.new(color: t["base05"])
       theme.styles["Error"] = Style.new(color: t["base08"])
       theme.styles["Comment"] = Style.new(color: t["base03"])

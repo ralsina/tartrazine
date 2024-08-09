@@ -12,13 +12,13 @@ module Tartrazine
 
     # property surrounding_pre : Bool = true
     # property wrap_long_lines : Bool = false
-    # property line_numbers : Bool = false
+    property? line_numbers : Bool = false
     property line_number_start : Int32 = 1
     property line_number_id_prefix : String = "line-"
 
     # property line_number_in_table : Bool = false
     # property linkable_line_numbers : Bool = false
-    # property highlight_lines : Array(Range(Int32, Int32)) = [] of Range(Int32, Int32)
+    property highlight_lines : Array(Range(Int32, Int32)) = [] of Range(Int32, Int32)
 
     def format(text : String, lexer : Lexer, theme : Theme) : String
       text = format_text(text, lexer, theme)
@@ -45,12 +45,14 @@ module Tartrazine
       output = String.build do |outp|
         outp << "<pre class=\"#{get_css_class("Background", theme)}\"><code class=\"#{get_css_class("Background", theme)}\">"
         lines.each_with_index(offset: line_number_start - 1) do |line, i|
-          outp << "<span id=\"#{line_number_id_prefix}#{i + 1}\">"
+          line_label = line_numbers? ? "#{i + 1}".rjust(4).ljust(5) : ""
+
+          line_class = highlighted?(i + 1) ? "class=\"#{get_css_class("Highlight", theme)}\"" : ""
+          outp << "<span id=\"#{line_number_id_prefix}#{i + 1}\" #{line_class}>#{line_label}</span>"
           line.each do |token|
             fragment = "<span class=\"#{get_css_class(token[:type], theme)}\">#{token[:value]}</span>"
             outp << fragment
           end
-          outp << "</span>"
         end
         outp << "</code></pre>"
       end
@@ -94,6 +96,10 @@ module Tartrazine
       class_prefix + Abbreviations[theme.style_parents(token).reverse.find { |parent|
         theme.styles.has_key?(parent)
       }]
+    end
+
+    def highlighted?(line : Int) : Bool
+      highlight_lines.any?(&.includes?(line))
     end
 
     def group_tokens_in_lines(tokens : Array(Token)) : Array(Array(Token))

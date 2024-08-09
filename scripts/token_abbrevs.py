@@ -8,7 +8,7 @@ def abbr(line):
     return "".join(c for c in line if c in string.ascii_uppercase).lower()
 
 abbrevs = {}
-tokens = set([])
+tokens = {"Highlight"}
 for line in sys.stdin:
     if "<token" not in line:
         continue
