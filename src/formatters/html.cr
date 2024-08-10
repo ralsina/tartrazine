@@ -39,7 +39,7 @@ module Tartrazine
       lines = group_tokens_in_lines(lexer.tokenize(text))
       output = String.build do |outp|
         if surrounding_pre?
-          pre_style= wrap_long_lines? ? "style=\"white-space: pre-wrap; word-break: break-word;\"" : ""
+          pre_style = wrap_long_lines? ? "style=\"white-space: pre-wrap; word-break: break-word;\"" : ""
           outp << "<pre class=\"#{get_css_class("Background", theme)}\" #{pre_style}>"
         end
         "<code class=\"#{get_css_class("Background", theme)}\">"

@@ -17,7 +17,7 @@ module Tartrazine
       raise ex unless ex.message.try &.includes? "Theme not found"
     end
     begin
-      return Theme.from_xml(ThemeFiles.get("/#{name}.xml").gets_to_end)
+      Theme.from_xml(ThemeFiles.get("/#{name}.xml").gets_to_end)
     rescue
       raise Exception.new("Theme #{name} not found")
     end
@@ -187,9 +187,9 @@ module Tartrazine
         return Color.new(127, 127, 127)
       end
       if base_color.dark?
-        return base_color.lighter(0.2)
+        base_color.lighter(0.2)
       else
-        return base_color.darker(0.2)
+        base_color.darker(0.2)
       end
     end
   end
