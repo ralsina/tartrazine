@@ -47,7 +47,7 @@ module Tartrazine
           line_label = line_numbers? ? "#{i + 1}".rjust(4).ljust(5) : ""
           line_class = highlighted?(i + 1) ? "class=\"#{get_css_class("LineHighlight", theme)}\"" : ""
           line_id = linkable_line_numbers? ? "id=\"#{line_number_id_prefix}#{i + 1}\"" : ""
-          outp << "<span #{line_id} #{line_class}>#{line_label}</span>"
+          outp << "<span #{line_id} #{line_class} style=\"user-select: none;\">#{line_label} </span>"
           line.each do |token|
             fragment = "<span class=\"#{get_css_class(token[:type], theme)}\">#{token[:value]}</span>"
             outp << fragment
