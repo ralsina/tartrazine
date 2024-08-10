@@ -15,6 +15,7 @@ dependencies:
     github: crystal-china/base58.cr
   sixteen:
     github: ralsina/sixteen
+    branch: main
   docopt:
     github: chenkovsky/docopt.cr
 

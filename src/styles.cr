@@ -12,7 +12,7 @@ module Tartrazine
 
   def self.theme(name : String) : Theme
     begin
-    return Theme.from_base16(name)
+      return Theme.from_base16(name)
     rescue ex : Exception
       raise ex unless ex.message.try &.includes? "Theme not found"
     end
@@ -111,7 +111,7 @@ module Tartrazine
       # The color assignments are adapted from
       # https://github.com/mohd-akram/base16-pygments/
 
-      theme.styles["Background"] = Style.new(color: t["base05"], background: t["base00"])
+      theme.styles["Background"] = Style.new(color: t["base05"], background: t["base00"], bold: true)
       theme.styles["LineHighlight"] = Style.new(color: t["base0D"], background: t["base01"])
       theme.styles["Text"] = Style.new(color: t["base05"])
       theme.styles["Error"] = Style.new(color: t["base08"])
@@ -175,27 +175,22 @@ module Tartrazine
       if !theme.styles.has_key?("LineHighlight")
         theme.styles["LineHighlight"] = Style.new
         theme.styles["LineHighlight"].background = make_highlight_color(theme.styles["Background"].background)
+        theme.styles["LineHighlight"].bold = true
       end
       theme
     end
 
     # If the color is dark, make it brighter and viceversa
     def self.make_highlight_color(base_color)
-      # FIXME: do a proper luminance adjustment in the color class
-      return nil if base_color.nil?
-      color = Color.new(base_color.hex)
-      if base_color.light?
-        color.r = [(base_color.r - 40), 255].min.to_u8
-        color.g = [(base_color.g - 40), 255].min.to_u8
-        color.b = [(base_color.b - 40), 255].min.to_u8
-      else
-        color.r = [(base_color.r + 40), 255].min.to_u8
-        color.g = [(base_color.g + 40), 255].min.to_u8
-        color.b = [(base_color.b + 40), 255].min.to_u8
+      if base_color.nil?
+        # WHo knows
+        return Color.new(127, 127, 127)
       end
-      # Bug in color, setting rgb doesn't update hex
-      color.hex = "#{color.r.to_s(16)}#{color.g.to_s(16)}#{color.b.to_s(16)}"
-      color
+      if base_color.dark?
+        return base_color.lighter(0.2)
+      else
+        return base_color.darker(0.2)
+      end
     end
   end
 end
