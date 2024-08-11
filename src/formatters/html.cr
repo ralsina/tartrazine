@@ -37,7 +37,7 @@ module Tartrazine
     end
 
     def format_text(text : String, lexer : Lexer, theme : Theme) : String
-      lines = group_tokens_in_lines(lexer.tokenize(text))
+      lines = lexer.group_tokens_in_lines(lexer.tokenize(text))
       output = String.build do |outp|
         if surrounding_pre?
           pre_style = wrap_long_lines? ? "style=\"white-space: pre-wrap; word-break: break-word;\"" : ""
@@ -100,29 +100,6 @@ module Tartrazine
 
     def highlighted?(line : Int) : Bool
       highlight_lines.any?(&.includes?(line))
-    end
-
-    def group_tokens_in_lines(tokens : Array(Token)) : Array(Array(Token))
-      split_tokens = [] of Token
-      tokens.each do |token|
-        if token[:value].includes?("\n")
-          values = token[:value].split("\n")
-          values.each_with_index do |value, index|
-            value += "\n" if index < values.size - 1
-            split_tokens << {type: token[:type], value: value}
-          end
-        else
-          split_tokens << token
-        end
-      end
-      lines = [Array(Token).new]
-      split_tokens.each do |token|
-        lines.last << token
-        if token[:value].includes?("\n")
-          lines << Array(Token).new
-        end
-      end
-      lines
     end
   end
 end

@@ -6,9 +6,11 @@ tartrazine: a syntax highlighting tool
 
 Usage:
   tartrazine (-h, --help)
-  tartrazine FILE -f html [-t theme][--standalone][--line-numbers][-l lexer] [-o output]
+  tartrazine FILE -f html [-t theme][--standalone][--line-numbers]
+                          [-l lexer][-o output]
   tartrazine -f html -t theme --css
-  tartrazine FILE -f terminal [-t theme][-l lexer][-o output]
+  tartrazine FILE -f terminal [-t theme][-l lexer][--line-numbers]
+                              [-o output]
   tartrazine FILE -f json [-o output]
   tartrazine --list-themes
   tartrazine --list-lexers
@@ -61,6 +63,7 @@ if options["-f"]
     formatter.line_numbers = options["--line-numbers"] != nil
   when "terminal"
     formatter = Tartrazine::Ansi.new
+    formatter.line_numbers = options["--line-numbers"] != nil
   when "json"
     formatter = Tartrazine::Json.new
   else

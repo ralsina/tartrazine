@@ -2,10 +2,16 @@ require "../formatter"
 
 module Tartrazine
   class Ansi < Formatter
+    property? line_numbers : Bool = false
+
     def format(text : String, lexer : Lexer, theme : Theme) : String
       output = String.build do |outp|
-        lexer.tokenize(text).each do |token|
-          outp << self.colorize(token[:value], token[:type], theme)
+        lexer.group_tokens_in_lines(lexer.tokenize(text)).each_with_index do |line, i|
+          label = line_numbers? ? "#{i + 1}".rjust(4).ljust(5) : ""
+          outp << label
+          line.each do |token|
+            outp << colorize(token[:value], token[:type], theme)
+          end
         end
       end
       output

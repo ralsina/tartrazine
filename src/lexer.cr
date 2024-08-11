@@ -124,6 +124,30 @@ module Tartrazine
       result
     end
 
+    # Group tokens into lines, splitting them when a newline is found
+    def group_tokens_in_lines(tokens : Array(Token)) : Array(Array(Token))
+      split_tokens = [] of Token
+      tokens.each do |token|
+        if token[:value].includes?("\n")
+          values = token[:value].split("\n")
+          values.each_with_index do |value, index|
+            value += "\n" if index < values.size - 1
+            split_tokens << {type: token[:type], value: value}
+          end
+        else
+          split_tokens << token
+        end
+      end
+      lines = [Array(Token).new]
+      split_tokens.each do |token|
+        lines.last << token
+        if token[:value].includes?("\n")
+          lines << Array(Token).new
+        end
+      end
+      lines
+    end
+
     # ameba:disable Metrics/CyclomaticComplexity
     def self.from_xml(xml : String) : Lexer
       l = Lexer.new
