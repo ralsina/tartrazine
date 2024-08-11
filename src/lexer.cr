@@ -5,6 +5,22 @@ module Tartrazine
     bake_folder "../lexers", __DIR__
   end
 
+  # Get the lexer object for a language name
+  # FIXME: support aliases, paths, mimetypes, etc
+  def self.lexer(name : String) : Lexer
+    Lexer.from_xml(LexerFiles.get("/#{name}.xml").gets_to_end)
+  end
+
+  # Return a list of all lexers
+  # FIXME: support aliases
+  def self.lexers : Array(String)
+    lexers = Set(String).new
+    LexerFiles.files.each do |file|
+      lexers << file.path.split("/").last.split(".").first
+    end
+    lexers.to_a.sort!
+  end
+
   # This implements a lexer for Pygments RegexLexers as expressed
   # in Chroma's XML serialization.
   #
@@ -173,8 +189,4 @@ module Tartrazine
 
   # A token, the output of the tokenizer
   alias Token = NamedTuple(type: String, value: String)
-
-  def self.lexer(name : String) : Lexer
-    Lexer.from_xml(LexerFiles.get("/#{name}.xml").gets_to_end)
-  end
 end

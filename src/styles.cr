@@ -10,6 +10,11 @@ require "xml"
 module Tartrazine
   alias Color = Sixteen::Color
 
+  class ThemeFiles
+    extend BakedFileSystem
+    bake_folder "../styles", __DIR__
+  end
+
   def self.theme(name : String) : Theme
     begin
       return Theme.from_base16(name)
@@ -23,9 +28,16 @@ module Tartrazine
     end
   end
 
-  class ThemeFiles
-    extend BakedFileSystem
-    bake_folder "../styles", __DIR__
+  # Return a list of all themes
+  def self.themes
+    themes = Set(String).new
+    ThemeFiles.files.each do |file|
+      themes << file.path.split("/").last.split(".").first
+    end
+    Sixteen::DataFiles.files.each do |file|
+      themes << file.path.split("/").last.split(".").first
+    end
+    themes.to_a.sort!
   end
 
   class Style
