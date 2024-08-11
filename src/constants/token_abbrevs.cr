@@ -22,6 +22,7 @@ module Tartrazine
     "GenericSubheading"        => "gs",
     "GenericTraceback"         => "gt",
     "GenericUnderline"         => "gu",
+    "Highlight"                => "hl",
     "Keyword"                  => "k",
     "KeywordConstant"          => "kc",
     "KeywordDeclaration"       => "kd",

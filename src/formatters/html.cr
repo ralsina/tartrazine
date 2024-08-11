@@ -1,3 +1,4 @@
+require "../constants/token_abbrevs.cr"
 require "../formatter"
 
 module Tartrazine

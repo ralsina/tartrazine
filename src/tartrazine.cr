@@ -1,5 +1,4 @@
 require "./actions"
-require "./constants"
 require "./formatter"
 require "./rules"
 require "./styles"
