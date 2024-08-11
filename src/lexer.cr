@@ -1,3 +1,5 @@
+require "./constants/lexers"
+
 module Tartrazine
   class LexerFiles
     extend BakedFileSystem
@@ -6,19 +8,33 @@ module Tartrazine
   end
 
   # Get the lexer object for a language name
-  # FIXME: support aliases, paths, mimetypes, etc
-  def self.lexer(name : String) : Lexer
-    Lexer.from_xml(LexerFiles.get("/#{name}.xml").gets_to_end)
+  # FIXME: support mimetypes
+  def self.lexer(name : String? = nil, filename : String? = nil) : Lexer
+    if name.nil? && filename.nil?
+      lexer_file_name = LEXERS_BY_NAME["plaintext"]
+    elsif name && name != "autodetect"
+      lexer_file_name = LEXERS_BY_NAME[name.downcase]
+    else
+      # Guess by filename
+      candidates = Set(String).new
+      LEXERS_BY_FILENAME.each do |k, v|
+        candidates += v.to_set if File.match?(k, File.basename(filename.to_s))
+      end
+      case candidates.size
+      when 0
+        lexer_file_name = LEXERS_BY_NAME["plaintext"]
+      when 1
+        lexer_file_name = candidates.first
+      else
+        raise Exception.new("Multiple lexers match the filename: #{candidates.to_a.join(", ")}")
+      end
+    end
+    Lexer.from_xml(LexerFiles.get("/#{lexer_file_name}.xml").gets_to_end)
   end
 
   # Return a list of all lexers
-  # FIXME: support aliases
   def self.lexers : Array(String)
-    lexers = Set(String).new
-    LexerFiles.files.each do |file|
-      lexers << file.path.split("/").last.split(".").first
-    end
-    lexers.to_a.sort!
+    LEXERS_BY_NAME.keys.sort!
   end
 
   # This implements a lexer for Pygments RegexLexers as expressed

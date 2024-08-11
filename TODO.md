@@ -5,5 +5,6 @@
 * ✅ Implement styles
 * ✅ Implement formatters
 * ✅ Implement CLI
-* Implement lexer loader that respects aliases, etc
-* Implement language guessing for file names
+* ✅ Implement lexer loader that respects aliases
+* ✅ Implement lexer loader by file extension
+* Implement lexer loader by mime type

@@ -18,7 +18,7 @@ Usage:
 Options:
   -f <formatter>      Format to use (html, terminal, json)
   -t <theme>          Theme to use, see --list-themes [default: default-dark]
-  -l <lexer>          Lexer (language) to use, see --list-lexers [default: plaintext]
+  -l <lexer>          Lexer (language) to use, see --list-lexers [default: autodetect]
   -o <output>         Output file. Default is stdout.
   --standalone        Generate a standalone HTML file, which includes
                       all style information. If not given, it will generate just
@@ -77,7 +77,7 @@ if options["-f"]
     exit 0
   end
 
-  lexer = Tartrazine.lexer(options["-l"].as(String))
+  lexer = Tartrazine.lexer(name: options["-l"].as(String), filename: options["FILE"].as(String))
 
   input = File.open(options["FILE"].as(String)).gets_to_end
   output = formatter.format(input, lexer, theme)
