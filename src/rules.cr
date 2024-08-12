@@ -11,7 +11,7 @@ module Tartrazine
   # This rule matches via a regex pattern
 
   class Rule
-    property pattern : Regex = Re2.new ""
+    property pattern : Regex = Regex.new ""
     property actions : Array(Action) = [] of Action
     property xml : String = "foo"
 
@@ -33,12 +33,15 @@ module Tartrazine
 
     def initialize(node : XML::Node, multiline, dotall, ignorecase)
       @xml = node.to_s
-      @pattern = Re2.new(
-        node["pattern"],
-        multiline,
-        dotall,
-        ignorecase,
-        anchored: true)
+      pattern = node["pattern"]
+      flags = Regex::Options::ANCHORED
+      # MULTILINE implies DOTALL which we don't want, so we
+      # use in-pattern flag (?m) instead
+      # flags |= Regex::Options::MULTILINE if multiline
+      pattern = "(?m)" + pattern if multiline
+      flags |= Regex::Options::DOTALL if dotall
+      flags |= Regex::Options::IGNORE_CASE if ignorecase
+      @pattern = Regex.new(pattern, flags)
       add_actions(node)
     end
 
@@ -88,27 +91,6 @@ module Tartrazine
     def initialize(node : XML::Node)
       @xml = node.to_s
       add_actions(node)
-    end
-  end
-
-  # This is a hack to workaround that Crystal seems to disallow
-  # having regexes multiline but not dot_all
-  class Re2 < Regex
-    @source = "fa"
-    @options = Regex::Options::None
-    @jit = true
-
-    def initialize(pattern : String, multiline = false, dotall = false, ignorecase = false, anchored = false)
-      flags = LibPCRE2::UTF | LibPCRE2::DUPNAMES |
-              LibPCRE2::UCP
-      flags |= LibPCRE2::MULTILINE if multiline
-      flags |= LibPCRE2::DOTALL if dotall
-      flags |= LibPCRE2::CASELESS if ignorecase
-      flags |= LibPCRE2::ANCHORED if anchored
-      flags |= LibPCRE2::NO_UTF_CHECK
-      @re = Regex::PCRE2.compile(pattern, flags) do |error_message|
-        raise Exception.new(error_message)
-      end
     end
   end
 end
