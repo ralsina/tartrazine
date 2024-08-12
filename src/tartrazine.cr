@@ -1,5 +1,4 @@
 require "./actions"
-require "./constants"
 require "./formatter"
 require "./rules"
 require "./styles"
@@ -12,7 +11,7 @@ require "xml"
 
 module Tartrazine
   extend self
-  VERSION = "0.1.1"
+  VERSION = "0.2.0"
 
   Log = ::Log.for("tartrazine")
 end

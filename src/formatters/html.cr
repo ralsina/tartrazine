@@ -1,3 +1,4 @@
+require "../constants/token_abbrevs.cr"
 require "../formatter"
 
 module Tartrazine
@@ -36,10 +37,10 @@ module Tartrazine
     end
 
     def format_text(text : String, lexer : Lexer, theme : Theme) : String
-      lines = group_tokens_in_lines(lexer.tokenize(text))
+      lines = lexer.group_tokens_in_lines(lexer.tokenize(text))
       output = String.build do |outp|
         if surrounding_pre?
-          pre_style= wrap_long_lines? ? "style=\"white-space: pre-wrap; word-break: break-word;\"" : ""
+          pre_style = wrap_long_lines? ? "style=\"white-space: pre-wrap; word-break: break-word;\"" : ""
           outp << "<pre class=\"#{get_css_class("Background", theme)}\" #{pre_style}>"
         end
         outp << "<code class=\"#{get_css_class("Background", theme)}\">"
@@ -47,7 +48,7 @@ module Tartrazine
           line_label = line_numbers? ? "#{i + 1}".rjust(4).ljust(5) : ""
           line_class = highlighted?(i + 1) ? "class=\"#{get_css_class("LineHighlight", theme)}\"" : ""
           line_id = linkable_line_numbers? ? "id=\"#{line_number_id_prefix}#{i + 1}\"" : ""
-          outp << "<span #{line_id} #{line_class}>#{line_label}</span>"
+          outp << "<span #{line_id} #{line_class} style=\"user-select: none;\">#{line_label} </span>"
           line.each do |token|
             fragment = "<span class=\"#{get_css_class(token[:type], theme)}\">#{token[:value]}</span>"
             outp << fragment
@@ -99,29 +100,6 @@ module Tartrazine
 
     def highlighted?(line : Int) : Bool
       highlight_lines.any?(&.includes?(line))
-    end
-
-    def group_tokens_in_lines(tokens : Array(Token)) : Array(Array(Token))
-      split_tokens = [] of Token
-      tokens.each do |token|
-        if token[:value].includes?("\n")
-          values = token[:value].split("\n")
-          values.each_with_index do |value, index|
-            value += "\n" if index < values.size - 1
-            split_tokens << {type: token[:type], value: value}
-          end
-        else
-          split_tokens << token
-        end
-      end
-      lines = [Array(Token).new]
-      split_tokens.each do |token|
-        lines.last << token
-        if token[:value].includes?("\n")
-          lines << Array(Token).new
-        end
-      end
-      lines
     end
   end
 end

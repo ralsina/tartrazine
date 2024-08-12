@@ -31,12 +31,21 @@ is a subset of Pygments'.
 
 Currently Tartrazine supports ... 241 languages.
 
-It has 332 themes (64 from Chroma, the rest are base16 themes via
+It has 331 themes (63 from Chroma, the rest are base16 themes via
 [Sixteen](https://github.com/ralsina/sixteen)
 
 ## Installation
 
-This has a CLI but it's not generally usable.
+From prebuilt binaries:
+
+Each release provides statically-linked binaries that should
+work on any Linux. Get them from the [releases page](https://github.com/ralsina/tartrazine/releases) and put them in your PATH.
+
+To build from source:
+
+1. Clone this repo
+2. Run `make` to build the `tartrazine` binary
+3. Copy the binary somewhere in your PATH.
 
 ## Usage
 
