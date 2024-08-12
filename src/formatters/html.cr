@@ -42,7 +42,7 @@ module Tartrazine
           pre_style= wrap_long_lines? ? "style=\"white-space: pre-wrap; word-break: break-word;\"" : ""
           outp << "<pre class=\"#{get_css_class("Background", theme)}\" #{pre_style}>"
         end
-        "<code class=\"#{get_css_class("Background", theme)}\">"
+        outp << "<code class=\"#{get_css_class("Background", theme)}\">"
         lines.each_with_index(offset: line_number_start - 1) do |line, i|
           line_label = line_numbers? ? "#{i + 1}".rjust(4).ljust(5) : ""
           line_class = highlighted?(i + 1) ? "class=\"#{get_css_class("LineHighlight", theme)}\"" : ""
