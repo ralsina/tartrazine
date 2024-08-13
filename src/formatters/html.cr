@@ -15,7 +15,7 @@ module Tartrazine
     property? standalone : Bool = false
     property? surrounding_pre : Bool = true
     property? wrap_long_lines : Bool = false
-    property? weight_of_bold : Int32 = 600
+    property weight_of_bold : Int32 = 600
 
     def format(text : String, lexer : Lexer, theme : Theme) : String
       text = format_text(text, lexer, theme)
@@ -73,7 +73,7 @@ module Tartrazine
           # These are true/false/nil
           outp << "border: none;" if style.border == false
           outp << "font-weight: bold;" if style.bold
-          outp << "font-weight: #{weight_of_bold};" if style.bold == false
+          outp << "font-weight: #{@weight_of_bold};" if style.bold == false
           outp << "font-style: italic;" if style.italic
           outp << "font-style: normal;" if style.italic == false
           outp << "text-decoration: underline;" if style.underline
