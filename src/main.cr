@@ -54,6 +54,8 @@ if options["--list-formatters"]
   exit 0
 end
 
+theme = Tartrazine.theme(options["-t"].as(String))
+
 if options["-f"]
   formatter = options["-f"].as(String)
   case formatter
@@ -61,9 +63,11 @@ if options["-f"]
     formatter = Tartrazine::Html.new
     formatter.standalone = options["--standalone"] != nil
     formatter.line_numbers = options["--line-numbers"] != nil
+    formatter.theme = theme
   when "terminal"
     formatter = Tartrazine::Ansi.new
     formatter.line_numbers = options["--line-numbers"] != nil
+    formatter.theme = theme
   when "json"
     formatter = Tartrazine::Json.new
   else
@@ -71,11 +75,9 @@ if options["-f"]
     exit 1
   end
 
-  theme = Tartrazine.theme(options["-t"].as(String))
-
   if formatter.is_a?(Tartrazine::Html) && options["--css"]
     File.open("#{options["-t"].as(String)}.css", "w") do |outf|
-      outf.puts formatter.get_style_defs(theme)
+      outf.puts formatter.style_defs
     end
     exit 0
   end
@@ -83,7 +85,7 @@ if options["-f"]
   lexer = Tartrazine.lexer(name: options["-l"].as(String), filename: options["FILE"].as(String))
 
   input = File.open(options["FILE"].as(String)).gets_to_end
-  output = formatter.format(input, lexer, theme)
+  output = formatter.format(input, lexer)
 
   if options["-o"].nil?
     puts output

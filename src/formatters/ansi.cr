@@ -4,20 +4,23 @@ module Tartrazine
   class Ansi < Formatter
     property? line_numbers : Bool = false
 
-    def format(text : String, lexer : Lexer, theme : Theme) : String
+    def initialize(@theme : Theme = Tartrazine.theme("default-dark"), @line_numbers : Bool = false)
+    end
+
+    def format(text : String, lexer : Lexer) : String
       output = String.build do |outp|
         lexer.group_tokens_in_lines(lexer.tokenize(text)).each_with_index do |line, i|
           label = line_numbers? ? "#{i + 1}".rjust(4).ljust(5) : ""
           outp << label
           line.each do |token|
-            outp << colorize(token[:value], token[:type], theme)
+            outp << colorize(token[:value], token[:type])
           end
         end
       end
       output
     end
 
-    def colorize(text : String, token : String, theme : Theme) : String
+    def colorize(text : String, token : String) : String
       style = theme.styles.fetch(token, nil)
       return text if style.nil?
       if theme.styles.has_key?(token)
