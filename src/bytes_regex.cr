@@ -16,8 +16,11 @@ module BytesRegex
            out erroroffset,
            nil)
       else
-        # FIXME: show actual error message
-        raise Exception.new "Error compiling regex"
+        msg = String.new(256) do |buffer|
+          bytesize = LibPCRE2.get_error_message(errorcode, buffer, 256)
+          {bytesize, 0}
+        end
+        raise Exception.new "Error #{msg} compiling regex at offset #{erroroffset}"
       end
     end
 
@@ -37,7 +40,7 @@ module BytesRegex
         match_data,
         nil)
       if rc < 0
-        # FIXME: handle actual errors
+        # No match, do nothing
       else
         ovector = LibPCRE2.get_ovector_pointer(match_data)
         (0...rc).each do |i|
