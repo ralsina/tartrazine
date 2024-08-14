@@ -14,6 +14,7 @@ unicode_problems = {
   "#{__DIR__}/tests/java/test_string_literals.txt",
   "#{__DIR__}/tests/json/test_strings.txt",
   "#{__DIR__}/tests/systemd/example1.txt",
+  "#{__DIR__}/tests/c++/test_unicode_identifiers.txt",
 }
 
 # These testcases fail because of differences in the way chroma and tartrazine tokenize

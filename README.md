@@ -4,17 +4,17 @@ Tartrazine is a library to syntax-highlight code. It is
 a port of [Pygments](https://pygments.org/) to
 [Crystal](https://crystal-lang.org/). Kind of.
 
-It's not currently usable because it's not finished, but:
-
-* The lexers work for the implemented languages
-* The provided styles work
-* There is a very very simple HTML formatter
+The CLI tool can be used to highlight many things in many styles.
 
 # A port of what? Why "kind of"?
 
-Because I did not read the Pygments code. And this is actually
-based on [Chroma](https://github.com/alecthomas/chroma) ...
-although I did not read that code either.
+Pygments is a staple of the Python ecosystem, and it's great.
+It lets you highlight code in many languages, and it has many
+themes. Chroma is "Pygments for Go", it's actually a port of
+Pygments to Go, and it's great too.
+
+I wanted that in Crystal, so I started this project. But I did
+not read much of the Pygments code. Or much of Chroma's.
 
 Chroma has taken most of the Pygments lexers and turned them into
 XML descriptions. What I did was take those XML files from Chroma

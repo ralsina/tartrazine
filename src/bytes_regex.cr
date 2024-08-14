@@ -3,7 +3,7 @@ module BytesRegex
 
   class Regex
     def initialize(pattern : String, multiline = false, dotall = false, ignorecase = false, anchored = false)
-      flags = LibPCRE2::UTF | LibPCRE2::DUPNAMES | LibPCRE2::UCP
+      flags = LibPCRE2::UTF | LibPCRE2::DUPNAMES | LibPCRE2::UCP | LibPCRE2::NO_UTF_CHECK
       flags |= LibPCRE2::MULTILINE if multiline
       flags |= LibPCRE2::DOTALL if dotall
       flags |= LibPCRE2::CASELESS if ignorecase
@@ -36,7 +36,7 @@ module BytesRegex
         str,
         str.size,
         pos,
-        0,
+        LibPCRE2::NO_UTF_CHECK,
         match_data,
         nil)
       if rc < 0
