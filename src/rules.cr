@@ -19,7 +19,7 @@ module Tartrazine
       match = pattern.match(text, pos)
       # We don't match if the match doesn't move the cursor
       # because that causes infinite loops
-      return false, pos, [] of Token if match.nil? || match.end == 0
+      return false, pos, [] of Token if match.nil? || match.size == 0
       # Log.trace { "#{match}, #{pattern.inspect}, #{text}, #{pos}" }
       tokens = [] of Token
       # Emit the tokens
