@@ -42,7 +42,6 @@ known_bad = {
   "#{__DIR__}/tests/mcfunction/selectors.txt",
   "#{__DIR__}/tests/php/anonymous_class.txt",
   "#{__DIR__}/tests/html/javascript_unclosed.txt",
-
 }
 
 # Tests that fail because of a limitation in PCRE2
