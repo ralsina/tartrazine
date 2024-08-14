@@ -1,8 +1,9 @@
 require "./actions"
+require "./bytes_regex"
 require "./formatter"
+require "./lexer"
 require "./rules"
 require "./styles"
-require "./lexer"
 
 # These are lexer rules. They match with the text being parsed
 # and perform actions, either emitting tokens or changing the
@@ -10,16 +11,21 @@ require "./lexer"
 module Tartrazine
   # This rule matches via a regex pattern
 
+  alias Regex = BytesRegex::Regex
+  alias Match = BytesRegex::Match
+  alias MatchData = Array(Match)
+
   class Rule
     property pattern : Regex = Regex.new ""
     property actions : Array(Action) = [] of Action
     property xml : String = "foo"
 
-    def match(text, pos, lexer) : Tuple(Bool, Int32, Array(Token))
+    def match(text : Bytes, pos, lexer) : Tuple(Bool, Int32, Array(Token))
       match = pattern.match(text, pos)
       # We don't match if the match doesn't move the cursor
       # because that causes infinite loops
-      return false, pos, [] of Token if match.nil? || match.size == 0
+      return false, pos, [] of Token if match.empty? || match[0].size == 0
+      # p! match, String.new(text[pos..pos+20])
       # Log.trace { "#{match}, #{pattern.inspect}, #{text}, #{pos}" }
       tokens = [] of Token
       # Emit the tokens
@@ -27,21 +33,21 @@ module Tartrazine
         # Emit the token
         tokens += action.emit(match, lexer)
       end
-      Log.trace { "#{xml}, #{match.end}, #{tokens}" }
-      return true, match.end, tokens
+      Log.trace { "#{xml}, #{pos + match[0].size}, #{tokens}" }
+      return true, pos + match[0].size, tokens
     end
 
     def initialize(node : XML::Node, multiline, dotall, ignorecase)
       @xml = node.to_s
       pattern = node["pattern"]
-      flags = Regex::Options::ANCHORED
+      # flags = Regex::Options::ANCHORED
       # MULTILINE implies DOTALL which we don't want, so we
       # use in-pattern flag (?m) instead
       # flags |= Regex::Options::MULTILINE if multiline
       pattern = "(?m)" + pattern if multiline
-      flags |= Regex::Options::DOTALL if dotall
-      flags |= Regex::Options::IGNORE_CASE if ignorecase
-      @pattern = Regex.new(pattern, flags)
+      # flags |= Regex::Options::DOTALL if dotall
+      # flags |= Regex::Options::IGNORE_CASE if ignorecase
+      @pattern = Regex.new(pattern, multiline, dotall, ignorecase, true)
       add_actions(node)
     end
 
@@ -83,7 +89,7 @@ module Tartrazine
     def match(text, pos, lexer) : Tuple(Bool, Int32, Array(Token))
       tokens = [] of Token
       actions.each do |action|
-        tokens += action.emit(nil, lexer)
+        tokens += action.emit([] of Match, lexer)
       end
       return true, pos, tokens
     end

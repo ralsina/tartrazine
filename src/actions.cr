@@ -30,11 +30,11 @@ module Tartrazine
     end
 
     # ameba:disable Metrics/CyclomaticComplexity
-    def emit(match : Regex::MatchData?, lexer : Lexer, match_group = 0) : Array(Token)
+    def emit(match : MatchData, lexer : Lexer, match_group = 0) : Array(Token)
       case type
       when "token"
-        raise Exception.new "Can't have a token without a match" if match.nil?
-        [Token.new(type: xml["type"], value: match[match_group])]
+        raise Exception.new "Can't have a token without a match" if match.empty?
+        [Token.new(type: xml["type"], value: String.new(match[match_group].value))]
       when "push"
         states_to_push = xml.attributes.select { |attrib|
           attrib.name == "state"
@@ -79,23 +79,29 @@ module Tartrazine
         # the action is skipped.
         result = [] of Token
         @actions.each_with_index do |e, i|
-          next if match[i + 1]?.nil?
+          begin
+            next if match[i + 1].size == 0
+          rescue IndexError
+            # FIXME: This should not actually happen
+            # No match for this group
+            next
+          end
           result += e.emit(match, lexer, i + 1)
         end
         result
       when "using"
         # Shunt to another lexer entirely
-        return [] of Token if match.nil?
+        return [] of Token if match.empty?
         lexer_name = xml["lexer"].downcase
         Log.trace { "to tokenize: #{match[match_group]}" }
-        Tartrazine.lexer(lexer_name).tokenize(match[match_group], usingself: true)
+        Tartrazine.lexer(lexer_name).tokenize(String.new(match[match_group].value), usingself: true)
       when "usingself"
         # Shunt to another copy of this lexer
-        return [] of Token if match.nil?
+        return [] of Token if match.empty?
 
         new_lexer = Lexer.from_xml(lexer.xml)
         Log.trace { "to tokenize: #{match[match_group]}" }
-        new_lexer.tokenize(match[match_group], usingself: true)
+        new_lexer.tokenize(String.new(match[match_group].value), usingself: true)
       when "combined"
         # Combine two states into one anonymous state
         states = xml.attributes.select { |attrib|

@@ -1,3 +1,4 @@
+require "baked_file_system"
 require "./constants/lexers"
 
 module Tartrazine
@@ -65,7 +66,7 @@ module Tartrazine
     # is true when the lexer is being used to tokenize a string
     # from a larger text that is already being tokenized.
     # So, when it's true, we don't modify the text.
-    def tokenize(text, usingself = false) : Array(Token)
+    def tokenize(text : String, usingself = false) : Array(Token)
       @state_stack = ["root"]
       tokens = [] of Token
       pos = 0
@@ -76,12 +77,13 @@ module Tartrazine
         text += "\n"
       end
 
+      text_bytes = text.to_slice
       # Loop through the text, applying rules
-      while pos < text.size
+      while pos < text_bytes.size
         state = states[@state_stack.last]
         # Log.trace { "Stack is #{@state_stack} State is #{state.name}, pos is #{pos}, text is #{text[pos..pos + 10]}" }
         state.rules.each do |rule|
-          matched, new_pos, new_tokens = rule.match(text, pos, self)
+          matched, new_pos, new_tokens = rule.match(text_bytes, pos, self)
           if matched
             # Move position forward, save the tokens,
             # tokenize from the new position
@@ -94,12 +96,12 @@ module Tartrazine
         end
         # If no rule matches, emit an error token
         unless matched
-          if text[pos] == "\n"
+          if text_bytes[pos] == 10u8
             # at EOL, reset state to "root"
-            tokens << {type: "TextWhitespace", value: "\n"}
+            tokens << {type: "Text", value: "\n"}
             @state_stack = ["root"]
           else
-            tokens << {type: "Error", value: text[pos..pos]}
+            tokens << {type: "Error", value: String.new(text_bytes[pos..pos])}
           end
           pos += 1
         end
