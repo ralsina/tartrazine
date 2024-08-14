@@ -30,7 +30,7 @@ module Tartrazine
                    @standalone : Bool = false,
                    @surrounding_pre : Bool = true,
                    @wrap_long_lines : Bool = false,
-                   @weight_of_bold : Int32 = 600,)
+                   @weight_of_bold : Int32 = 600)
     end
 
     def format(text : String, lexer : Lexer) : String
