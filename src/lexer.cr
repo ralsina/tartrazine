@@ -94,8 +94,13 @@ module Tartrazine
         end
         # If no rule matches, emit an error token
         unless matched
-          # Log.trace { "Error at #{pos}" }
-          tokens << {type: "Error", value: "#{text[pos]}"}
+          if text[pos] == "\n"
+            # at EOL, reset state to "root"
+            tokens << {type: "TextWhitespace", value: "\n"}
+            @state_stack = ["root"]
+          else
+            tokens << {type: "Error", value: text[pos..pos]}
+          end
           pos += 1
         end
       end
