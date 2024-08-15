@@ -109,7 +109,7 @@ module Tartrazine
       when "usingself"
         # Shunt to another copy of this lexer
         return [] of Token if match.empty?
-        new_lexer = Lexer.from_xml(lexer.xml)
+        new_lexer = lexer.copy
         new_lexer.tokenize(String.new(match[match_group].value), usingself: true)
       when "combined"
         # Combine two states into one anonymous state

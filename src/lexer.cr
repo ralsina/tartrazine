@@ -56,9 +56,17 @@ module Tartrazine
       not_multiline:    false,
       ensure_nl:        false,
     }
-    property xml : String = ""
+    # property xml : String = ""
     property states = {} of String => State
     property state_stack = ["root"]
+
+    def copy : Lexer
+      new_lexer = Lexer.new
+      new_lexer.config = config
+      new_lexer.states = states
+      new_lexer.state_stack = state_stack[0..-1]
+      new_lexer
+    end
 
     # Turn the text into a list of tokens. The `usingself` parameter
     # is true when the lexer is being used to tokenize a string
@@ -85,12 +93,10 @@ module Tartrazine
           if matched
             # Move position forward, save the tokens,
             # tokenize from the new position
-            # Log.trace { "MATCHED: #{rule.xml}" }
             pos = new_pos
             tokens += new_tokens
             break
           end
-          # Log.trace { "NOT MATCHED: #{rule.xml}" }
         end
         # If no rule matches, emit an error token
         unless matched
@@ -156,7 +162,6 @@ module Tartrazine
     # ameba:disable Metrics/CyclomaticComplexity
     def self.from_xml(xml : String) : Lexer
       l = Lexer.new
-      l.xml = xml
       lexer = XML.parse(xml).first_element_child
       if lexer
         config = lexer.children.find { |node|
