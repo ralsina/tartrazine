@@ -15,7 +15,7 @@ module Tartrazine
       disambiguation = disambiguations.find do |item|
         item.extensions.includes? ext
       end
-      p! disambiguation
+      disambiguation.try &.run(content, named_patterns)
     end
   end
 
@@ -23,6 +23,15 @@ module Tartrazine
     include YAML::Serializable
     property extensions : Array(String)
     property rules : Array(LangRule)
+
+    def run(content, named_patterns)
+      rules.each do |rule|
+        if rule.match(content, named_patterns)
+          return rule.language
+        end
+      end
+      nil
+    end
   end
 
   class Rule
@@ -30,6 +39,27 @@ module Tartrazine
     property pattern : (String | Array(String))?
     property named_pattern : String?
     property and : Array(Rule)?
+
+    def match(content, named_patterns)
+      result = true
+      if pattern
+        p_arr = [] of String
+        p_arr << pattern.as(String) if pattern.is_a? String
+        p_arr = pattern.as(Array(String)) if pattern.is_a? Array(String)
+        result = p_arr.any? { |pat| ::Regex.new(pat).match(content) }
+      elsif named_pattern
+        p_arr = [] of String
+        if named_patterns[named_pattern].is_a? String
+          p_arr << named_patterns[named_pattern].as(String)
+        else
+          p_arr = named_patterns[named_pattern].as(Array(String))
+        end
+        result = p_arr.any? { |pat| ::Regex.new(pat).match(content) }
+      elsif and
+        result = and.as(Array(Rule)).all?(&.match(content, named_patterns))
+      end
+      result
+    end
   end
 
   class LangRule < Rule
@@ -39,4 +69,4 @@ module Tartrazine
 end
 
 h = Tartrazine::Heuristic.from_yaml(File.read("heuristics/heuristics.yml"))
-h.run("../elkjs/src/elk.h", File.read("../elkjs/src/elk.h"))
+p! h.run("../elkjs/src/elk.h", File.read("../elkjs/src/elk.h"))
