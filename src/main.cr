@@ -77,7 +77,7 @@ if options["-f"]
 
   if formatter.is_a?(Tartrazine::Html) && options["--css"]
     File.open("#{options["-t"].as(String)}.css", "w") do |outf|
-      outf.puts formatter.style_defs
+      outf << formatter.style_defs
     end
     exit 0
   end
@@ -91,7 +91,7 @@ if options["-f"]
     puts output
   else
     File.open(options["-o"].as(String), "w") do |outf|
-      outf.puts output
+      outf << output
     end
   end
 end

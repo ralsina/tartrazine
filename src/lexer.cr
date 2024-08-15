@@ -57,9 +57,7 @@ module Tartrazine
       ensure_nl:        false,
     }
     property xml : String = ""
-
     property states = {} of String => State
-
     property state_stack = ["root"]
 
     # Turn the text into a list of tokens. The `usingself` parameter
