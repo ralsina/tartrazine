@@ -18,35 +18,23 @@ module Tartrazine
   class Rule
     property pattern : Regex = Regex.new ""
     property actions : Array(Action) = [] of Action
-    property xml : String = "foo"
 
     def match(text : Bytes, pos, lexer) : Tuple(Bool, Int32, Array(Token))
       match = pattern.match(text, pos)
       # We don't match if the match doesn't move the cursor
       # because that causes infinite loops
       return false, pos, [] of Token if match.empty? || match[0].size == 0
-      # p! match, String.new(text[pos..pos+20])
-      # Log.trace { "#{match}, #{pattern.inspect}, #{text}, #{pos}" }
       tokens = [] of Token
-      # Emit the tokens
       actions.each do |action|
-        # Emit the token
         tokens += action.emit(match, lexer)
       end
-      Log.trace { "#{xml}, #{pos + match[0].size}, #{tokens}" }
       return true, pos + match[0].size, tokens
     end
 
     def initialize(node : XML::Node, multiline, dotall, ignorecase)
       @xml = node.to_s
       pattern = node["pattern"]
-      # flags = Regex::Options::ANCHORED
-      # MULTILINE implies DOTALL which we don't want, so we
-      # use in-pattern flag (?m) instead
-      # flags |= Regex::Options::MULTILINE if multiline
       pattern = "(?m)" + pattern if multiline
-      # flags |= Regex::Options::DOTALL if dotall
-      # flags |= Regex::Options::IGNORE_CASE if ignorecase
       @pattern = Regex.new(pattern, multiline, dotall, ignorecase, true)
       add_actions(node)
     end
@@ -68,7 +56,6 @@ module Tartrazine
       Log.trace { "Including state #{state} from #{lexer.state_stack.last}" }
       lexer.states[state].rules.each do |rule|
         matched, new_pos, new_tokens = rule.match(text, pos, lexer)
-        Log.trace { "#{xml}, #{new_pos}, #{new_tokens}" } if matched
         return true, new_pos, new_tokens if matched
       end
       return false, pos, [] of Token
