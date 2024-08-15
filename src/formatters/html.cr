@@ -1,5 +1,6 @@
 require "../constants/token_abbrevs.cr"
 require "../formatter"
+require "html"
 
 module Tartrazine
   class Html < Formatter
@@ -67,7 +68,7 @@ module Tartrazine
           line_id = linkable_line_numbers? ? "id=\"#{line_number_id_prefix}#{i + 1}\"" : ""
           outp << "<span #{line_id} #{line_class} style=\"user-select: none;\">#{line_label} </span>"
           line.each do |token|
-            fragment = "<span class=\"#{get_css_class(token[:type])}\">#{token[:value]}</span>"
+            fragment = "<span class=\"#{get_css_class(token[:type])}\">#{HTML.escape(token[:value])}</span>"
             outp << fragment
           end
         end
