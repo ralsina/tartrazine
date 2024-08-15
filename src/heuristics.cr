@@ -37,25 +37,37 @@ module Tartrazine
   class Rule
     include YAML::Serializable
     property pattern : (String | Array(String))?
+    property negative_pattern : (String | Array(String))?
     property named_pattern : String?
     property and : Array(Rule)?
 
+    # ameba:disable Metrics/CyclomaticComplexity
     def match(content, named_patterns)
-      result = true
+      # This rule matches without conditions
+      return true if !pattern && !negative_pattern && !named_pattern && !and
+
       if pattern
         p_arr = [] of String
         p_arr << pattern.as(String) if pattern.is_a? String
         p_arr = pattern.as(Array(String)) if pattern.is_a? Array(String)
-        result = p_arr.any? { |pat| ::Regex.new(pat).match(content) }
-      elsif named_pattern
+        return true if p_arr.any? { |pat| ::Regex.new(pat).matches?(content) }
+      end
+      if negative_pattern
+        p_arr = [] of String
+        p_arr << negative_pattern.as(String) if negative_pattern.is_a? String
+        p_arr = negative_pattern.as(Array(String)) if negative_pattern.is_a? Array(String)
+        return true if p_arr.none? { |pat| ::Regex.new(pat).matches?(content) }
+      end
+      if named_pattern
         p_arr = [] of String
         if named_patterns[named_pattern].is_a? String
           p_arr << named_patterns[named_pattern].as(String)
         else
           p_arr = named_patterns[named_pattern].as(Array(String))
         end
-        result = p_arr.any? { |pat| ::Regex.new(pat).match(content) }
-      elsif and
+        result = p_arr.any? { |pat| ::Regex.new(pat).matches?(content) }
+      end
+      if and
         result = and.as(Array(Rule)).all?(&.match(content, named_patterns))
       end
       result
@@ -68,5 +80,5 @@ module Tartrazine
   end
 end
 
-h = Tartrazine::Heuristic.from_yaml(File.read("heuristics/heuristics.yml"))
-p! h.run("../elkjs/src/elk.h", File.read("../elkjs/src/elk.h"))
+# h = Tartrazine::Heuristic.from_yaml(File.read("heuristics/heuristics.yml"))
+# p! h.run(ARGV[0], File.read(ARGV[0]))
