@@ -22,14 +22,15 @@ module BytesRegex
         end
         raise Exception.new "Error #{msg} compiling regex at offset #{erroroffset}"
       end
+      @match_data = LibPCRE2.match_data_create_from_pattern(@re, nil)
     end
 
     def finalize
+      LibPCRE2.match_data_free(@match_data)
       LibPCRE2.code_free(@re)
     end
 
     def match(str : Bytes, pos = 0) : Array(Match)
-      match_data = LibPCRE2.match_data_create_from_pattern(@re, nil)
       match = [] of Match
       rc = LibPCRE2.match(
         @re,
@@ -37,12 +38,12 @@ module BytesRegex
         str.size,
         pos,
         LibPCRE2::NO_UTF_CHECK,
-        match_data,
+        @match_data,
         nil)
       if rc < 0
         # No match, do nothing
       else
-        ovector = LibPCRE2.get_ovector_pointer(match_data)
+        ovector = LibPCRE2.get_ovector_pointer(@match_data)
         (0...rc).each do |i|
           m_start = ovector[2 * i]
           m_size = ovector[2 * i + 1] - m_start
@@ -54,7 +55,6 @@ module BytesRegex
           match << Match.new(m_value, m_start, m_size)
         end
       end
-      LibPCRE2.match_data_free(match_data)
       match
     end
   end
