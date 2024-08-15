@@ -15,11 +15,28 @@ module Tartrazine
   alias Match = BytesRegex::Match
   alias MatchData = Array(Match)
 
-  abstract struct BaseRule
-    abstract def match(text : Bytes, pos : Int32, tokenizer : Tokenizer) : Tuple(Bool, Int32, Array(Token))
-    abstract def initialize(node : XML::Node)
+  class Rule
+    property pattern : Regex = Regex.new ""
+    property actions : Array(Action) = [] of Action
 
-    @actions : Array(Action) = [] of Action
+    def match(text : Bytes, pos, lexer) : Tuple(Bool, Int32, Array(Token))
+      match = pattern.match(text, pos)
+      # We don't match if the match doesn't move the cursor
+      # because that causes infinite loops
+      return false, pos, [] of Token if match.empty? || match[0].size == 0
+      tokens = [] of Token
+      actions.each do |action|
+        tokens += action.emit(match, lexer)
+      end
+      return true, pos + match[0].size, tokens
+    end
+
+    def initialize(node : XML::Node, multiline, dotall, ignorecase)
+      pattern = node["pattern"]
+      pattern = "(?m)" + pattern if multiline
+      @pattern = Regex.new(pattern, multiline, dotall, ignorecase, true)
+      add_actions(node)
+    end
 
     def add_actions(node : XML::Node)
       node.children.each do |child|
@@ -56,9 +73,9 @@ module Tartrazine
   struct IncludeStateRule < BaseRule
     @state : String = ""
 
-    def match(text : Bytes, pos : Int32, tokenizer : Tokenizer) : Tuple(Bool, Int32, Array(Token))
-      tokenizer.@lexer.states[@state].rules.each do |rule|
-        matched, new_pos, new_tokens = rule.match(text, pos, tokenizer)
+    def match(text, pos, lexer) : Tuple(Bool, Int32, Array(Token))
+      lexer.states[state].rules.each do |rule|
+        matched, new_pos, new_tokens = rule.match(text, pos, lexer)
         return true, new_pos, new_tokens if matched
       end
       return false, pos, [] of Token

@@ -1,6 +1,18 @@
 require "docopt"
 require "./**"
 
+# Performance data (in milliseconds):
+#
+# Docopt parsing:            0.5
+# Instantiating a theme:     0.1
+# Instantiating a formatter: 1.0
+# Instantiating a lexer:     2.0
+# Tokenizing crycco.cr:     16.0
+# Formatting:                0.5
+# I/O:                       1.5
+# ---------------------------------
+# Total:                    21.6
+
 HELP = <<-HELP
 tartrazine: a syntax highlighting tool
 
@@ -84,7 +96,6 @@ if options["-f"]
   end
 
   lexer = Tartrazine.lexer(name: options["-l"].as(String), filename: options["FILE"].as(String))
-
   input = File.open(options["FILE"].as(String)).gets_to_end
 
   if options["-o"].nil?
