@@ -47,9 +47,6 @@ module Tartrazine
   struct Lexer
     property config = {
       name:             "",
-      aliases:          [] of String,
-      filenames:        [] of String,
-      mime_types:       [] of String,
       priority:         0.0,
       case_insensitive: false,
       dot_all:          false,
@@ -169,9 +166,6 @@ module Tartrazine
         if config
           l.config = {
             name:             xml_to_s(config, name) || "",
-            aliases:          xml_to_a(config, _alias) || [] of String,
-            filenames:        xml_to_a(config, filename) || [] of String,
-            mime_types:       xml_to_a(config, mime_type) || [] of String,
             priority:         xml_to_f(config, priority) || 0.0,
             not_multiline:    xml_to_s(config, not_multiline) == "true",
             dot_all:          xml_to_s(config, dot_all) == "true",
