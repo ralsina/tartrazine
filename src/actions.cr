@@ -8,19 +8,29 @@ require "./tartrazine"
 # perform a list of actions. These actions can emit tokens
 # or change the state machine.
 module Tartrazine
+  enum ActionType
+    Token
+    Push
+    Pop
+    Combined
+    Bygroups
+    Include
+    Using
+    Usingself
+  end
+
   struct Action
     property actions : Array(Action) = [] of Action
-    property type : String
 
     @depth : Int32 = 0
     @lexer_name : String = ""
     @states : Array(String) = [] of String
     @states_to_push : Array(String) = [] of String
     @token_type : String = ""
+    @type : ActionType = ActionType::Token
 
-    def initialize(@type : String, xml : XML::Node?)
-      known_types = %w(token push pop combined bygroups include using usingself)
-      raise Exception.new("Unknown action type: #{type}") unless known_types.includes? type
+    def initialize(t : String, xml : XML::Node?)
+      @type = ActionType.parse(t.capitalize)
 
       # Some actions may have actions in them, like this:
       # <bygroups>
@@ -37,18 +47,18 @@ module Tartrazine
       end
 
       # Prefetch the attributes we ned from the XML and keep them
-      case type
-      when "token"
+      case @type
+      when ActionType::Token
         @token_type = xml["type"]
-      when "push"
+      when ActionType::Push
         @states_to_push = xml.attributes.select { |attrib|
           attrib.name == "state"
         }.map &.content
-      when "pop"
+      when ActionType::Pop
         @depth = xml["depth"].to_i
-      when "using"
+      when ActionType::Using
         @lexer_name = xml["lexer"].downcase
-      when "combined"
+      when ActionType::Combined
         @states = xml.attributes.select { |attrib|
           attrib.name == "state"
         }.map &.content
@@ -57,11 +67,11 @@ module Tartrazine
 
     # ameba:disable Metrics/CyclomaticComplexity
     def emit(match : MatchData, lexer : Lexer, match_group = 0) : Array(Token)
-      case type
-      when "token"
+      case @type
+      when ActionType::Token
         raise Exception.new "Can't have a token without a match" if match.empty?
         [Token.new(type: @token_type, value: String.new(match[match_group].value))]
-      when "push"
+      when ActionType::Push
         to_push = @states_to_push.empty? ? [lexer.state_stack.last] : @states_to_push
         to_push.each do |state|
           if state == "#pop" && lexer.state_stack.size > 1
@@ -73,11 +83,11 @@ module Tartrazine
           end
         end
         [] of Token
-      when "pop"
+      when ActionType::Pop
         to_pop = [@depth, lexer.state_stack.size - 1].min
         lexer.state_stack.pop(to_pop)
         [] of Token
-      when "bygroups"
+      when ActionType::Bygroups
         # FIXME: handle
         # ><bygroups>
         # <token type="Punctuation"/>
@@ -102,16 +112,16 @@ module Tartrazine
           result += e.emit(match, lexer, i + 1)
         end
         result
-      when "using"
+      when ActionType::Using
         # Shunt to another lexer entirely
         return [] of Token if match.empty?
-        Tartrazine.lexer(@lexer_name).tokenize(String.new(match[match_group].value), usingself: true)
-      when "usingself"
+        Tartrazine.lexer(@lexer_name).tokenize(String.new(match[match_group].value), secondary: true)
+      when ActionType::Usingself
         # Shunt to another copy of this lexer
         return [] of Token if match.empty?
         new_lexer = lexer.copy
-        new_lexer.tokenize(String.new(match[match_group].value), usingself: true)
-      when "combined"
+        new_lexer.tokenize(String.new(match[match_group].value), secondary: true)
+      when ActionType::Combined
         # Combine two states into one anonymous state
         new_state = @states.map { |name|
           lexer.states[name]
@@ -122,7 +132,7 @@ module Tartrazine
         lexer.state_stack << new_state.name
         [] of Token
       else
-        raise Exception.new("Unknown action type: #{type}")
+        raise Exception.new("Unknown action type: #{@type}")
       end
     end
   end

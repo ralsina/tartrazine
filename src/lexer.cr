@@ -68,18 +68,18 @@ module Tartrazine
       new_lexer
     end
 
-    # Turn the text into a list of tokens. The `usingself` parameter
+    # Turn the text into a list of tokens. The `secondary` parameter
     # is true when the lexer is being used to tokenize a string
     # from a larger text that is already being tokenized.
     # So, when it's true, we don't modify the text.
-    def tokenize(text : String, usingself = false) : Array(Token)
+    def tokenize(text : String, secondary = false) : Array(Token)
       @state_stack = ["root"]
       tokens = [] of Token
       pos = 0
       matched = false
 
       # Respect the `ensure_nl` config option
-      if text.size > 0 && text[-1] != '\n' && config[:ensure_nl] && !usingself
+      if text.size > 0 && text[-1] != '\n' && config[:ensure_nl] && !secondary
         text += "\n"
       end
 
