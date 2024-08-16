@@ -80,8 +80,8 @@ module Tartrazine
             @state_stack = ["root"]
           else
             @dq << {type: "Error", value: String.new(@text[@pos..@pos])}
-            @pos += 1
           end
+          @pos += 1
           break
         end  
       end
