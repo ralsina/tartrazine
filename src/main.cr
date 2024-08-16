@@ -85,13 +85,11 @@ if options["-f"]
   lexer = Tartrazine.lexer(name: options["-l"].as(String), filename: options["FILE"].as(String))
 
   input = File.open(options["FILE"].as(String)).gets_to_end
-  output = formatter.format(input, lexer)
 
   if options["-o"].nil?
-    puts output
+    outf = STDOUT
   else
-    File.open(options["-o"].as(String), "w") do |outf|
-      outf << output
-    end
+    outf = File.open(options["-o"].as(String), "w")
   end
+  formatter.format(input, lexer, outf)
 end

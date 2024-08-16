@@ -34,24 +34,21 @@ module Tartrazine
                    @weight_of_bold : Int32 = 600)
     end
 
-    def format(text : String, lexer : Lexer) : String
-      text = format_text(text, lexer)
-      if standalone?
-        text = wrap_standalone(text)
-      end
-      text
+    def format(text : String, lexer : Lexer, dst : IO) : Nil
+      pre, post = wrap_standalone
+      dst << pre if standalone?
+      format_text(text, lexer, dst)
+      dst << post if standalone?
     end
 
     # Wrap text into a full HTML document, including the CSS for the theme
-    def wrap_standalone(text) : String
+    def wrap_standalone
       output = String.build do |outp|
         outp << "<!DOCTYPE html><html><head><style>"
         outp << style_defs
         outp << "</style></head><body>"
-        outp << text
-        outp << "</body></html>"
       end
-      output
+      {output.to_s, "</body></html>"}
     end
 
     private def line_label(i : Int32) : String
@@ -61,27 +58,23 @@ module Tartrazine
       "<span #{line_id} #{line_class} style=\"user-select: none;\">#{line_label} </span>"
     end
 
-    def format_text(text : String, lexer : Lexer) : String
-      # lines = lexer.group_tokens_in_lines(lexer.tokenize(text))
+    def format_text(text : String, lexer : Lexer, outp : IO) : Nil
       tokenizer = Tokenizer.new(lexer, text)
       i = 0
-      output = String.build do |outp|
-        if surrounding_pre?
-          pre_style = wrap_long_lines? ? "style=\"white-space: pre-wrap; word-break: break-word;\"" : ""
-          outp << "<pre class=\"#{get_css_class("Background")}\" #{pre_style}>"
-        end
-        outp << "<code class=\"#{get_css_class("Background")}\">"
-        outp << line_label(i) if line_numbers?
-        tokenizer.each do |token|
-          outp << "<span class=\"#{get_css_class(token[:type])}\">#{HTML.escape(token[:value])}</span>"
-          if token[:value].ends_with? "\n"
-            i += 1
-            outp << line_label(i) if line_numbers?
-          end
-        end
-        outp << "</code></pre>"
+      if surrounding_pre?
+        pre_style = wrap_long_lines? ? "style=\"white-space: pre-wrap; word-break: break-word;\"" : ""
+        outp << "<pre class=\"#{get_css_class("Background")}\" #{pre_style}>"
       end
-      output
+      outp << "<code class=\"#{get_css_class("Background")}\">"
+      outp << line_label(i) if line_numbers?
+      tokenizer.each do |token|
+        outp << "<span class=\"#{get_css_class(token[:type])}\">#{HTML.escape(token[:value])}</span>"
+        if token[:value].ends_with? "\n"
+          i += 1
+          outp << line_label(i) if line_numbers?
+        end
+      end
+      outp << "</code></pre>"
     end
 
     # ameba:disable Metrics/CyclomaticComplexity
