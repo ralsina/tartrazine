@@ -38,7 +38,7 @@ module Tartrazine
 
       # No match
       return false, pos, [] of Token if match.size == 0
-      return true, pos + match[0].size, actions.flat_map { |action| action.emit(match, lexer) }
+      return true, pos + match[0].size, actions.flat_map(&.emit(match, lexer))
     end
 
     def initialize(node : XML::Node)
@@ -80,7 +80,7 @@ module Tartrazine
     NO_MATCH = [] of Match
 
     def match(text, pos, lexer) : Tuple(Bool, Int32, Array(Token))
-      return true, pos, actions.flat_map { |action| action.emit(NO_MATCH, lexer) }
+      return true, pos, actions.flat_map(&.emit(NO_MATCH, lexer))
     end
 
     def initialize(node : XML::Node)
