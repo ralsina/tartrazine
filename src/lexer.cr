@@ -83,30 +83,29 @@ module Tartrazine
         text += "\n"
       end
 
+      # We operate in bytes from now on
       text_bytes = text.to_slice
-      # Loop through the text, applying rules
+      # Loop through the text, matching rules
       while pos < text_bytes.size
-        state = states[@state_stack.last]
-        # Log.trace { "Stack is #{@state_stack} State is #{state.name}, pos is #{pos}, text is #{text[pos..pos + 10]}" }
-        state.rules.each do |rule|
+        states[@state_stack.last].rules.each do |rule|
           matched, new_pos, new_tokens = rule.match(text_bytes, pos, self)
           if matched
             # Move position forward, save the tokens,
-            # tokenize from the new position
             pos = new_pos
             tokens += new_tokens
             break
           end
         end
-        # If no rule matches, emit an error token
-        unless matched
+        if !matched
+          # at EOL, emit the newline, reset state to "root"
           if text_bytes[pos] == 10u8
-            # at EOL, reset state to "root"
             tokens << {type: "Text", value: "\n"}
             @state_stack = ["root"]
           else
+            # Emit an error token
             tokens << {type: "Error", value: String.new(text_bytes[pos..pos])}
           end
+          # Move forward 1
           pos += 1
         end
       end
