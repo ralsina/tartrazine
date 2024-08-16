@@ -19,7 +19,7 @@ module Tartrazine
     abstract def match(text : Bytes, pos, lexer) : Tuple(Bool, Int32, Array(Token))
     abstract def initialize(node : XML::Node)
 
-    property actions : Array(Action) = [] of Action
+    @actions : Array(Action) = [] of Action
 
     def add_actions(node : XML::Node)
       node.children.each do |child|
@@ -31,14 +31,13 @@ module Tartrazine
 
   struct Rule < BaseRule
     property pattern : Regex = Regex.new ""
-    property actions : Array(Action) = [] of Action
 
     def match(text : Bytes, pos, lexer) : Tuple(Bool, Int32, Array(Token))
       match = pattern.match(text, pos)
 
       # No match
       return false, pos, [] of Token if match.size == 0
-      return true, pos + match[0].size, actions.flat_map(&.emit(match, lexer))
+      return true, pos + match[0].size, @actions.flat_map(&.emit(match, lexer))
     end
 
     def initialize(node : XML::Node)
@@ -55,11 +54,10 @@ module Tartrazine
   # This rule includes another state. If any of the rules of the
   # included state matches, this rule matches.
   struct IncludeStateRule < BaseRule
-    property state : String = ""
+    @state : String = ""
 
     def match(text, pos, lexer) : Tuple(Bool, Int32, Array(Token))
-      Log.trace { "Including state #{state} from #{lexer.state_stack.last}" }
-      lexer.states[state].rules.each do |rule|
+      lexer.states[@state].rules.each do |rule|
         matched, new_pos, new_tokens = rule.match(text, pos, lexer)
         return true, new_pos, new_tokens if matched
       end
@@ -80,7 +78,7 @@ module Tartrazine
     NO_MATCH = [] of Match
 
     def match(text, pos, lexer) : Tuple(Bool, Int32, Array(Token))
-      return true, pos, actions.flat_map(&.emit(NO_MATCH, lexer))
+      return true, pos, @actions.flat_map(&.emit(NO_MATCH, lexer))
     end
 
     def initialize(node : XML::Node)

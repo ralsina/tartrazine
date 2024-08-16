@@ -57,7 +57,7 @@ module BytesRegex
     end
   end
 
-  class Match
+  struct Match
     property value : Bytes
     property start : UInt64
     property size : UInt64

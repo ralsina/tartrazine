@@ -44,7 +44,7 @@ module Tartrazine
   # For explanations on what actions and states do
   # the Pygments documentation is a good place to start.
   # https://pygments.org/docs/lexerdevelopment/
-  class Lexer
+  struct Lexer
     property config = {
       name:             "",
       aliases:          [] of String,

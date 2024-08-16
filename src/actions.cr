@@ -9,12 +9,12 @@ require "./tartrazine"
 # or change the state machine.
 module Tartrazine
   enum ActionType
-    Token
-    Push
-    Pop
-    Combined
     Bygroups
+    Combined
     Include
+    Pop
+    Push
+    Token
     Using
     Usingself
   end
