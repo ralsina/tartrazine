@@ -83,7 +83,7 @@ module Tartrazine
           end
           @pos += 1
           break
-        end  
+        end
       end
       self.next
     end
