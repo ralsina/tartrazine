@@ -122,7 +122,7 @@ module Tartrazine
         new_lexer = lexer.copy
         new_lexer.tokenize(String.new(match[match_group].value), secondary: true)
       when ActionType::Combined
-        # Combine two states into one anonymous state
+        # Combine two or more states into one anonymous state
         new_state = @states.map { |name|
           lexer.states[name]
         }.reduce { |state1, state2|
