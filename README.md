@@ -47,7 +47,14 @@ To build from source:
 2. Run `make` to build the `tartrazine` binary
 3. Copy the binary somewhere in your PATH.
 
-## Usage
+## Usage as a CLI tool
+
+```shell
+$ tartrazine whatever.c -l c -t catppuccin-macchiato --line-numbers \
+  --standalone -o whatever.html 
+```
+
+## Usage as a Library
 
 This works:
 
