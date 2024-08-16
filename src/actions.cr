@@ -8,7 +8,7 @@ require "./tartrazine"
 # perform a list of actions. These actions can emit tokens
 # or change the state machine.
 module Tartrazine
-  class Action
+  struct Action
     property actions : Array(Action) = [] of Action
     property type : String
 
@@ -64,7 +64,7 @@ module Tartrazine
       when "push"
         to_push = @states_to_push.empty? ? [lexer.state_stack.last] : @states_to_push
         to_push.each do |state|
-          if state == "#pop"
+          if state == "#pop" && lexer.state_stack.size > 1
             # Pop the state
             lexer.state_stack.pop
           else
