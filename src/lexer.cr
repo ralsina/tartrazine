@@ -4,7 +4,6 @@ require "./constants/lexers"
 module Tartrazine
   class LexerFiles
     extend BakedFileSystem
-
     bake_folder "../lexers", __DIR__
   end
 
@@ -61,7 +60,7 @@ module Tartrazine
       new_lexer = Lexer.new
       new_lexer.config = config
       new_lexer.states = states
-      new_lexer.state_stack = state_stack[0..-1]
+      new_lexer.state_stack = ["root"]
       new_lexer
     end
 
@@ -87,9 +86,10 @@ module Tartrazine
         states[@state_stack.last].rules.each do |rule|
           matched, new_pos, new_tokens = rule.match(text_bytes, pos, self)
           if matched
-            # Move position forward, save the tokens,
+            # Move position forward, save the tokens
             pos = new_pos
             tokens += new_tokens
+            # Start matching rules at new position
             break
           end
         end
