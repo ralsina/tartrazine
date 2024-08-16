@@ -68,8 +68,7 @@ module Tartrazine
           line_id = linkable_line_numbers? ? "id=\"#{line_number_id_prefix}#{i + 1}\"" : ""
           outp << "<span #{line_id} #{line_class} style=\"user-select: none;\">#{line_label} </span>"
           line.each do |token|
-            fragment = "<span class=\"#{get_css_class(token[:type])}\">#{HTML.escape(token[:value])}</span>"
-            outp << fragment
+            outp << "<span class=\"#{get_css_class(token[:type])}\">#{HTML.escape(token[:value])}</span>"
           end
         end
         outp << "</code></pre>"
@@ -105,15 +104,17 @@ module Tartrazine
 
     # Given a token type, return the CSS class to use.
     def get_css_class(token : String) : String
-      return class_prefix + Abbreviations[token] if theme.styles.has_key?(token)
-
-      # Themes don't contain information for each specific
-      # token type. However, they may contain information
-      # for a parent style. Worst case, we go to the root
-      # (Background) style.
-      class_prefix + Abbreviations[theme.style_parents(token).reverse.find { |parent|
-        theme.styles.has_key?(parent)
-      }]
+      if !theme.styles.has_key? token
+        # Themes don't contain information for each specific
+        # token type. However, they may contain information
+        # for a parent style. Worst case, we go to the root
+        # (Background) style.
+        parent = theme.style_parents(token).reverse.find { |dad|
+          theme.styles.has_key?(dad)
+        }
+        theme.styles[token] = theme.styles[parent]
+      end
+      class_prefix + Abbreviations[token]
     end
 
     # Is this line in the highlighted ranges?

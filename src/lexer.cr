@@ -225,9 +225,9 @@ module Tartrazine
   # A Lexer state. A state has a name and a list of rules.
   # The state machine has a state stack containing references
   # to states to decide which rules to apply.
-  class State
+  struct State
     property name : String = ""
-    property rules = [] of Rule
+    property rules = [] of BaseRule
 
     def +(other : State)
       new_state = State.new

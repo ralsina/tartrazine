@@ -15,29 +15,11 @@ module Tartrazine
   alias Match = BytesRegex::Match
   alias MatchData = Array(Match)
 
-  class Rule
-    property pattern : Regex = Regex.new ""
+  abstract struct BaseRule
+    abstract def match(text : Bytes, pos, lexer) : Tuple(Bool, Int32, Array(Token))
+    abstract def initialize(node : XML::Node)
+
     property actions : Array(Action) = [] of Action
-
-    def match(text : Bytes, pos, lexer) : Tuple(Bool, Int32, Array(Token))
-      match = pattern.match(text, pos)
-      # We don't match if the match doesn't move the cursor
-      # because that causes infinite loops
-      return false, pos, [] of Token if match.empty? || match[0].size == 0
-      tokens = [] of Token
-      actions.each do |action|
-        tokens += action.emit(match, lexer)
-      end
-      return true, pos + match[0].size, tokens
-    end
-
-    def initialize(node : XML::Node, multiline, dotall, ignorecase)
-      @xml = node.to_s
-      pattern = node["pattern"]
-      pattern = "(?m)" + pattern if multiline
-      @pattern = Regex.new(pattern, multiline, dotall, ignorecase, true)
-      add_actions(node)
-    end
 
     def add_actions(node : XML::Node)
       node.children.each do |child|
@@ -47,9 +29,32 @@ module Tartrazine
     end
   end
 
+  struct Rule < BaseRule
+    property pattern : Regex = Regex.new ""
+    property actions : Array(Action) = [] of Action
+
+    def match(text : Bytes, pos, lexer) : Tuple(Bool, Int32, Array(Token))
+      match = pattern.match(text, pos)
+
+      # No match
+      return false, pos, [] of Token if match.size == 0
+      return true, pos + match[0].size, actions.flat_map { |action| action.emit(match, lexer) }
+    end
+
+    def initialize(node : XML::Node)
+    end
+
+    def initialize(node : XML::Node, multiline, dotall, ignorecase)
+      pattern = node["pattern"]
+      pattern = "(?m)" + pattern if multiline
+      @pattern = Regex.new(pattern, multiline, dotall, ignorecase, true)
+      add_actions(node)
+    end
+  end
+
   # This rule includes another state. If any of the rules of the
   # included state matches, this rule matches.
-  class IncludeStateRule < Rule
+  struct IncludeStateRule < BaseRule
     property state : String = ""
 
     def match(text, pos, lexer) : Tuple(Bool, Int32, Array(Token))
@@ -62,7 +67,6 @@ module Tartrazine
     end
 
     def initialize(node : XML::Node)
-      @xml = node.to_s
       include_node = node.children.find { |child|
         child.name == "include"
       }
@@ -72,17 +76,14 @@ module Tartrazine
   end
 
   # This rule always matches, unconditionally
-  class UnconditionalRule < Rule
+  struct UnconditionalRule < BaseRule
+    NO_MATCH = [] of Match
+
     def match(text, pos, lexer) : Tuple(Bool, Int32, Array(Token))
-      tokens = [] of Token
-      actions.each do |action|
-        tokens += action.emit([] of Match, lexer)
-      end
-      return true, pos, tokens
+      return true, pos, actions.flat_map { |action| action.emit(NO_MATCH, lexer) }
     end
 
     def initialize(node : XML::Node)
-      @xml = node.to_s
       add_actions(node)
     end
   end
