@@ -54,21 +54,29 @@ module Tartrazine
       output
     end
 
+    private def line_label(i : Int32) : String
+      line_label = "#{i + 1}".rjust(4).ljust(5)
+      line_class = highlighted?(i + 1) ? "class=\"#{get_css_class("LineHighlight")}\"" : ""
+      line_id = linkable_line_numbers? ? "id=\"#{line_number_id_prefix}#{i + 1}\"" : ""
+      "<span #{line_id} #{line_class} style=\"user-select: none;\">#{line_label} </span>"
+    end
+
     def format_text(text : String, lexer : Lexer) : String
-      lines = lexer.group_tokens_in_lines(lexer.tokenize(text))
+      # lines = lexer.group_tokens_in_lines(lexer.tokenize(text))
+      tokenizer = Tokenizer.new(lexer, text)
+      i = 0
       output = String.build do |outp|
         if surrounding_pre?
           pre_style = wrap_long_lines? ? "style=\"white-space: pre-wrap; word-break: break-word;\"" : ""
           outp << "<pre class=\"#{get_css_class("Background")}\" #{pre_style}>"
         end
         outp << "<code class=\"#{get_css_class("Background")}\">"
-        lines.each_with_index(offset: line_number_start - 1) do |line, i|
-          line_label = line_numbers? ? "#{i + 1}".rjust(4).ljust(5) : ""
-          line_class = highlighted?(i + 1) ? "class=\"#{get_css_class("LineHighlight")}\"" : ""
-          line_id = linkable_line_numbers? ? "id=\"#{line_number_id_prefix}#{i + 1}\"" : ""
-          outp << "<span #{line_id} #{line_class} style=\"user-select: none;\">#{line_label} </span>"
-          line.each do |token|
-            outp << "<span class=\"#{get_css_class(token[:type])}\">#{HTML.escape(token[:value])}</span>"
+        outp << line_label(i) if line_numbers?
+        tokenizer.each do |token|
+          outp << "<span class=\"#{get_css_class(token[:type])}\">#{HTML.escape(token[:value])}</span>"
+          if token[:value].ends_with? "\n"
+            i += 1
+            outp << line_label(i) if line_numbers?
           end
         end
         outp << "</code></pre>"

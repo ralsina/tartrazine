@@ -73,7 +73,8 @@ end
 # Helper that creates lexer and tokenizes
 def tokenize(lexer_name, text)
   lexer = Tartrazine.lexer(lexer_name)
-  lexer.tokenize(text)
+  tokenizer = Tartrazine::Tokenizer.new(lexer, text)
+  Tartrazine::Lexer.collapse_tokens(tokenizer.to_a)
 end
 
 # Helper that tokenizes using chroma to validate the lexer

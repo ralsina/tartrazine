@@ -37,6 +37,75 @@ module Tartrazine
     LEXERS_BY_NAME.keys.sort!
   end
 
+  # A token, the output of the tokenizer
+  alias Token = NamedTuple(type: String, value: String)
+
+  struct Tokenizer
+    include Iterator(Token)
+    property lexer : Lexer
+    property text : Bytes
+    property pos : Int32 = 0
+    @dq = Deque(Token).new
+    property state_stack = ["root"]
+
+    def initialize(@lexer : Lexer, text : String, secondary = false)
+      # Respect the `ensure_nl` config option
+      if text.size > 0 && text[-1] != '\n' && @lexer.config[:ensure_nl] && !secondary
+        text += "\n"
+      end
+      @text = text.to_slice
+    end
+
+    def next : Iterator::Stop | Token
+      if @dq.size > 0
+        return @dq.shift
+      end
+      if pos == @text.size
+        return stop
+      end
+
+      matched = false
+      while @pos < @text.size
+        @lexer.states[@state_stack.last].rules.each do |rule|
+          matched, new_pos, new_tokens = rule.match(@text, @pos, self)
+          if matched
+            @pos = new_pos
+            split_tokens(new_tokens).each { |token| @dq << token }
+            break
+          end
+        end
+        if !matched
+          if @text[@pos] == 10u8
+            @dq << {type: "Text", value: "\n"}
+            @state_stack = ["root"]
+          else
+            @dq << {type: "Error", value: String.new(@text[@pos..@pos])}
+            @pos += 1
+          end
+          break
+        end  
+      end
+      self.next
+    end
+
+    # If a token contains a newline, split it into two tokens
+    def split_tokens(tokens : Array(Token)) : Array(Token)
+      split_tokens = [] of Token
+      tokens.each do |token|
+        if token[:value].includes?("\n")
+          values = token[:value].split("\n")
+          values.each_with_index do |value, index|
+            value += "\n" if index < values.size - 1
+            split_tokens << {type: token[:type], value: value}
+          end
+        else
+          split_tokens << token
+        end
+      end
+      split_tokens
+    end
+  end
+
   # This implements a lexer for Pygments RegexLexers as expressed
   # in Chroma's XML serialization.
   #
@@ -52,62 +121,7 @@ module Tartrazine
       not_multiline:    false,
       ensure_nl:        false,
     }
-    # property xml : String = ""
     property states = {} of String => State
-    property state_stack = ["root"]
-
-    def copy : Lexer
-      new_lexer = Lexer.new
-      new_lexer.config = config
-      new_lexer.states = states
-      new_lexer.state_stack = ["root"]
-      new_lexer
-    end
-
-    # Turn the text into a list of tokens. The `secondary` parameter
-    # is true when the lexer is being used to tokenize a string
-    # from a larger text that is already being tokenized.
-    # So, when it's true, we don't modify the text.
-    def tokenize(text : String, secondary = false) : Array(Token)
-      @state_stack = ["root"]
-      tokens = [] of Token
-      pos = 0
-      matched = false
-
-      # Respect the `ensure_nl` config option
-      if text.size > 0 && text[-1] != '\n' && config[:ensure_nl] && !secondary
-        text += "\n"
-      end
-
-      # We operate in bytes from now on
-      text_bytes = text.to_slice
-      # Loop through the text, matching rules
-      while pos < text_bytes.size
-        states[@state_stack.last].rules.each do |rule|
-          matched, new_pos, new_tokens = rule.match(text_bytes, pos, self)
-          if matched
-            # Move position forward, save the tokens
-            pos = new_pos
-            tokens += new_tokens
-            # Start matching rules at new position
-            break
-          end
-        end
-        if !matched
-          # at EOL, emit the newline, reset state to "root"
-          if text_bytes[pos] == 10u8
-            tokens << {type: "Text", value: "\n"}
-            @state_stack = ["root"]
-          else
-            # Emit an error token
-            tokens << {type: "Error", value: String.new(text_bytes[pos..pos])}
-          end
-          # Move forward 1
-          pos += 1
-        end
-      end
-      Lexer.collapse_tokens(tokens)
-    end
 
     # Collapse consecutive tokens of the same type for easier comparison
     # and smaller output
@@ -131,31 +145,6 @@ module Tartrazine
       result
     end
 
-    # Group tokens into lines, splitting them when a newline is found
-    def group_tokens_in_lines(tokens : Array(Token)) : Array(Array(Token))
-      split_tokens = [] of Token
-      tokens.each do |token|
-        if token[:value].includes?("\n")
-          values = token[:value].split("\n")
-          values.each_with_index do |value, index|
-            value += "\n" if index < values.size - 1
-            split_tokens << {type: token[:type], value: value}
-          end
-        else
-          split_tokens << token
-        end
-      end
-      lines = [Array(Token).new]
-      split_tokens.each do |token|
-        lines.last << token
-        if token[:value].includes?("\n")
-          lines << Array(Token).new
-        end
-      end
-      lines
-    end
-
-    # ameba:disable Metrics/CyclomaticComplexity
     def self.from_xml(xml : String) : Lexer
       l = Lexer.new
       lexer = XML.parse(xml).first_element_child
@@ -229,7 +218,4 @@ module Tartrazine
       new_state
     end
   end
-
-  # A token, the output of the tokenizer
-  alias Token = NamedTuple(type: String, value: String)
 end

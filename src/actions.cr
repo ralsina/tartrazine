@@ -66,26 +66,26 @@ module Tartrazine
     end
 
     # ameba:disable Metrics/CyclomaticComplexity
-    def emit(match : MatchData, lexer : Lexer, match_group = 0) : Array(Token)
+    def emit(match : MatchData, tokenizer : Tokenizer, match_group = 0) : Array(Token)
       case @type
       when ActionType::Token
         raise Exception.new "Can't have a token without a match" if match.empty?
         [Token.new(type: @token_type, value: String.new(match[match_group].value))]
       when ActionType::Push
-        to_push = @states_to_push.empty? ? [lexer.state_stack.last] : @states_to_push
+        to_push = @states_to_push.empty? ? [tokenizer.state_stack.last] : @states_to_push
         to_push.each do |state|
-          if state == "#pop" && lexer.state_stack.size > 1
+          if state == "#pop" && tokenizer.state_stack.size > 1
             # Pop the state
-            lexer.state_stack.pop
+            tokenizer.state_stack.pop
           else
             # Really push
-            lexer.state_stack << state
+            tokenizer.state_stack << state
           end
         end
         [] of Token
       when ActionType::Pop
-        to_pop = [@depth, lexer.state_stack.size - 1].min
-        lexer.state_stack.pop(to_pop)
+        to_pop = [@depth, tokenizer.state_stack.size - 1].min
+        tokenizer.state_stack.pop(to_pop)
         [] of Token
       when ActionType::Bygroups
         # FIXME: handle
@@ -109,27 +109,32 @@ module Tartrazine
             # No match for this group
             next
           end
-          result += e.emit(match, lexer, i + 1)
+          result += e.emit(match, tokenizer, i + 1)
         end
         result
       when ActionType::Using
         # Shunt to another lexer entirely
         return [] of Token if match.empty?
-        Tartrazine.lexer(@lexer_name).tokenize(String.new(match[match_group].value), secondary: true)
+        Tokenizer.new(
+          Tartrazine.lexer(@lexer_name),
+          String.new(match[match_group].value),
+          secondary: true).to_a
       when ActionType::Usingself
         # Shunt to another copy of this lexer
         return [] of Token if match.empty?
-        new_lexer = lexer.copy
-        new_lexer.tokenize(String.new(match[match_group].value), secondary: true)
+        Tokenizer.new(
+          tokenizer.lexer,
+          String.new(match[match_group].value),
+          secondary: true).to_a
       when ActionType::Combined
         # Combine two or more states into one anonymous state
         new_state = @states.map { |name|
-          lexer.states[name]
+          tokenizer.lexer.states[name]
         }.reduce { |state1, state2|
           state1 + state2
         }
-        lexer.states[new_state.name] = new_state
-        lexer.state_stack << new_state.name
+        tokenizer.lexer.states[new_state.name] = new_state
+        tokenizer.state_stack << new_state.name
         [] of Token
       else
         raise Exception.new("Unknown action type: #{@type}")

@@ -16,7 +16,7 @@ module Tartrazine
   alias MatchData = Array(Match)
 
   abstract struct BaseRule
-    abstract def match(text : Bytes, pos, lexer) : Tuple(Bool, Int32, Array(Token))
+    abstract def match(text : Bytes, pos : Int32, tokenizer : Tokenizer) : Tuple(Bool, Int32, Array(Token))
     abstract def initialize(node : XML::Node)
 
     @actions : Array(Action) = [] of Action
@@ -32,12 +32,12 @@ module Tartrazine
   struct Rule < BaseRule
     property pattern : Regex = Regex.new ""
 
-    def match(text : Bytes, pos, lexer) : Tuple(Bool, Int32, Array(Token))
+    def match(text : Bytes, pos, tokenizer) : Tuple(Bool, Int32, Array(Token))
       match = pattern.match(text, pos)
 
       # No match
       return false, pos, [] of Token if match.size == 0
-      return true, pos + match[0].size, @actions.flat_map(&.emit(match, lexer))
+      return true, pos + match[0].size, @actions.flat_map(&.emit(match, tokenizer))
     end
 
     def initialize(node : XML::Node)
@@ -56,9 +56,9 @@ module Tartrazine
   struct IncludeStateRule < BaseRule
     @state : String = ""
 
-    def match(text, pos, lexer) : Tuple(Bool, Int32, Array(Token))
-      lexer.states[@state].rules.each do |rule|
-        matched, new_pos, new_tokens = rule.match(text, pos, lexer)
+    def match(text : Bytes, pos : Int32, tokenizer : Tokenizer) : Tuple(Bool, Int32, Array(Token))
+      tokenizer.@lexer.states[@state].rules.each do |rule|
+        matched, new_pos, new_tokens = rule.match(text, pos, tokenizer)
         return true, new_pos, new_tokens if matched
       end
       return false, pos, [] of Token
@@ -77,8 +77,8 @@ module Tartrazine
   struct UnconditionalRule < BaseRule
     NO_MATCH = [] of Match
 
-    def match(text, pos, lexer) : Tuple(Bool, Int32, Array(Token))
-      return true, pos, @actions.flat_map(&.emit(NO_MATCH, lexer))
+    def match(text, pos, tokenizer) : Tuple(Bool, Int32, Array(Token))
+      return true, pos, @actions.flat_map(&.emit(NO_MATCH, tokenizer))
     end
 
     def initialize(node : XML::Node)

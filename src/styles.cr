@@ -9,7 +9,7 @@ require "xml"
 module Tartrazine
   alias Color = Sixteen::Color
 
-  class ThemeFiles
+  struct ThemeFiles
     extend BakedFileSystem
     bake_folder "../styles", __DIR__
   end
@@ -39,7 +39,7 @@ module Tartrazine
     themes.to_a.sort!
   end
 
-  class Style
+  struct Style
     # These properties are tri-state.
     # true means it's set
     # false means it's not set
@@ -79,7 +79,7 @@ module Tartrazine
     end
   end
 
-  class Theme
+  struct Theme
     property name : String = ""
 
     property styles = {} of String => Style
