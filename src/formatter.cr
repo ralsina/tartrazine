@@ -12,7 +12,11 @@ module Tartrazine
     property theme : Theme = Tartrazine.theme("default-dark")
 
     # Format the text using the given lexer.
-    def format(text : String, lexer : Lexer, io : IO? = nil) : String?
+    def format(text : String, lexer : Lexer, io : IO = nil) : Nil
+      raise Exception.new("Not implemented")
+    end
+
+    def format(text : String, lexer : Lexer) : String
       raise Exception.new("Not implemented")
     end
 
