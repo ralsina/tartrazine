@@ -34,11 +34,13 @@ module Tartrazine
                    @weight_of_bold : Int32 = 600)
     end
 
-    def format(text : String, lexer : Lexer, dst : IO) : Nil
+    def format(text : String, lexer : Lexer, io : IO) : Nil
+      outp = io.nil? ? String::Builder.new("") : io
       pre, post = wrap_standalone
-      dst << pre if standalone?
-      format_text(text, lexer, dst)
-      dst << post if standalone?
+      outp << pre if standalone?
+      format_text(text, lexer, outp)
+      outp << post if standalone?
+      return outp.to_s if io.nil?
     end
 
     # Wrap text into a full HTML document, including the CSS for the theme
@@ -58,8 +60,7 @@ module Tartrazine
       "<span #{line_id} #{line_class} style=\"user-select: none;\">#{line_label} </span>"
     end
 
-    def format_text(text : String, lexer : Lexer, io : IO?) : String?
-      outp = io.nil? ? String::Builder.new("") : io
+    def format_text(text : String, lexer : Lexer, outp : IO)
       tokenizer = Tokenizer.new(lexer, text)
       i = 0
       if surrounding_pre?
@@ -76,7 +77,6 @@ module Tartrazine
         end
       end
       outp << "</code></pre>"
-      return outp.to_s if io.nil?
     end
 
     # ameba:disable Metrics/CyclomaticComplexity
