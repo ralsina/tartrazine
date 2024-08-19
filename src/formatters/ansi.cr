@@ -11,7 +11,8 @@ module Tartrazine
       "#{i + 1}".rjust(4).ljust(5)
     end
 
-    def format(text : String, lexer : Lexer, outp : IO) : Nil
+    def format(text : String, lexer : Lexer, io : IO?) : String?
+      outp = io.nil? ? String::Builder.new("") : io
       tokenizer = Tokenizer.new(lexer, text)
       i = 0
       outp << line_label(i) if line_numbers?
@@ -22,6 +23,7 @@ module Tartrazine
           outp << line_label(i) if line_numbers?
         end
       end
+      return outp.to_s if io.nil?
     end
 
     def colorize(text : String, token : String) : String
