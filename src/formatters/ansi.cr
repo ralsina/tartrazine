@@ -11,7 +11,7 @@ module Tartrazine
       "#{i + 1}".rjust(4).ljust(5)
     end
 
-    def format(text : String, lexer : Lexer, io : IO?) : String?
+    def format(text : String, lexer : Lexer, io : IO? = nil) : String?
       outp = io.nil? ? String::Builder.new("") : io
       tokenizer = Tokenizer.new(lexer, text)
       i = 0

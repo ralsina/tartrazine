@@ -34,7 +34,7 @@ module Tartrazine
                    @weight_of_bold : Int32 = 600)
     end
 
-    def format(text : String, lexer : Lexer, io : IO?) : String?
+    def format(text : String, lexer : Lexer, io : IO? = nil) : String?
       outp = io.nil? ? String::Builder.new("") : io
       pre, post = wrap_standalone
       outp << pre if standalone?
