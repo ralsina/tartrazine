@@ -37,9 +37,8 @@ module Tartrazine
     def format(text : String, lexer : Lexer) : String
       outp = String::Builder.new("")
       format(text, lexer, outp)
-      return outp.to_s
+      outp.to_s
     end
-
 
     def format(text : String, lexer : Lexer, io : IO) : Nil
       pre, post = wrap_standalone
