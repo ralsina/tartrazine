@@ -40,15 +40,18 @@ for fname in glob.glob("lexers/*.xml"):
 with open("src/constants/lexers.cr", "w") as f:
     f.write("module Tartrazine\n")
     f.write("  LEXERS_BY_NAME = {\n")
-    for k, v in lexer_by_name.items():
+    for k in sorted(lexer_by_name.keys()):
+        v = lexer_by_name[k]
         f.write(f'"{k}" => "{v}", \n')
     f.write("}\n")
     f.write("  LEXERS_BY_MIMETYPE = {\n")
-    for k, v in lexer_by_mimetype.items():
+    for k in sorted(lexer_by_mimetype.keys()):
+        v = lexer_by_mimetype[k]
         f.write(f'"{k}" => "{v}", \n')
     f.write("}\n")
     f.write("  LEXERS_BY_FILENAME = {\n")
-    for k, v in lexer_by_filename.items():
+    for k in sorted(lexer_by_filename.keys()):
+        v = lexer_by_filename[k]
         f.write(f'"{k}" => {str(list(v)).replace("'", "\"")}, \n')
     f.write("}\n")
     f.write("end\n")
