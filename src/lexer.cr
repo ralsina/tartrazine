@@ -42,7 +42,7 @@ module Tartrazine
 
   struct Tokenizer
     include Iterator(Token)
-    property lexer : Lexer
+    property lexer : BaseLexer
     property text : Bytes
     property pos : Int32 = 0
     @dq = Deque(Token).new
@@ -106,13 +106,16 @@ module Tartrazine
     end
   end
 
+  abstract struct BaseLexer
+  end
+
   # This implements a lexer for Pygments RegexLexers as expressed
   # in Chroma's XML serialization.
   #
   # For explanations on what actions and states do
   # the Pygments documentation is a good place to start.
   # https://pygments.org/docs/lexerdevelopment/
-  struct Lexer
+  struct Lexer < BaseLexer
     property config = {
       name:             "",
       priority:         0.0,
@@ -201,6 +204,56 @@ module Tartrazine
         end
       end
       l
+    end
+  end
+
+  # A lexer that takes two lexers as arguments. A root lexer
+  # and a language lexer. Everything is scalled using the
+  # language lexer, afterwards all `Other` tokens are lexed
+  # using the root lexer.
+  #
+  # This is useful for things like template languages, where
+  # you have Jinja + HTML or Jinja + CSS and so on.
+  struct DelegatingLexer < BaseLexer
+    property root_lexer : Lexer
+    property language_lexer : Lexer
+
+    def initialize(@lexer : Lexer, @delegate : Lexer)
+    end
+  end
+
+  # This Tokenizer works with a DelegatingLexer. It first tokenizes
+  # using the language lexer, and "Other" tokens are tokenized using
+  # the root lexer.
+  struct DelegatingTokenizer
+    include Iterator(Token)
+    @dq = Deque(Token).new
+
+    def initialize(@lexer : Lexer, text : String, secondary = false)
+      # Respect the `ensure_nl` config option
+      if text.size > 0 && text[-1] != '\n' && @lexer.config[:ensure_nl] && !secondary
+        text += "\n"
+      end
+      @language_tokenizer = Tokenizer.new(@lexer.language_lexer, text, true)
+    end
+
+    def next : Iterator::Stop | Token
+      if @dq.size > 0
+        return @dq.shift
+      end
+      token = @language_tokenizer.next
+      if token == Iterator::Stop
+        return stop
+      end
+      if token[:type] == "Other"
+        @root_tokenizer = Tokenizer.new(@lexer.root_lexer, token[:value], true)
+        @root_tokenizer.each do |root_token|
+          @dq << root_token
+        end
+      else
+        dq << token
+      end
+      self.next
     end
   end
 
