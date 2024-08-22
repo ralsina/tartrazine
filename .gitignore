@@ -8,3 +8,4 @@ pygments/
 shard.lock
 .vscode/
 .crystal/
+venv/
