@@ -92,4 +92,5 @@ if options["-f"]
     outf = File.open(options["-o"].as(String), "w")
   end
   formatter.format(input, lexer, outf)
+  outf.close
 end
