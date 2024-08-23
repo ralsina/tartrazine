@@ -17,8 +17,8 @@ module Tartrazine
       outp.to_s
     end
 
-    def format(text : String, lexer : Lexer, outp : IO) : Nil
-      tokenizer = Tokenizer.new(lexer, text)
+    def format(text : String, lexer : BaseLexer, outp : IO) : Nil
+      tokenizer = lexer.tokenizer(text)
       i = 0
       outp << line_label(i) if line_numbers?
       tokenizer.each do |token|

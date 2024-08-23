@@ -115,15 +115,13 @@ module Tartrazine
       when ActionType::Using
         # Shunt to another lexer entirely
         return [] of Token if match.empty?
-        Tokenizer.new(
-          Tartrazine.lexer(@lexer_name),
+        Tartrazine.lexer(@lexer_name).tokenizer(
           String.new(match[match_group].value),
           secondary: true).to_a
       when ActionType::Usingself
         # Shunt to another copy of this lexer
         return [] of Token if match.empty?
-        Tokenizer.new(
-          tokenizer.lexer,
+        tokenizer.lexer.tokenizer(
           String.new(match[match_group].value),
           secondary: true).to_a
       when ActionType::Combined

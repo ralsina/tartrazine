@@ -9,11 +9,20 @@ module Tartrazine
 
   # Get the lexer object for a language name
   # FIXME: support mimetypes
-  def self.lexer(name : String? = nil, filename : String? = nil) : Lexer
+  def self.lexer(name : String? = nil, filename : String? = nil) : BaseLexer
     if name.nil? && filename.nil?
       lexer_file_name = LEXERS_BY_NAME["plaintext"]
     elsif name && name != "autodetect"
-      lexer_file_name = LEXERS_BY_NAME[name.downcase]
+      lexer_file_name = LEXERS_BY_NAME.fetch(name.downcase, nil)
+      if lexer_file_name.nil? && name.includes? "+"
+        # Delegating lexer
+        language, root = name.split("+", 2)
+        language_lexer = lexer(language)
+        root_lexer = lexer(root)
+        return DelegatingLexer.new(language_lexer, root_lexer)
+      elsif lexer_file_name.nil?
+        raise Exception.new("Unknown lexer: #{name}")
+      end
     else
       # Guess by filename
       candidates = Set(String).new
@@ -40,7 +49,10 @@ module Tartrazine
   # A token, the output of the tokenizer
   alias Token = NamedTuple(type: String, value: String)
 
-  struct Tokenizer
+  abstract class BaseTokenizer
+  end
+
+  class Tokenizer < BaseTokenizer
     include Iterator(Token)
     property lexer : BaseLexer
     property text : Bytes
@@ -48,7 +60,7 @@ module Tartrazine
     @dq = Deque(Token).new
     property state_stack = ["root"]
 
-    def initialize(@lexer : Lexer, text : String, secondary = false)
+    def initialize(@lexer : BaseLexer, text : String, secondary = false)
       # Respect the `ensure_nl` config option
       if text.size > 0 && text[-1] != '\n' && @lexer.config[:ensure_nl] && !secondary
         text += "\n"
@@ -106,16 +118,7 @@ module Tartrazine
     end
   end
 
-  abstract struct BaseLexer
-  end
-
-  # This implements a lexer for Pygments RegexLexers as expressed
-  # in Chroma's XML serialization.
-  #
-  # For explanations on what actions and states do
-  # the Pygments documentation is a good place to start.
-  # https://pygments.org/docs/lexerdevelopment/
-  struct Lexer < BaseLexer
+  abstract class BaseLexer
     property config = {
       name:             "",
       priority:         0.0,
@@ -126,6 +129,18 @@ module Tartrazine
     }
     property states = {} of String => State
 
+    def tokenizer(text : String, secondary = false) : BaseTokenizer
+      Tokenizer.new(self, text, secondary)
+    end
+  end
+
+  # This implements a lexer for Pygments RegexLexers as expressed
+  # in Chroma's XML serialization.
+  #
+  # For explanations on what actions and states do
+  # the Pygments documentation is a good place to start.
+  # https://pygments.org/docs/lexerdevelopment/
+  class Lexer < BaseLexer
     # Collapse consecutive tokens of the same type for easier comparison
     # and smaller output
     def self.collapse_tokens(tokens : Array(Tartrazine::Token)) : Array(Tartrazine::Token)
@@ -214,27 +229,32 @@ module Tartrazine
   #
   # This is useful for things like template languages, where
   # you have Jinja + HTML or Jinja + CSS and so on.
-  struct DelegatingLexer < BaseLexer
-    property root_lexer : Lexer
-    property language_lexer : Lexer
+  class DelegatingLexer < BaseLexer
+    property language_lexer : BaseLexer
+    property root_lexer : BaseLexer
 
-    def initialize(@lexer : Lexer, @delegate : Lexer)
+    def initialize(@language_lexer : BaseLexer, @root_lexer : BaseLexer)
+    end
+
+    def tokenizer(text : String, secondary = false) : DelegatingTokenizer
+      DelegatingTokenizer.new(self, text, secondary)
     end
   end
 
   # This Tokenizer works with a DelegatingLexer. It first tokenizes
   # using the language lexer, and "Other" tokens are tokenized using
   # the root lexer.
-  struct DelegatingTokenizer
+  class DelegatingTokenizer < BaseTokenizer
     include Iterator(Token)
     @dq = Deque(Token).new
+    @language_tokenizer : BaseTokenizer
 
-    def initialize(@lexer : Lexer, text : String, secondary = false)
+    def initialize(@lexer : DelegatingLexer, text : String, secondary = false)
       # Respect the `ensure_nl` config option
       if text.size > 0 && text[-1] != '\n' && @lexer.config[:ensure_nl] && !secondary
         text += "\n"
       end
-      @language_tokenizer = Tokenizer.new(@lexer.language_lexer, text, true)
+      @language_tokenizer = @lexer.language_lexer.tokenizer(text, true)
     end
 
     def next : Iterator::Stop | Token
@@ -242,16 +262,15 @@ module Tartrazine
         return @dq.shift
       end
       token = @language_tokenizer.next
-      if token == Iterator::Stop
+      if token.is_a? Iterator::Stop
         return stop
-      end
-      if token[:type] == "Other"
-        @root_tokenizer = Tokenizer.new(@lexer.root_lexer, token[:value], true)
-        @root_tokenizer.each do |root_token|
+      elsif token.as(Token).[:type] == "Other"
+        root_tokenizer = @lexer.root_lexer.tokenizer(token.as(Token).[:value], true)
+        root_tokenizer.each do |root_token|
           @dq << root_token
         end
       else
-        dq << token
+        @dq << token.as(Token)
       end
       self.next
     end
