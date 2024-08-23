@@ -55,7 +55,7 @@ Show a syntax highlighted version of a C source file in your terminal:
 $ tartrazine whatever.c -l c -t catppuccin-macchiato --line-numbers -f terminal
 ```
 
-Generate a standalone HTML file from a C source file with the syntax highlited:
+Generate a standalone HTML file from a C source file with the syntax highlighted:
 
 ```shell
 $ tartrazine whatever.c -l c -t catppuccin-macchiato --line-numbers \
