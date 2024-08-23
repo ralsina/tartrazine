@@ -12,24 +12,24 @@ module Tartrazine
   def self.lexer(name : String? = nil, filename : String? = nil) : BaseLexer
     return lexer_by_name(name) if name && name != "autodetect"
     return lexer_by_filename(filename) if filename
-  
+
     Lexer.from_xml(LexerFiles.get("/#{LEXERS_BY_NAME["plaintext"]}.xml").gets_to_end)
   end
-  
+
   private def self.lexer_by_name(name : String) : BaseLexer
     lexer_file_name = LEXERS_BY_NAME.fetch(name.downcase, nil)
     return create_delegating_lexer(name) if lexer_file_name.nil? && name.includes? "+"
     raise Exception.new("Unknown lexer: #{name}") if lexer_file_name.nil?
-  
+
     Lexer.from_xml(LexerFiles.get("/#{lexer_file_name}.xml").gets_to_end)
   end
-  
+
   private def self.lexer_by_filename(filename : String) : BaseLexer
     candidates = Set(String).new
     LEXERS_BY_FILENAME.each do |k, v|
       candidates += v.to_set if File.match?(k, File.basename(filename))
     end
-  
+
     case candidates.size
     when 0
       lexer_file_name = LEXERS_BY_NAME["plaintext"]
@@ -38,16 +38,17 @@ module Tartrazine
     else
       raise Exception.new("Multiple lexers match the filename: #{candidates.to_a.join(", ")}")
     end
-  
+
     Lexer.from_xml(LexerFiles.get("/#{lexer_file_name}.xml").gets_to_end)
   end
-  
+
   private def self.create_delegating_lexer(name : String) : BaseLexer
     language, root = name.split("+", 2)
     language_lexer = lexer(language)
     root_lexer = lexer(root)
     DelegatingLexer.new(language_lexer, root_lexer)
   end
+
   # Return a list of all lexers
   def self.lexers : Array(String)
     LEXERS_BY_NAME.keys.sort!
