@@ -49,9 +49,17 @@ To build from source:
 
 ## Usage as a CLI tool
 
+Show a syntax highlighted version of a C source file in your terminal:
+
+```shell
+$ tartrazine whatever.c -l c -t catppuccin-macchiato --line-numbers -f terminal
+```
+
+Generate a standalone HTML file from a C source file with the syntax highlited:
+
 ```shell
 $ tartrazine whatever.c -l c -t catppuccin-macchiato --line-numbers \
-  --standalone -o whatever.html 
+  --standalone -f html -o whatever.html 
 ```
 
 ## Usage as a Library
