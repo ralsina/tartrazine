@@ -16,13 +16,16 @@ module Tartrazine
     Push
     Token
     Using
+    Usingbygroup
     Usingself
   end
 
   struct Action
     property actions : Array(Action) = [] of Action
 
+    @content_index : Int32 = 0
     @depth : Int32 = 0
+    @lexer_index : Int32 = 0
     @lexer_name : String = ""
     @states : Array(String) = [] of String
     @states_to_push : Array(String) = [] of String
@@ -62,6 +65,9 @@ module Tartrazine
         @states = xml.attributes.select { |attrib|
           attrib.name == "state"
         }.map &.content
+      when ActionType::Usingbygroup
+        @lexer_index = xml["lexer"].to_i
+        @content_index = xml["content"].to_i
       end
     end
 
@@ -115,15 +121,13 @@ module Tartrazine
       when ActionType::Using
         # Shunt to another lexer entirely
         return [] of Token if match.empty?
-        Tokenizer.new(
-          Tartrazine.lexer(@lexer_name),
+        Tartrazine.lexer(@lexer_name).tokenizer(
           String.new(match[match_group].value),
           secondary: true).to_a
       when ActionType::Usingself
         # Shunt to another copy of this lexer
         return [] of Token if match.empty?
-        Tokenizer.new(
-          tokenizer.lexer,
+        tokenizer.lexer.tokenizer(
           String.new(match[match_group].value),
           secondary: true).to_a
       when ActionType::Combined
@@ -136,6 +140,12 @@ module Tartrazine
         tokenizer.lexer.states[new_state.name] = new_state
         tokenizer.state_stack << new_state.name
         [] of Token
+      when ActionType::Usingbygroup
+        # Shunt to content-specified lexer
+        return [] of Token if match.empty?
+        Tartrazine.lexer(String.new(match[@lexer_index].value)).tokenizer(
+          String.new(match[@content_index].value),
+          secondary: true).to_a
       else
         raise Exception.new("Unknown action type: #{@type}")
       end

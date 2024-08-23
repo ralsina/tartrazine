@@ -40,7 +40,7 @@ module Tartrazine
       outp.to_s
     end
 
-    def format(text : String, lexer : Lexer, io : IO) : Nil
+    def format(text : String, lexer : BaseLexer, io : IO) : Nil
       pre, post = wrap_standalone
       io << pre if standalone?
       format_text(text, lexer, io)
@@ -64,8 +64,8 @@ module Tartrazine
       "<span #{line_id} #{line_class} style=\"user-select: none;\">#{line_label} </span>"
     end
 
-    def format_text(text : String, lexer : Lexer, outp : IO)
-      tokenizer = Tokenizer.new(lexer, text)
+    def format_text(text : String, lexer : BaseLexer, outp : IO)
+      tokenizer = lexer.tokenizer(text)
       i = 0
       if surrounding_pre?
         pre_style = wrap_long_lines? ? "style=\"white-space: pre-wrap; word-break: break-word;\"" : ""

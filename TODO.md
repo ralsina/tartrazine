@@ -9,4 +9,4 @@
 * ✅ Implement lexer loader by file extension
 * ✅ Add --line-numbers to terminal formatter
 * Implement lexer loader by mime type
-* Implement Delegating lexers
+* ✅ Implement Delegating lexers

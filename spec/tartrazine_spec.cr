@@ -72,8 +72,7 @@ end
 
 # Helper that creates lexer and tokenizes
 def tokenize(lexer_name, text)
-  lexer = Tartrazine.lexer(lexer_name)
-  tokenizer = Tartrazine::Tokenizer.new(lexer, text)
+  tokenizer = Tartrazine.lexer(lexer_name).tokenizer(text)
   Tartrazine::Lexer.collapse_tokens(tokenizer.to_a)
 end
 
