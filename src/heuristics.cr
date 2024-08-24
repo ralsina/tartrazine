@@ -1,7 +1,12 @@
 require "yaml"
 
-module Linguist
   # Use linguist's heuristics to disambiguate between languages
+  # This is *shamelessly* stolen from https://github.com/github-linguist/linguist
+  # and ported to Crystal. Deepest thanks to the authors of Linguist
+  # for licensing it liberally.
+  # 
+  # Consider this code (c) 2017 GitHub, Inc. even if I wrote it.
+  module Linguist
 
   class Heuristic
     include YAML::Serializable
