@@ -23,7 +23,7 @@ module Tartrazine
   struct Action
     property actions : Array(Action) = [] of Action
 
-    @content_index : Int32 = 0
+    @content_index : Array(Int32) = [] of Int32
     @depth : Int32 = 0
     @lexer_index : Int32 = 0
     @lexer_name : String = ""
@@ -67,7 +67,7 @@ module Tartrazine
         }.map &.content
       when ActionType::Usingbygroup
         @lexer_index = xml["lexer"].to_i
-        @content_index = xml["content"].to_i
+        @content_index = xml["content"].split(",").map(&.to_i)
       end
     end
 
@@ -143,8 +143,12 @@ module Tartrazine
       when ActionType::Usingbygroup
         # Shunt to content-specified lexer
         return [] of Token if match.empty?
+        content = ""
+        @content_index.each do |i|
+          content += String.new(match[i].value)
+        end
         Tartrazine.lexer(String.new(match[@lexer_index].value)).tokenizer(
-          String.new(match[@content_index].value),
+          content,
           secondary: true).to_a
       else
         raise Exception.new("Unknown action type: #{@type}")
