@@ -1,6 +1,6 @@
 require "yaml"
 
-module Tartrazine
+module Linguist
   # Use linguist's heuristics to disambiguate between languages
 
   class Heuristic
@@ -34,12 +34,13 @@ module Tartrazine
     end
   end
 
-  class Rule
+  class LangRule
     include YAML::Serializable
     property pattern : (String | Array(String))?
     property negative_pattern : (String | Array(String))?
     property named_pattern : String?
-    property and : Array(Rule)?
+    property and : Array(LangRule)?
+    property language : String | Array(String)?
 
     # ameba:disable Metrics/CyclomaticComplexity
     def match(content, named_patterns)
@@ -68,17 +69,13 @@ module Tartrazine
         result = p_arr.any? { |pat| ::Regex.new(pat).matches?(content) }
       end
       if and
-        result = and.as(Array(Rule)).all?(&.match(content, named_patterns))
+        result = and.as(Array(LangRule)).all?(&.match(content, named_patterns))
       end
       result
     end
   end
-
-  class LangRule < Rule
-    include YAML::Serializable
-    property language : String | Array(String)
-  end
 end
 
-# h = Tartrazine::Heuristic.from_yaml(File.read("heuristics/heuristics.yml"))
-# p! h.run(ARGV[0], File.read(ARGV[0]))
+h = Linguist::Heuristic.from_yaml(File.read("heuristics/heuristics.yml"))
+fname = "/usr/include/sqlite3.h"
+p! h.run(fname, File.read(fname))
