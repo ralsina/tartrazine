@@ -23,14 +23,17 @@ module Tartrazine
   struct Action
     property actions : Array(Action) = [] of Action
 
-    property token_type : String = ""
-    property states_to_push : Array(String) = [] of String
-    property depth = 0
-    property lexer_name : String = ""
-    property states_to_combine : Array(String) = [] of String
+    @content_index : Array(Int32) = [] of Int32
+    @depth : Int32 = 0
+    @lexer_index : Int32 = 0
+    @lexer_name : String = ""
+    @states : Array(String) = [] of String
+    @states_to_push : Array(String) = [] of String
+    @token_type : String = ""
+    @type : ActionType = ActionType::Token
 
-    def initialize(@type : String, @xml : XML::Node?)
-      # Extract information from the XML node we will use later
+    def initialize(t : String, xml : XML::Node?)
+      @type = ActionType.parse(t.capitalize)
 
       # Some actions may have actions in them, like this:
       # <bygroups>
@@ -41,31 +44,30 @@ module Tartrazine
       #
       # The token actions match with the first 2 groups in the regex
       # the using action matches the 3rd and shunts it to another lexer
-
-      known_types = %w(token push pop bygroups using usingself include combined)
-      raise Exception.new(
-        "Unknown action type: #{@type}") unless known_types.includes? @type
-
-      @xml.children.each do |node|
+      xml.children.each do |node|
         next unless node.element?
         @actions << Action.new(node.name, node)
       end
 
+      # Prefetch the attributes we ned from the XML and keep them
       case @type
-      when "token"
-        @token_type = xml["type"]? || ""
-      when "push"
+      when ActionType::Token
+        @token_type = xml["type"]
+      when ActionType::Push
         @states_to_push = xml.attributes.select { |attrib|
           attrib.name == "state"
-        }.map &.content || [] of String
-      when "pop"
-        @depth = xml["depth"]?.try &.to_i || 0
-      when "using"
-        @lexer_name = xml["lexer"]?.try &.downcase || ""
-      when "combined"
-        @states_to_combine = xml.attributes.select { |attrib|
+        }.map &.content
+      when ActionType::Pop
+        @depth = xml["depth"].to_i
+      when ActionType::Using
+        @lexer_name = xml["lexer"].downcase
+      when ActionType::Combined
+        @states = xml.attributes.select { |attrib|
           attrib.name == "state"
         }.map &.content
+      when ActionType::Usingbygroup
+        @lexer_index = xml["lexer"].to_i
+        @content_index = xml["content"].split(",").map(&.to_i)
       end
     end
 
@@ -75,25 +77,21 @@ module Tartrazine
       when ActionType::Token
         raise Exception.new "Can't have a token without a match" if match.empty?
         [Token.new(type: @token_type, value: String.new(match[match_group].value))]
-      when "push"
-        if @states_to_push.empty?
-          # Push without a state means push the current state
-          @states_to_push = [lexer.state_stack.last]
-        end
-        @states_to_push.each do |state|
-          if state == "#pop"
+      when ActionType::Push
+        to_push = @states_to_push.empty? ? [tokenizer.state_stack.last] : @states_to_push
+        to_push.each do |state|
+          if state == "#pop" && tokenizer.state_stack.size > 1
             # Pop the state
-            lexer.state_stack.pop
+            tokenizer.state_stack.pop
           else
             # Really push
-            lexer.state_stack << state
+            tokenizer.state_stack << state
           end
         end
         [] of Token
-      when "pop"
-        if lexer.state_stack.size > @depth
-          lexer.state_stack.pop(@depth)
-        end
+      when ActionType::Pop
+        to_pop = [@depth, tokenizer.state_stack.size - 1].min
+        tokenizer.state_stack.pop(to_pop)
         [] of Token
       when ActionType::Bygroups
         # FIXME: handle
@@ -104,7 +102,7 @@ module Tartrazine
         #
         # where that None means skipping a group
         #
-        raise Exception.new "Can't have a token without a match" if match.empty?
+        raise Exception.new "Can't have a token without a match" if match.nil?
 
         # Each group matches an action. If the group match is empty,
         # the action is skipped.
@@ -113,7 +111,8 @@ module Tartrazine
           begin
             next if match[i + 1].size == 0
           rescue IndexError
-            # No match for the last group
+            # FIXME: This should not actually happen
+            # No match for this group
             next
           end
           result += e.emit(match, tokenizer, i + 1)
@@ -122,16 +121,19 @@ module Tartrazine
       when ActionType::Using
         # Shunt to another lexer entirely
         return [] of Token if match.empty?
-        Tartrazine.lexer(@lexer_name).tokenize(String.new(match[match_group].value), usingself: true)
-      when "usingself"
+        Tartrazine.lexer(@lexer_name).tokenizer(
+          String.new(match[match_group].value),
+          secondary: true).to_a
+      when ActionType::Usingself
         # Shunt to another copy of this lexer
         return [] of Token if match.empty?
-        new_lexer = Lexer.from_xml(lexer.xml)
-        new_lexer.tokenize(String.new(match[match_group].value), usingself: true)
-      when "combined"
-        # Combine two states into one anonymous state
-        new_state = @states_to_combine.map { |name|
-          lexer.states[name]
+        tokenizer.lexer.tokenizer(
+          String.new(match[match_group].value),
+          secondary: true).to_a
+      when ActionType::Combined
+        # Combine two or more states into one anonymous state
+        new_state = @states.map { |name|
+          tokenizer.lexer.states[name]
         }.reduce { |state1, state2|
           state1 + state2
         }
@@ -149,7 +151,7 @@ module Tartrazine
           content,
           secondary: true).to_a
       else
-        raise Exception.new("Unhandled action type: #{type}")
+        raise Exception.new("Unknown action type: #{@type}")
       end
     end
   end

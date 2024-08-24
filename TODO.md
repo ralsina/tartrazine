@@ -9,4 +9,7 @@
 * ✅ Implement lexer loader by file extension
 * ✅ Add --line-numbers to terminal formatter
 * Implement lexer loader by mime type
-* Implement Pygment's "DelegateLexer"
+* ✅ Implement Delegating lexers
+* ✅ Add RstLexer
+* Add Mako template lexer
+* Implement heuristic lexer detection

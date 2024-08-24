@@ -31,7 +31,6 @@ module BytesRegex
     end
 
     def match(str : Bytes, pos = 0) : Array(Match)
-      match = [] of Match
       rc = LibPCRE2.match(
         @re,
         str,
@@ -40,9 +39,9 @@ module BytesRegex
         LibPCRE2::NO_UTF_CHECK,
         @match_data,
         nil)
-      if rc >= 0
+      if rc > 0
         ovector = LibPCRE2.get_ovector_pointer(@match_data)
-        (0...rc).each do |i|
+        (0...rc).map do |i|
           m_start = ovector[2 * i]
           m_end = ovector[2 * i + 1]
           if m_start == m_end
@@ -55,7 +54,6 @@ module BytesRegex
       else
         [] of Match
       end
-      match
     end
   end
 
