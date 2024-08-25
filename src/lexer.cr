@@ -36,10 +36,28 @@ module Tartrazine
     when 1
       lexer_file_name = candidates.first
     else
-      raise Exception.new("Multiple lexers match the filename: #{candidates.to_a.join(", ")}")
+      lexer_file_name = self.lexer_by_content(filename)
+      begin
+        return self.lexer(lexer_file_name)
+      rescue ex : Exception
+        raise Exception.new("Multiple lexers match the filename: #{candidates.to_a.join(", ")}, heuristics suggest #{lexer_file_name} but there is no matching lexer.")
+      end
     end
 
     Lexer.from_xml(LexerFiles.get("/#{lexer_file_name}.xml").gets_to_end)
+  end
+
+  private def self.lexer_by_content(fname : String) : String?
+    h = Linguist::Heuristic.from_yaml(LexerFiles.get("/heuristics.yml").gets_to_end)
+    result = h.run(fname, File.read(fname))
+    case result
+    when Nil
+      raise Exception.new "No lexer found for #{fname}"
+    when String
+      result.as(String)
+    when Array(String)
+      result.first
+    end
   end
 
   private def self.create_delegating_lexer(name : String) : BaseLexer
