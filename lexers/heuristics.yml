@@ -30,12 +30,12 @@
 disambiguations:
 - extensions: ['.1', '.2', '.3', '.4', '.5', '.6', '.7', '.8', '.9']
   rules:
-  - language: Roff Manpage
+  - language: man
     and:
     - named_pattern: mdoc-date
     - named_pattern: mdoc-title
     - named_pattern: mdoc-heading
-  - language: Roff Manpage
+  - language: man
     and:
     - named_pattern: man-title
     - named_pattern: man-heading
@@ -43,12 +43,12 @@ disambiguations:
     pattern: '^\.(?:[A-Za-z]{2}(?:\s|$)|\\")'
 - extensions: ['.1in', '.1m', '.1x', '.3in', '.3m', '.3p', '.3pm', '.3qt', '.3x', '.man', '.mdoc']
   rules:
-  - language: Roff Manpage
+  - language: man
     and:
     - named_pattern: mdoc-date
     - named_pattern: mdoc-title
     - named_pattern: mdoc-heading
-  - language: Roff Manpage
+  - language: man
     and:
     - named_pattern: man-title
     - named_pattern: man-heading

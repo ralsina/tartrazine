@@ -52,6 +52,6 @@ with open("src/constants/lexers.cr", "w") as f:
     f.write("  LEXERS_BY_FILENAME = {\n")
     for k in sorted(lexer_by_filename.keys()):
         v = lexer_by_filename[k]
-        f.write(f'"{k}" => {str(list(v)).replace("'", "\"")}, \n')
+        f.write(f'"{k}" => {str(sorted(list(v))).replace("'", "\"")}, \n')
     f.write("}\n")
     f.write("end\n")
