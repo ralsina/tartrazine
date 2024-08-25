@@ -9,11 +9,19 @@ module Tartrazine
 
   # Get the lexer object for a language name
   # FIXME: support mimetypes
-  def self.lexer(name : String? = nil, filename : String? = nil) : BaseLexer
+  def self.lexer(name : String? = nil, filename : String? = nil, mimetype : String? = nil) : BaseLexer
     return lexer_by_name(name) if name && name != "autodetect"
     return lexer_by_filename(filename) if filename
+    return lexer_by_mimetype(mimetype) if mimetype
 
     Lexer.from_xml(LexerFiles.get("/#{LEXERS_BY_NAME["plaintext"]}.xml").gets_to_end)
+  end
+
+  private def self.lexer_by_mimetype(mimetype : String) : BaseLexer
+    lexer_file_name = LEXERS_BY_MIMETYPE.fetch(mimetype, nil)
+    raise Exception.new("Unknown mimetype: #{mimetype}") if lexer_file_name.nil?
+
+    Lexer.from_xml(LexerFiles.get("/#{lexer_file_name}.xml").gets_to_end)
   end
 
   private def self.lexer_by_name(name : String) : BaseLexer
