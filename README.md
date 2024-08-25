@@ -29,7 +29,7 @@ This only covers the RegexLexers, which are the most common ones,
 but it means the supported languages are a subset of Chroma's, which
 is a subset of Pygments'.
 
-Currently Tartrazine supports ... 248 languages.
+Currently Tartrazine supports ... 247 languages.
 
 It has 331 themes (63 from Chroma, the rest are base16 themes via
 [Sixteen](https://github.com/ralsina/sixteen)
