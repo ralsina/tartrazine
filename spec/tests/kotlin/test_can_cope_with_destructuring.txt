@@ -1,5 +1,5 @@
 ---input---
-val (a, b) = 
+val (a, b) =
 
 ---tokens---
 'val'         Keyword.Declaration

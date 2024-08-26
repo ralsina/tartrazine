@@ -108,6 +108,6 @@
         <rule pattern="[{}()\[\],.;]">
             <token type="Punctuation"/>
         </rule>
-    </state>  
+    </state>
   </rules>
 </lexer>

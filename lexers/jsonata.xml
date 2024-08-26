@@ -15,7 +15,7 @@
       </rule>
        <rule pattern="\.\."> // Spread operator
         <token type="Operator"/>
-      </rule> 
+      </rule>
       <rule pattern="\^(?=\()"> // Sort operator
         <token type="Operator"/>
       </rule>
@@ -54,7 +54,7 @@
       </rule>
       <rule pattern="(\+|-)?(0|[1-9]\d*)(\.\d+[eE](\+|-)?\d+|[eE](\+|-)?\d+|\.\d+)">
         <token type="LiteralNumberFloat"/>
-      </rule> 
+      </rule>
       <rule pattern="(\+|-)?(0|[1-9]\d*)">
         <token type="LiteralNumberInteger"/>
       </rule>
@@ -75,7 +75,7 @@
       </rule>
       <!-- NOTE: This expression matches everything remaining, which should be only JSONata names.
       Therefore, it has been left as last intentionally -->
-      <rule pattern="[a-zA-Z0-9_]*"> 
+      <rule pattern="[a-zA-Z0-9_]*">
         <token type="Name"/>
       </rule>
     </state>

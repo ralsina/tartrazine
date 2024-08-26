@@ -28,9 +28,9 @@
       <rule pattern="^(```)(\w+)(\n)([\w\W]*?)(^```$)">
         <bygroups>
           <token type="LiteralStringBacktick"/>
-          <token type="NameLabel"/>  
+          <token type="NameLabel"/>
           <token type="TextWhitespace"/>
-          <UsingByGroup lexer="2" content="4"/>  
+          <UsingByGroup lexer="2" content="4"/>
           <token type="LiteralStringBacktick"/>
         </bygroups>
       </rule>
@@ -53,4 +53,3 @@
     </state>
   </rules>
 </lexer>
-

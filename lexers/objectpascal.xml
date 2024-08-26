@@ -95,7 +95,7 @@
       <!-- Result -->
       <rule pattern="\b(?!=\.)(?i:(Result))\b(?![&#60;\/(])">
         <token type="GenericEmph" />
-      </rule>      
+      </rule>
       <!-- Result Constants -->
       <rule pattern="\b(?!=\.)(?i:(True|False))\b(?![&#60;\/(])">
         <token type="NameConstant" />
@@ -103,7 +103,7 @@
       <!-- Operator (Assign) -->
       <rule pattern="[(\:\=)]">
         <token type="Operator" />
-      </rule>      
+      </rule>
       <!-- Operators (Arithmetic, Unary Arithmetic, String, Pointer, Set, Relational, Address) -->
       <rule pattern="[\+\-\*\/\^&#60;&#62;\=\@]">
         <token type="Operator" />

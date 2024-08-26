@@ -1,6 +1,6 @@
 ---input---
-```More than 
-one backtick 
+```More than
+one backtick
 can be used
 ```
 

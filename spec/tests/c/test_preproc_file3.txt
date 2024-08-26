@@ -1,7 +1,7 @@
 Space around line break before macro is valid C, but failed to parse previously.
 
 ---input---
-foo(); 
+foo();
  #define FOO 0
 
 ---tokens---

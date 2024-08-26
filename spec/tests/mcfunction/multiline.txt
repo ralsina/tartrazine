@@ -11,7 +11,7 @@ execute
     positioned ^ ^ ^-1                  # and move one block back.
     if entity @s[distance=..0.6]        # Check if we're close to the
                                            # player's feet.
-    run 
+    run
         say "I'm facing the target!"
 
 ---tokens---

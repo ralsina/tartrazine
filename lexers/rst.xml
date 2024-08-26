@@ -20,7 +20,7 @@
       <rule pattern="^(\s*)([A-Z]+\.)( .+\n(?:\1  .+\n)+)"><bygroups><token type="Text"/><token type="LiteralNumber"/><usingself state="inline"/></bygroups></rule>
       <rule pattern="^(\s*)(\(?[A-Za-z]+\))( .+\n(?:\1  .+\n)+)"><bygroups><token type="Text"/><token type="LiteralNumber"/><usingself state="inline"/></bygroups></rule>
       <rule pattern="^(\s*)(\|)( .+\n(?:\|  .+\n)*)"><bygroups><token type="Text"/><token type="Operator"/><usingself state="inline"/></bygroups></rule>
-      <rule pattern="^( *\.\.)(\s*)((?:source)?code(?:-block)?)(::)([ \t]*)([^\n]+)(\n[ \t]*\n)([ \t]+)(.*)(\n)((?:(?:\8.*)?\n)+)"> 
+      <rule pattern="^( *\.\.)(\s*)((?:source)?code(?:-block)?)(::)([ \t]*)([^\n]+)(\n[ \t]*\n)([ \t]+)(.*)(\n)((?:(?:\8.*)?\n)+)">
         <bygroups>
           <token type="Punctuation"/>
           <token type="Text"/>
@@ -73,4 +73,3 @@
     </state>
   </rules>
 </lexer>
-

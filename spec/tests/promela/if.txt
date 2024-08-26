@@ -1,6 +1,6 @@
 ---input---
 init {
-    if 
+    if
     :: skip;
     fi;
     skip

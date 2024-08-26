@@ -32,8 +32,8 @@ for fname in glob.glob("lexers/*.xml"):
         if alias in lexer_by_name and alias != lexer_by_name[alias]:
             raise Exception(f"Alias {alias} already in use by {lexer_by_name[alias]}")
         lexer_by_name[alias] = lexer_name
-    for mimetype in mimetypes: 
-        lexer_by_mimetype[mimetype] = lexer_name       
+    for mimetype in mimetypes:
+        lexer_by_mimetype[mimetype] = lexer_name
     for filename in filenames:
         lexer_by_filename[filename].add(lexer_name)
 

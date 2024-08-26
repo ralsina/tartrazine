@@ -6,15 +6,16 @@ a port of [Pygments](https://pygments.org/) to
 
 It also provides a CLI tool which can be used to highlight many things in many styles.
 
-Currently Tartrazine supports 247 languages. and it has 331 themes (63 from Chroma, the rest are base16 themes via 
-[Sixteen](https://github.com/ralsina/sixteen)
+Currently Tartrazine supports 247 languages and has 331 themes (63 from Chroma,
+the rest are base16 themes via [Sixteen](https://github.com/ralsina/sixteen)
 
 ## Installation
 
 From prebuilt binaries:
 
 Each release provides statically-linked binaries that should
-work on any Linux. Get them from the [releases page](https://github.com/ralsina/tartrazine/releases) and put them in your PATH.
+work on any Linux. Get them from the [releases page](https://github.com/ralsina/tartrazine/releases)
+and put them in your PATH.
 
 To build from source:
 
@@ -27,14 +28,14 @@ To build from source:
 Show a syntax highlighted version of a C source file in your terminal:
 
 ```shell
-$ tartrazine whatever.c -l c -t catppuccin-macchiato --line-numbers -f terminal
+tartrazine whatever.c -l c -t catppuccin-macchiato --line-numbers -f terminal
 ```
 
 Generate a standalone HTML file from a C source file with the syntax highlighted:
 
 ```shell
 $ tartrazine whatever.c -t catppuccin-macchiato --line-numbers \
-  --standalone -f html -o whatever.html 
+  --standalone -f html -o whatever.html
 ```
 
 ## Usage as a Library
@@ -63,7 +64,7 @@ puts formatter.format(File.read(ARGV[0]), lexer)
 
 - [Roberto Alsina](https://github.com/ralsina) - creator and maintainer
 
-## A port of what? Why "kind of"?
+## A port of what, and why "kind of"
 
 Pygments is a staple of the Python ecosystem, and it's great.
 It lets you highlight code in many languages, and it has many
@@ -86,5 +87,6 @@ This only covers the RegexLexers, which are the most common ones,
 but it means the supported languages are a subset of Chroma's, which
 is a subset of Pygments' and DelegatingLexers (useful for things like template languages)
 
-Then performance was bad, so I hacked and hacked and made it
-significantly [faster than chroma](https://ralsina.me/weblog/posts/a-tale-of-optimization.html) which is fun.
+Then performance was bad, so I hacked and hacked and made it significantly
+[faster than chroma](https://ralsina.me/weblog/posts/a-tale-of-optimization.html)
+which is fun.

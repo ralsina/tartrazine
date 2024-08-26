@@ -8,7 +8,7 @@
 */
 provider "azurerm" { # (1)
   features {}
-} 
+}
 
 ---tokens---
 '# Single line comment\n' Comment.Single

@@ -10,7 +10,7 @@ public class Quine {
 	}
 }
 """;
-        
+
 
 ---tokens---
 '\t    '      Text.Whitespace

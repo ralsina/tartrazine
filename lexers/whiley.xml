@@ -21,7 +21,7 @@
       </rule>
       <rule pattern="//.*?\n">
         <token type="CommentSingle"/>
-      </rule>      
+      </rule>
       <rule pattern="(function|import|from|method|property|type|with|variant)\b">
         <token type="KeywordDeclaration"/>
       </rule>
@@ -36,7 +36,7 @@
       </rule>
       <rule pattern="0b(?:_?[01])+">
         <token type="LiteralNumberBin"/>
-      </rule>      
+      </rule>
       <rule pattern="0[xX][0-9a-fA-F]+">
         <token type="LiteralNumberHex"/>
       </rule>
@@ -48,10 +48,10 @@
       </rule>
       <rule pattern="[+%=&gt;&lt;|^!?/\-*&amp;~:]">
         <token type="Operator"/>
-      </rule>      
+      </rule>
       <rule pattern="[{}()\[\],.;\|]">
         <token type="Punctuation"/>
-      </rule>      
+      </rule>
     </state>
   </rules>
 </lexer>
