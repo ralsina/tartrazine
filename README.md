@@ -11,6 +11,8 @@ the rest are base16 themes via [Sixteen](https://github.com/ralsina/sixteen)
 
 ## Installation
 
+If you are using Arch: Use yay or your favourite AUR helper, package name is `tartrazine`.
+
 From prebuilt binaries:
 
 Each release provides statically-linked binaries that should
