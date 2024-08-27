@@ -9,3 +9,6 @@ shard.lock
 .vscode/
 .crystal/
 venv/
+.croupier
+coverage/
+run_tests
