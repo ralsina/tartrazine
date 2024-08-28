@@ -7,6 +7,7 @@ All notable changes to this project will be documented in this file.
 ### 🐛 Bug Fixes
 
 - Ameba
+- Variable bame in Hacefile
 
 ### 📚 Documentation
 
@@ -26,6 +27,10 @@ All notable changes to this project will be documented in this file.
 - Switch from Makefile to Hacefile
 - Added do_release script
 - Fix markdown check
+
+### Bump
+
+- Release v0.6.4
 
 ## [0.6.1] - 2024-08-25
 
