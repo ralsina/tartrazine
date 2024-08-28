@@ -25,6 +25,7 @@ All notable changes to this project will be documented in this file.
 
 - Switch from Makefile to Hacefile
 - Added do_release script
+- Fix markdown check
 
 ## [0.6.1] - 2024-08-25
 
