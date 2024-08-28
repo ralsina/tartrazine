@@ -2,12 +2,29 @@
 
 All notable changes to this project will be documented in this file.
 
-## [unreleased]
+## [0.6.4] - 2024-08-28
+
+### 🐛 Bug Fixes
+
+- Ameba
+
+### 📚 Documentation
+
+- Mention AUR package
 
 ### ⚙️ Miscellaneous Tasks
 
 - Pre-commit hooks
 - Git-cliff config
+- Started changelog
+- Force conventional commit messages
+- Force conventional commit messages
+- Updated pre-commit
+
+### Build
+
+- Switch from Makefile to Hacefile
+- Added do_release script
 
 ## [0.6.1] - 2024-08-25
 
