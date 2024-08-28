@@ -37,13 +37,13 @@ tasks:
     dependencies:
       - bin/hace
     commands: |
-      rm ${HOME}/.local/bin/{{name}}
-      cp bin/hace ${HOME}/.local/bin/{{name}}
+      rm ${HOME}/.local/bin/{{NAME}}
+      cp bin/hace ${HOME}/.local/bin/{{NAME}}
 
   static:
     outputs:
-      - bin/{{name}}-static-linux-amd64
-      - bin/{{name}}-static-linux-arm64
+      - bin/{{NAME}}-static-linux-amd64
+      - bin/{{NAME}}-static-linux-arm64
     commands: |
       hace clean
       ./build_static.sh
