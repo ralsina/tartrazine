@@ -1,5 +1,6 @@
 require "./actions"
 require "./formatter"
+require "./formatters/**"
 require "./rules"
 require "./styles"
 require "./tartrazine"
