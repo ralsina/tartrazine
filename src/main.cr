@@ -1,5 +1,5 @@
 require "docopt"
-require "./**"
+require "./tartrazine"
 
 HELP = <<-HELP
 tartrazine: a syntax highlighting tool

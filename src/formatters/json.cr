@@ -12,7 +12,7 @@ module Tartrazine
 
     def format(text : String, lexer : BaseLexer, io : IO) : Nil
       tokenizer = lexer.tokenizer(text)
-      io << Tartrazine::Lexer.collapse_tokens(tokenizer.to_a).to_json
+      io << Tartrazine::RegexLexer.collapse_tokens(tokenizer.to_a).to_json
     end
   end
 end

@@ -1,5 +1,6 @@
-require "baked_file_system"
 require "./constants/lexers"
+require "./heuristics"
+require "baked_file_system"
 
 module Tartrazine
   class LexerFiles
@@ -14,14 +15,14 @@ module Tartrazine
     return lexer_by_filename(filename) if filename
     return lexer_by_mimetype(mimetype) if mimetype
 
-    Lexer.from_xml(LexerFiles.get("/#{LEXERS_BY_NAME["plaintext"]}.xml").gets_to_end)
+    RegexLexer.from_xml(LexerFiles.get("/#{LEXERS_BY_NAME["plaintext"]}.xml").gets_to_end)
   end
 
   private def self.lexer_by_mimetype(mimetype : String) : BaseLexer
     lexer_file_name = LEXERS_BY_MIMETYPE.fetch(mimetype, nil)
     raise Exception.new("Unknown mimetype: #{mimetype}") if lexer_file_name.nil?
 
-    Lexer.from_xml(LexerFiles.get("/#{lexer_file_name}.xml").gets_to_end)
+    RegexLexer.from_xml(LexerFiles.get("/#{lexer_file_name}.xml").gets_to_end)
   end
 
   private def self.lexer_by_name(name : String) : BaseLexer
@@ -29,7 +30,7 @@ module Tartrazine
     return create_delegating_lexer(name) if lexer_file_name.nil? && name.includes? "+"
     raise Exception.new("Unknown lexer: #{name}") if lexer_file_name.nil?
 
-    Lexer.from_xml(LexerFiles.get("/#{lexer_file_name}.xml").gets_to_end)
+    RegexLexer.from_xml(LexerFiles.get("/#{lexer_file_name}.xml").gets_to_end)
   end
 
   private def self.lexer_by_filename(filename : String) : BaseLexer
@@ -52,7 +53,7 @@ module Tartrazine
       end
     end
 
-    Lexer.from_xml(LexerFiles.get("/#{lexer_file_name}.xml").gets_to_end)
+    RegexLexer.from_xml(LexerFiles.get("/#{lexer_file_name}.xml").gets_to_end)
   end
 
   private def self.lexer_by_content(fname : String) : String?
@@ -152,7 +153,9 @@ module Tartrazine
     end
   end
 
-  abstract class BaseLexer
+  alias BaseLexer = Lexer
+
+  abstract class Lexer
     property config = {
       name:             "",
       priority:         0.0,
@@ -174,7 +177,7 @@ module Tartrazine
   # For explanations on what actions and states do
   # the Pygments documentation is a good place to start.
   # https://pygments.org/docs/lexerdevelopment/
-  class Lexer < BaseLexer
+  class RegexLexer < BaseLexer
     # Collapse consecutive tokens of the same type for easier comparison
     # and smaller output
     def self.collapse_tokens(tokens : Array(Tartrazine::Token)) : Array(Tartrazine::Token)
@@ -198,7 +201,7 @@ module Tartrazine
     end
 
     def self.from_xml(xml : String) : Lexer
-      l = Lexer.new
+      l = RegexLexer.new
       lexer = XML.parse(xml).first_element_child
       if lexer
         config = lexer.children.find { |node|
@@ -263,7 +266,7 @@ module Tartrazine
   #
   # This is useful for things like template languages, where
   # you have Jinja + HTML or Jinja + CSS and so on.
-  class DelegatingLexer < BaseLexer
+  class DelegatingLexer < Lexer
     property language_lexer : BaseLexer
     property root_lexer : BaseLexer
 
