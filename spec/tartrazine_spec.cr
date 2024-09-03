@@ -28,6 +28,7 @@ bad_in_chroma = {
   "#{__DIR__}/tests/octave/test_multilinecomment.txt",
   "#{__DIR__}/tests/php/test_string_escaping_run.txt",
   "#{__DIR__}/tests/python_2/test_cls_builtin.txt",
+  "#{__DIR__}/tests/bqn/test_syntax_roles.txt", # This one only fails in CI
 }
 
 known_bad = {

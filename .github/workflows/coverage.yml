@@ -1,0 +1,30 @@
+name: Coverage
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: "0 1 * * *"
+permissions:
+  contents: read
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Download source
+        uses: actions/checkout@v4
+      - name: Install Crystal
+        uses: crystal-lang/install-crystal@v1
+      - name: Run tests using kcov
+        run: |
+          sudo apt update && sudo apt install kcov
+          wget https://github.com/alecthomas/chroma/releases/download/v2.14.0/chroma-2.14.0-linux-amd64.tar.gz
+          tar xzvf chroma-2.14.0*gz
+          mkdir ~/.local/bin -p
+          sudo mv chroma ~/.local/bin
+          shards install
+          crystal build src/run_tests.cr
+          kcov --clean --include-path=./src $PWD/coverage ./run_tests
+          curl -Os https://uploader.codecov.io/latest/linux/codecov
+          chmod +x codecov
+          ./codecov -t ${CODECOV_TOKEN} -s coverage
+        env:
+          CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}

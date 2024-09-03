@@ -1,0 +1,26 @@
+name: Tests
+on:
+  # This can't yet run automatically, because tests fail because of
+  # different versions of chroma. Need to get the same one in my
+  # local env and in CI
+  workflow_dispatch:
+  push:
+permissions:
+  contents: read
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Download source
+        uses: actions/checkout@v4
+      - name: Install Crystal
+        uses: crystal-lang/install-crystal@v1
+      - name: Run tests
+        run: |
+          wget https://github.com/alecthomas/chroma/releases/download/v2.14.0/chroma-2.14.0-linux-amd64.tar.gz
+          tar xzvf chroma-2.14.0*gz
+          mkdir ~/.local/bin -p
+          sudo mv chroma ~/.local/bin
+          shards install
+          crystal tool format --check
+          crystal spec -v

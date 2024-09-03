@@ -35,7 +35,7 @@ tasks:
     phony: true
     always_run: true
     dependencies:
-      - bin/hace
+      - bin/tartrazine
     commands: |
       rm ${HOME}/.local/bin/{{NAME}}
       cp bin/hace ${HOME}/.local/bin/{{NAME}}
