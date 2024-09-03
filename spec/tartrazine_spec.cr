@@ -73,7 +73,7 @@ end
 # Helper that creates lexer and tokenizes
 def tokenize(lexer_name, text)
   tokenizer = Tartrazine.lexer(lexer_name).tokenizer(text)
-  Tartrazine::Lexer.collapse_tokens(tokenizer.to_a)
+  Tartrazine::RegexLexer.collapse_tokens(tokenizer.to_a)
 end
 
 # Helper that tokenizes using chroma to validate the lexer
@@ -85,5 +85,5 @@ def chroma_tokenize(lexer_name, text)
     ["-f", "json", "-l", lexer_name],
     input: input, output: output
   )
-  Tartrazine::Lexer.collapse_tokens(Array(Tartrazine::Token).from_json(output.to_s))
+  Tartrazine::RegexLexer.collapse_tokens(Array(Tartrazine::Token).from_json(output.to_s))
 end
