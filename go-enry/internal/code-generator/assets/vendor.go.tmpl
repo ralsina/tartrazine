@@ -1,0 +1,22 @@
+package data
+
+import "github.com/go-enry/go-enry/v2/regex"
+
+{{define "mustCompile" -}}
+	{{ if isRE2 .  -}}
+		regex.MustCompile({{ . | stringVal }})
+	{{- else -}}
+		regex.MustCompileRuby({{ . | stringVal }})
+	{{- end -}}
+{{end}}
+
+var VendorMatchers = []regex.EnryRegexp{
+	{{range $re := . -}}
+		{{ template "mustCompile" $re }},
+	{{end -}}
+}
+
+// FastVendorMatcher is equivalent to matching any of the VendorMatchers.
+{{with $singleRE := collateAllRegexps . -}}
+var FastVendorMatcher = {{template "mustCompile" $singleRE}}
+{{end}}
