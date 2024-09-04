@@ -1,7 +1,7 @@
 # TARTRAZINE
 
 [![Tests](https://github.com/ralsina/tartrazine/actions/workflows/ci.yml/badge.svg)](https://github.com/ralsina/tartrazine/actions/workflows/ci.yml)
-[![Coverage](https://github.com/ralsina/tartrazine/actions/workflows/coverage.yml/badge.svg)](https://github.com/ralsina/tartrazine/actions/workflows/coverage.yml)
+[![codecov](https://codecov.io/gh/ralsina/tartrazine/branch/main/graph/badge.svg?token=52XBPNL99F)](https://codecov.io/gh/ralsina/tartrazine)
 
 Tartrazine is a library to syntax-highlight code. It is
 a port of [Pygments](https://pygments.org/) to
