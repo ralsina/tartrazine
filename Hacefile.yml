@@ -12,6 +12,7 @@ tasks:
       - Hacefile.yml
       - lexers/*xml
       - styles/*xml
+      - go-enry
     outputs:
       - bin/{{NAME}}
     commands: |
@@ -113,3 +114,14 @@ tasks:
       kcov --clean --include-path=./src ${PWD}/coverage ./bin/run_tests
     outputs:
       - coverage/index.html
+
+  go-enry:
+    cwd: go-enry
+    dependencies:
+      - go-enry
+    outputs:
+      - src/libenry.a
+      - src/libenry.h
+    commands: |
+      make static
+      cp .shared/* ../src
