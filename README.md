@@ -1,5 +1,8 @@
 # TARTRAZINE
 
+[![Tests](https://github.com/ralsina/tartrazine/actions/workflows/ci.yml/badge.svg)](https://github.com/ralsina/tartrazine/actions/workflows/ci.yml)
+[![Coverage](https://github.com/ralsina/tartrazine/actions/workflows/coverage.yml/badge.svg)](https://github.com/ralsina/tartrazine/actions/workflows/coverage.yml)
+
 Tartrazine is a library to syntax-highlight code. It is
 a port of [Pygments](https://pygments.org/) to
 [Crystal](https://crystal-lang.org/).
