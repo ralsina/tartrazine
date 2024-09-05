@@ -45,17 +45,34 @@ $ tartrazine whatever.c -t catppuccin-macchiato --line-numbers \
 
 ## Usage as a Library
 
-This works:
+This is the high level API:
 
 ```crystal
 require "tartrazine"
 
-lexer = Tartrazine.lexer("crystal")
-theme = Tartrazine.theme("catppuccin-macchiato")
-formatter = Tartrazine::Html.new
-formatter.theme = theme
-puts formatter.format(File.read(ARGV[0]), lexer)
+html = Tartrazine.to_html(
+  "puts \"Hello, world!\"",
+  language: "crystal",
+  theme: "catppuccin-macchiato",
+  standalone: true,
+  line_numbers: true
+)
 ```
+
+This does more or less the same thing, but more manually:
+
+```crystal
+lexer = Tartrazine.lexer("crystal")
+formatter = Tartrazine::Html.new (
+  theme: Tartrazine.theme("catppuccin-macchiato"),
+  line_numbers: true,
+  standalone: true,
+)
+puts formatter.format("puts \"Hello, world!\"", lexer)
+```
+
+The reason you may want to use the manual version is to reuse
+the lexer and formatter objects for performance reasons.
 
 ## Contributing
 

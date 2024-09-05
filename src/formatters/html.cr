@@ -3,6 +3,17 @@ require "../formatter"
 require "html"
 
 module Tartrazine
+  def self.to_html(text : String, language : String,
+                   theme : String = "default-dark",
+                   standalone : Bool = true,
+                   line_numbers : Bool = false) : String
+    Tartrazine::Html.new(
+      theme: Tartrazine.theme(theme),
+      standalone: standalone,
+      line_numbers: line_numbers
+    ).format(text, Tartrazine.lexer(name: language))
+  end
+
   class Html < Formatter
     # property line_number_in_table : Bool = false
     # property with_classes : Bool = true

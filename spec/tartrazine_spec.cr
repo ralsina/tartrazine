@@ -69,6 +69,31 @@ describe Tartrazine do
       end
     end
   end
+
+  describe "to_html" do
+    it "should do basic highlighting" do
+      html = Tartrazine.to_html("puts 'Hello, World!'", "ruby", standalone: false)
+      html.should eq(
+        "<pre class=\"b\" ><code class=\"b\"><span class=\"nb\">puts</span><span class=\"t\"> </span><span class=\"lss\">&#39;Hello, World!&#39;</span></code></pre>"
+      )
+    end
+  end
+  describe "to_ansi" do
+    it "should do basic highlighting" do
+      ansi = Tartrazine.to_ansi("puts 'Hello, World!'", "ruby")
+      if ENV.fetch("CI", nil)
+        # In Github Actions there is no terminal so these don't
+        # really work
+        ansi.should eq(
+          "puts 'Hello, World!'"
+        )
+      else
+        ansi.should eq(
+          "\e[38;2;171;70;66mputs\e[0m\e[38;2;216;216;216m \e[0m'Hello, World!'"
+        )
+      end
+    end
+  end
 end
 
 # Helper that creates lexer and tokenizes

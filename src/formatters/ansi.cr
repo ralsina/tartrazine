@@ -1,6 +1,15 @@
 require "../formatter"
 
 module Tartrazine
+  def self.to_ansi(text : String, language : String,
+                   theme : String = "default-dark",
+                   line_numbers : Bool = false) : String
+    Tartrazine::Ansi.new(
+      theme: Tartrazine.theme(theme),
+      line_numbers: line_numbers
+    ).format(text, Tartrazine.lexer(name: language))
+  end
+
   class Ansi < Formatter
     property? line_numbers : Bool = false
 
