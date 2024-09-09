@@ -84,27 +84,6 @@ module Tartrazine
 
     property styles = {} of String => Style
 
-    # Get the style for a token.
-    def style(token)
-      styles[token] = Style.new unless styles.has_key?(token)
-      s = styles[token]
-
-      # We already got the data from the style hierarchy
-      return s if s.complete?
-
-      # Form the hierarchy of parent styles
-      parents = style_parents(token)
-
-      s = parents.map do |parent|
-        styles[parent]
-      end.reduce(s) do |acc, style|
-        acc + style
-      end
-      s.complete = true
-      styles[token] = s
-      s
-    end
-
     def style_parents(token)
       parents = ["Background"]
       parts = token.underscore.split("_").map(&.capitalize)
