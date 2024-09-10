@@ -1,6 +1,7 @@
 require "./constants/lexers"
 require "./heuristics"
 require "baked_file_system"
+require "crystal/syntax_highlighter"
 
 module Tartrazine
   class LexerFiles
@@ -26,6 +27,7 @@ module Tartrazine
   end
 
   private def self.lexer_by_name(name : String) : BaseLexer
+    return CrystalLexer.new if name == "crystal"
     lexer_file_name = LEXERS_BY_NAME.fetch(name.downcase, nil)
     return create_delegating_lexer(name) if lexer_file_name.nil? && name.includes? "+"
     raise Exception.new("Unknown lexer: #{name}") if lexer_file_name.nil?
@@ -34,6 +36,10 @@ module Tartrazine
   end
 
   private def self.lexer_by_filename(filename : String) : BaseLexer
+    if filename.ends_with?(".cr")
+      return CrystalLexer.new
+    end
+
     candidates = Set(String).new
     LEXERS_BY_FILENAME.each do |k, v|
       candidates += v.to_set if File.match?(k, File.basename(filename))
@@ -325,6 +331,83 @@ module Tartrazine
       new_state.name = Random.base58(8)
       new_state.rules = rules + other.rules
       new_state
+    end
+  end
+
+  class CustomCrystalHighlighter < Crystal::SyntaxHighlighter
+    @tokens = [] of Token
+
+    def render_delimiter(&block)
+      @tokens << {type: "LiteralString", value: block.call.to_s}
+    end
+
+    def render_interpolation(&block)
+      @tokens << {type: "LiteralStringInterpol", value: "\#{"}
+      @tokens << {type: "Text", value: block.call.to_s}
+      @tokens << {type: "LiteralStringInterpol", value: "}"}
+    end
+
+    def render_string_array(&block)
+      @tokens << {type: "LiteralString", value: block.call.to_s}
+    end
+
+    # ameba:disable Metrics/CyclomaticComplexity
+    def render(type : TokenType, value : String)
+      case type
+      when .comment?
+        @tokens << {type: "Comment", value: value}
+      when .number?
+        @tokens << {type: "LiteralNumber", value: value}
+      when .char?
+        @tokens << {type: "LiteralStringChar", value: value}
+      when .symbol?
+        @tokens << {type: "LiteralStringSymbol", value: value}
+      when .const?
+        @tokens << {type: "NameConstant", value: value}
+      when .string?
+        @tokens << {type: "LiteralString", value: value}
+      when .ident?
+        @tokens << {type: "NameVariable", value: value}
+      when .keyword?, .self?
+        @tokens << {type: "NameKeyword", value: value}
+      when .primitive_literal?
+        @tokens << {type: "Literal", value: value}
+      when .operator?
+        @tokens << {type: "Operator", value: value}
+      when Crystal::SyntaxHighlighter::TokenType::DELIMITED_TOKEN, Crystal::SyntaxHighlighter::TokenType::DELIMITER_START, Crystal::SyntaxHighlighter::TokenType::DELIMITER_END
+        @tokens << {type: "LiteralString", value: value}
+      else
+        @tokens << {type: "Text", value: value}
+      end
+    end
+  end
+
+  class CrystalTokenizer < Tartrazine::BaseTokenizer
+    include Iterator(Token)
+    @hl = CustomCrystalHighlighter.new
+    @lexer : BaseLexer
+    @iter : Iterator(Token)
+
+    # delegate next, to: @iter
+
+    def initialize(@lexer : BaseLexer, text : String, secondary = false)
+      # Respect the `ensure_nl` config option
+      if text.size > 0 && text[-1] != '\n' && @lexer.config[:ensure_nl] && !secondary
+        text += "\n"
+      end
+      # Just do the tokenizing
+      @hl.highlight(text)
+      @iter = @hl.@tokens.each
+    end
+
+    def next : Iterator::Stop | Token
+      @iter.next
+    end
+  end
+
+  class CrystalLexer < BaseLexer
+    def tokenizer(text : String, secondary = false) : BaseTokenizer
+      CrystalTokenizer.new(self, text, secondary)
     end
   end
 end

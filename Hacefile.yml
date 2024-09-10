@@ -35,10 +35,10 @@ tasks:
     phony: true
     always_run: true
     dependencies:
-      - bin/tartrazine
+      - bin/{{NAME}}
     commands: |
-      rm ${HOME}/.local/bin/{{NAME}}
-      cp bin/hace ${HOME}/.local/bin/{{NAME}}
+      rm ${HOME}/.local/bin/{{NAME}} -f
+      cp bin/{{NAME}} ${HOME}/.local/bin/{{NAME}}
 
   static:
     outputs:

@@ -17,7 +17,6 @@ module Tartrazine
 
   abstract struct BaseRule
     abstract def match(text : Bytes, pos : Int32, tokenizer : Tokenizer) : Tuple(Bool, Int32, Array(Token))
-    abstract def initialize(node : XML::Node)
 
     @actions : Array(Action) = [] of Action
 
@@ -38,9 +37,6 @@ module Tartrazine
       # No match
       return false, pos, [] of Token if match.size == 0
       return true, pos + match[0].size, @actions.flat_map(&.emit(match, tokenizer))
-    end
-
-    def initialize(node : XML::Node)
     end
 
     def initialize(node : XML::Node, multiline, dotall, ignorecase)
