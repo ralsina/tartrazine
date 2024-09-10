@@ -2,16 +2,28 @@
 
 All notable changes to this project will be documented in this file.
 
-## [0.6.4] - 2024-08-28
+## [0.7.0] - 2024-09-10
+
+### 🚀 Features
+
+- Higher level API (`to_html` and `to_ansi`)
+- Use the native crystal highlighter
 
 ### 🐛 Bug Fixes
 
 - Ameba
 - Variable bame in Hacefile
+- Make it easier to import the Ansi formatter
+- Renamed BaseLexer to Lexer and Lexer to RegexLexer to make API nicer
+- Make install work
 
 ### 📚 Documentation
 
 - Mention AUR package
+
+### 🧪 Testing
+
+- Add CI workflows
 
 ### ⚙️ Miscellaneous Tasks
 
@@ -21,6 +33,10 @@ All notable changes to this project will be documented in this file.
 - Force conventional commit messages
 - Force conventional commit messages
 - Updated pre-commit
+- *(ignore)* Fix tests
+- Added badges
+- Added badges
+- *(ignore)* Removed random file
 
 ### Build
 
@@ -30,6 +46,7 @@ All notable changes to this project will be documented in this file.
 
 ### Bump
 
+- Release v0.6.4
 - Release v0.6.4
 
 ## [0.6.1] - 2024-08-25
