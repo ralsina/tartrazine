@@ -3,6 +3,9 @@ require "./spec_helper"
 # These are the testcases from Pygments
 testcases = Dir.glob("#{__DIR__}/tests/**/*txt").sort
 
+# These are custom testcases
+examples = Dir.glob("#{__DIR__}/examples/**/*.*").reject(&.ends_with? ".json").sort!
+
 # These lexers don't load because of parsing issues
 failing_lexers = {
   "webgpu_shading_language",
@@ -51,6 +54,14 @@ not_my_fault = {
 
 describe Tartrazine do
   describe "Lexer" do
+    examples.each do |example|
+      it "parses #{example}".split("/")[-2...].join("/") do
+        lexer = Tartrazine.lexer(name: File.basename(File.dirname(example)).downcase)
+        text = File.read(example)
+        expected = Array(Tartrazine::Token).from_json(File.read("#{example}.json"))
+        Tartrazine::RegexLexer.collapse_tokens(lexer.tokenizer(text).to_a).should eq expected
+      end
+    end
     testcases.each do |testcase|
       if known_bad.includes?(testcase)
         pending "parses #{testcase}".split("/")[-2...].join("/") do
