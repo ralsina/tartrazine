@@ -6,6 +6,9 @@ testcases = Dir.glob("#{__DIR__}/tests/**/*txt").sort
 # These are custom testcases
 examples = Dir.glob("#{__DIR__}/examples/**/*.*").reject(&.ends_with? ".json").sort!
 
+# CSS Stylesheets
+css_files = Dir.glob("#{__DIR__}/css/*.css")
+
 # These lexers don't load because of parsing issues
 failing_lexers = {
   "webgpu_shading_language",
@@ -77,6 +80,17 @@ describe Tartrazine do
             tokenize(lexer_name, text).should eq(chroma_tokenize(lexer_name, text))
           end
         end
+      end
+    end
+  end
+
+  describe "formatter" do
+    css_files.each do |css_file|
+      it "generates #{css_file}" do
+        css = File.read(css_file)
+        theme = Tartrazine.theme(File.basename(css_file, ".css"))
+        formatter = Tartrazine::Html.new(theme: theme)
+        formatter.style_defs.strip.should eq css.strip
       end
     end
   end
