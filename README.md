@@ -45,6 +45,14 @@ $ tartrazine whatever.c -t catppuccin-macchiato --line-numbers \
 
 ## Usage as a Library
 
+Add to your `shard.yml`:
+
+```yaml
+dependencies:
+  tartrazine:
+    github: ralsina/tartrazine
+```
+
 This is the high level API:
 
 ```crystal
