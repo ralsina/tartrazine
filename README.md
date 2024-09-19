@@ -71,7 +71,7 @@ This does more or less the same thing, but more manually:
 
 ```crystal
 lexer = Tartrazine.lexer("crystal")
-formatter = Tartrazine::Html.new (
+formatter = Tartrazine::Html.new(
   theme: Tartrazine.theme("catppuccin-macchiato"),
   line_numbers: true,
   standalone: true,
