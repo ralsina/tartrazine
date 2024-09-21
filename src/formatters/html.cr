@@ -134,10 +134,5 @@ module Tartrazine
       end
       class_prefix + Abbreviations[token]
     end
-
-    # Is this line in the highlighted ranges?
-    def highlighted?(line : Int) : Bool
-      highlight_lines.any?(&.includes?(line))
-    end
   end
 end

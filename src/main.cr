@@ -11,6 +11,8 @@ Usage:
   tartrazine -f html -t theme --css
   tartrazine FILE -f terminal [-t theme][-l lexer][--line-numbers]
                               [-o output]
+  tartrazine FILE -f svg  [-t theme][--standalone][--line-numbers]
+                          [-l lexer][-o output]
   tartrazine FILE -f json [-o output]
   tartrazine --list-themes
   tartrazine --list-lexers
@@ -18,7 +20,7 @@ Usage:
   tartrazine --version
 
 Options:
-  -f <formatter>      Format to use (html, terminal, json)
+  -f <formatter>      Format to use (html, terminal, json, svg)
   -t <theme>          Theme to use, see --list-themes [default: default-dark]
   -l <lexer>          Lexer (language) to use, see --list-lexers. Use more than
                       one lexer with "+" (e.g. jinja+yaml) [default: autodetect]
@@ -71,6 +73,11 @@ if options["-f"]
     formatter.theme = theme
   when "json"
     formatter = Tartrazine::Json.new
+  when "svg"
+    formatter = Tartrazine::Svg.new
+    formatter.standalone = options["--standalone"] != nil
+    formatter.line_numbers = options["--line-numbers"] != nil
+    formatter.theme = theme
   else
     puts "Invalid formatter: #{formatter}"
     exit 1
