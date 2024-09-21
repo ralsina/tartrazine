@@ -34,8 +34,6 @@ module Tartrazine
     end
 
     def colorize(text : String, token : String) : String
-      style = theme.styles.fetch(token, nil)
-      return text if style.nil?
       if theme.styles.has_key?(token)
         s = theme.styles[token]
       else
