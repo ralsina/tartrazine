@@ -113,3 +113,11 @@ tasks:
       kcov --clean --include-path=./src ${PWD}/coverage ./bin/run_tests
     outputs:
       - coverage/index.html
+
+  loc:
+    phony: true
+    always_run: true
+    dependencies:
+      - src
+    commands: |
+      tokei src -e src/constants/

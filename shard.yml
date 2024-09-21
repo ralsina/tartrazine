@@ -18,6 +18,10 @@ dependencies:
     github: ralsina/sixteen
   docopt:
     github: chenkovsky/docopt.cr
+  stumpy_utils:
+    github: stumpycr/stumpy_utils
+  stumpy_png:
+    github: stumpycr/stumpy_png
 
 crystal: ">= 1.13.0"
 

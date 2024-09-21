@@ -4,6 +4,10 @@ require "./tartrazine"
 HELP = <<-HELP
 tartrazine: a syntax highlighting tool
 
+You can use the CLI to generate HTML, terminal, JSON or SVG output
+from a source file using different themes.
+Keep in mind that not all formatters support all features.
+
 Usage:
   tartrazine (-h, --help)
   tartrazine FILE -f html [-t theme][--standalone][--line-numbers]
@@ -12,6 +16,8 @@ Usage:
   tartrazine FILE -f terminal [-t theme][-l lexer][--line-numbers]
                               [-o output]
   tartrazine FILE -f svg  [-t theme][--standalone][--line-numbers]
+                          [-l lexer][-o output]
+  tartrazine FILE -f png  [-t theme][--line-numbers]
                           [-l lexer][-o output]
   tartrazine FILE -f json [-o output]
   tartrazine --list-themes
@@ -76,6 +82,10 @@ if options["-f"]
   when "svg"
     formatter = Tartrazine::Svg.new
     formatter.standalone = options["--standalone"] != nil
+    formatter.line_numbers = options["--line-numbers"] != nil
+    formatter.theme = theme
+  when "png"
+    formatter = Tartrazine::Png.new
     formatter.line_numbers = options["--line-numbers"] != nil
     formatter.theme = theme
   else
