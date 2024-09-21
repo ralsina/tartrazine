@@ -106,8 +106,7 @@ module Tartrazine
 
           # These are true/false/nil
           outp << "border: none;" if style.border == false
-          outp << "font-weight: bold;" if style.bold
-          outp << "font-weight: #{@weight_of_bold};" if style.bold == false
+          outp << "font-weight: #{@weight_of_bold};" if style.bold
           outp << "font-style: italic;" if style.italic
           outp << "font-style: normal;" if style.italic == false
           outp << "text-decoration: underline;" if style.underline
