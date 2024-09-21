@@ -17,12 +17,19 @@ module Tartrazine
     end
 
     def format(text : String, lexer : Lexer) : String
-      raise Exception.new("Not implemented")
+      outp = String::Builder.new("")
+      format(text, lexer, outp)
+      outp.to_s
     end
 
     # Return the styles, if the formatter supports it.
     def style_defs : String
       raise Exception.new("Not implemented")
+    end
+
+    # Is this line in the highlighted ranges?
+    def highlighted?(line : Int) : Bool
+      highlight_lines.any?(&.includes?(line))
     end
   end
 end
