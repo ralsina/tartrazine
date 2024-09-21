@@ -2,6 +2,29 @@
 
 All notable changes to this project will be documented in this file.
 
+## [0.8.0] - 2024-09-21
+
+### 🚀 Features
+
+- SVG formatter
+
+### 🐛 Bug Fixes
+
+- HTML formatter was setting bold wrong
+
+### 📚 Documentation
+
+- Added instructions to add as a dependency
+
+### 🧪 Testing
+
+- Add basic tests for crystal and delegating lexers
+- Added tests for CSS generation
+
+### ⚙ Miscellaneous Tasks
+
+- Fix example code in README
+
 ## [0.7.0] - 2024-09-10
 
 ### 🚀 Features
