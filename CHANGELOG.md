@@ -2,6 +2,18 @@
 
 All notable changes to this project will be documented in this file.
 
+## [0.9.0] - 2024-09-21
+
+### 🚀 Features
+
+- PNG writer based on Stumpy libs
+
+### ⚙️ Miscellaneous Tasks
+
+- Clean
+- Detect version bump in release script
+- Improve changelog handling
+
 ## [0.8.0] - 2024-09-21
 
 ### 🚀 Features
