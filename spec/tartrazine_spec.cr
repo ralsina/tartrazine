@@ -1,4 +1,5 @@
 require "./spec_helper"
+require "digest/sha1"
 
 # These are the testcases from Pygments
 testcases = Dir.glob("#{__DIR__}/tests/**/*txt").sort
@@ -103,6 +104,7 @@ describe Tartrazine do
       )
     end
   end
+
   describe "to_ansi" do
     it "should do basic highlighting" do
       ansi = Tartrazine.to_ansi("puts 'Hello, World!'", "ruby")
@@ -117,6 +119,24 @@ describe Tartrazine do
           "\e[38;2;171;70;66mputs\e[0m\e[38;2;216;216;216m \e[0m\e[38;2;161;181;108m'Hello, World!'\e[0m"
         )
       end
+    end
+  end
+
+  describe "to_svg" do
+    it "should do basic highlighting" do
+      svg = Tartrazine.to_svg("puts 'Hello, World!'", "ruby", standalone: false)
+      svg.should eq(
+        "<text x=\"0\" y=\"19\" xml:space=\"preserve\"><tspan fill=\"#ab4642\">puts</tspan><tspan fill=\"#d8d8d8\"> </tspan><tspan fill=\"#a1b56c\">&#39;Hello, World!&#39;</tspan></text>"
+      )
+    end
+  end
+
+  describe "to_png" do
+    it "should do basic highlighting" do
+      png = Digest::SHA1.hexdigest(Tartrazine.to_png("puts 'Hello, World!'", "ruby"))
+      png.should eq(
+        "62d419dcd263fffffc265a0f04c156dc2530c362"
+      )
     end
   end
 end
