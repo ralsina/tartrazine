@@ -2,6 +2,17 @@
 
 All notable changes to this project will be documented in this file.
 
+## [0.9.1] - 2024-09-22
+
+### 🐛 Bug Fixes
+
+- Terminal formatter was skipping things that it could highlight
+- Bug in high-level API for png formatter
+
+### 🧪 Testing
+
+- Added minimal tests for svg and png formatters
+
 ## [0.9.0] - 2024-09-21
 
 ### 🚀 Features
