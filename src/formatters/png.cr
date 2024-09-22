@@ -1,16 +1,20 @@
 require "../formatter"
+require "compress/gzip"
+require "digest/sha1"
 require "stumpy_png"
 require "stumpy_utils"
-require "compress/gzip"
 
 module Tartrazine
   def self.to_png(text : String, language : String,
                   theme : String = "default-dark",
                   line_numbers : Bool = false) : String
+    buf = IO::Memory.new
+
     Tartrazine::Png.new(
       theme: Tartrazine.theme(theme),
       line_numbers: line_numbers
-    ).format(text, Tartrazine.lexer(name: language))
+    ).format(text, Tartrazine.lexer(name: language), buf)
+    buf.to_s
   end
 
   class FontFiles
