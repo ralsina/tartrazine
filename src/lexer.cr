@@ -6,11 +6,21 @@ require "crystal/syntax_highlighter"
 module Tartrazine
   class LexerFiles
     extend BakedFileSystem
-    bake_folder "../lexers", __DIR__
+
+    macro bake_selected_lexers
+      {% for lexer in env("TT_LEXERS").split "," %}
+      bake_file {{ lexer }}+".xml", {{ read_file "lexers/" + lexer + ".xml" }}
+      {% end %}
+    end
+
+    {% if flag?(:nolexers) %}
+      bake_selected_lexers
+    {% else %}
+      bake_folder "../lexers", __DIR__
+    {% end %}
   end
 
   # Get the lexer object for a language name
-  # FIXME: support mimetypes
   def self.lexer(name : String? = nil, filename : String? = nil, mimetype : String? = nil) : BaseLexer
     return lexer_by_name(name) if name && name != "autodetect"
     return lexer_by_filename(filename) if filename
@@ -33,6 +43,8 @@ module Tartrazine
     raise Exception.new("Unknown lexer: #{name}") if lexer_file_name.nil?
 
     RegexLexer.from_xml(LexerFiles.get("/#{lexer_file_name}.xml").gets_to_end)
+  rescue ex : BakedFileSystem::NoSuchFileError
+    raise Exception.new("Unknown lexer: #{name}")
   end
 
   private def self.lexer_by_filename(filename : String) : BaseLexer
@@ -84,7 +96,8 @@ module Tartrazine
 
   # Return a list of all lexers
   def self.lexers : Array(String)
-    LEXERS_BY_NAME.keys.sort!
+    file_map = LexerFiles.files.map(&.path)
+    LEXERS_BY_NAME.keys.select { |k| file_map.includes?("/#{k}.xml") }.sort!
   end
 
   # A token, the output of the tokenizer
