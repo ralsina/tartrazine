@@ -38,6 +38,12 @@ for fname in glob.glob("lexers/*.xml"):
         lexer_by_filename[filename].add(lexer_name)
 
 with open("src/constants/lexers.cr", "w") as f:
+    # Crystal doesn't come from a xml file
+    lexer_by_name["crystal"] = "crystal"
+    lexer_by_name["cr"] = "crystal"
+    lexer_by_filename["*.cr"] = ["crystal"]
+    lexer_by_mimetype["text/x-crystal"] = "crystal"
+
     f.write("module Tartrazine\n")
     f.write("  LEXERS_BY_NAME = {\n")
     for k in sorted(lexer_by_name.keys()):
