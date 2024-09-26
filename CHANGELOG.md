@@ -2,6 +2,17 @@
 
 All notable changes to this project will be documented in this file.
 
+## [0.10.0] - 2024-09-26
+
+### 🚀 Features
+
+- Optional conditional baking of lexers
+
+### 🐛 Bug Fixes
+
+- Strip binaries for release artifacts
+- Fix metadata to show crystal
+
 ## [0.9.1] - 2024-09-22
 
 ### 🐛 Bug Fixes
