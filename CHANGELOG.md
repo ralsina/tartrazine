@@ -21,6 +21,27 @@ All notable changes to this project will be documented in this file.
 ### Bump
 
 - Release v0.10.0
+- Release v0.10.0
+
+## [0.10.0] - 2024-09-26
+
+### 🚀 Features
+
+- Optional conditional baking of lexers
+
+### 🐛 Bug Fixes
+
+- Strip binaries for release artifacts
+- Fix metadata to show crystal
+
+### ⚙️ Miscellaneous Tasks
+
+- Build before tag
+- *(build)* Strip static binary
+
+### Bump
+
+- Release v0.10.0
 
 ## [0.10.0] - 2024-09-26
 
