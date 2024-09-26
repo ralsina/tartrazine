@@ -82,6 +82,25 @@ puts formatter.format("puts \"Hello, world!\"", lexer)
 The reason you may want to use the manual version is to reuse
 the lexer and formatter objects for performance reasons.
 
+## Choosing what Lexers you want
+
+By default Tartrazine will support all its lexers by embedding
+them in the binary. This makes the binary large. If you are
+using it as a library, you may want to just include a selection of lexers. To do that:
+
+* Pass the `-Dnolexers` flag to the compiler
+* Set the `TT_LEXERS` environment variable to a
+  comma-separated list of lexers you want to include.
+
+
+This builds a binary with only the python, markdown, bash and yaml lexers (enough to highlight this `README.md`):
+
+```bash
+> TT_LEXERS=python,markdown,bash,yaml shards build -Dnolexers -d --error-trace
+Dependencies are satisfied
+Building: tartrazine
+```
+
 ## Contributing
 
 1. Fork it (<https://github.com/ralsina/tartrazine/fork>)
