@@ -7,10 +7,10 @@ docker run --rm --privileged \
 
 # Build for AMD64
 docker build . -f Dockerfile.static -t tartrazine-builder
-docker run -ti --rm -v "$PWD":/app --user="$UID" tartrazine-builder /bin/sh -c "cd /app && rm -rf lib shard.lock && shards build --static --release && strip bin/*"
+docker run -ti --rm -v "$PWD":/app --user="$UID" tartrazine-builder /bin/sh -c "cd /app && rm -rf lib shard.lock && shards build --static --release && strip bin/tartrazine"
 mv bin/tartrazine bin/tartrazine-static-linux-amd64
 
 # Build for ARM64
 docker build . -f Dockerfile.static --platform linux/arm64 -t tartrazine-builder
-docker run -ti --rm -v "$PWD":/app --platform linux/arm64 --user="$UID" tartrazine-builder /bin/sh -c "cd /app && rm -rf lib shard.lock && shards build --static --release && strip bin/*"
+docker run -ti --rm -v "$PWD":/app --platform linux/arm64 --user="$UID" tartrazine-builder /bin/sh -c "cd /app && rm -rf lib shard.lock && shards build --static --release && strip bin/tartrazine"
 mv bin/tartrazine bin/tartrazine-static-linux-arm64
