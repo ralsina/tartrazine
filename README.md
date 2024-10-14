@@ -101,6 +101,32 @@ Dependencies are satisfied
 Building: tartrazine
 ```
 
+## Choosing what themes you want
+
+Themes come from two places, tartrazine itself and [Sixteen](https://github.com/ralsina/sixteen).
+
+To only embed selected themes, build your project with the `-Dnothemes` option, and
+you can set two environment variables to control which themes are included:
+
+* `TT_THEMES` is a comma-separated list of themes to include from tartrazine (see the styles directory in the source)
+* `SIXTEEN_THEMES` is a comma-separated list of themes to include from Sixteen (see the base16 directory in the sixteen source)
+
+For example (using the tartrazine CLI as the project):
+
+```bash
+$ TT_THEMES=colorful,autumn SIXTEEN_THEMES=pasque,pico shards build -Dnothemes
+Dependencies are satisfied
+Building: tartrazine
+
+$ ./bin/tartrazine  --list-themes
+autumn
+colorful
+pasque
+pico
+```
+
+Be careful not to build without any themes at all, nothing will work.
+
 ## Contributing
 
 1. Fork it (<https://github.com/ralsina/tartrazine/fork>)

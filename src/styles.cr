@@ -11,7 +11,20 @@ module Tartrazine
 
   struct ThemeFiles
     extend BakedFileSystem
-    bake_folder "../styles", __DIR__
+
+    macro bake_selected_themes
+      {% if env("TT_THEMES") %}
+      {% for theme in env("TT_THEMES").split "," %}
+      bake_file {{ theme }}+".xml", {{ read_file "#{__DIR__}/../styles/" + theme + ".xml" }}
+      {% end %}
+      {% end %}
+    end
+
+    {% if flag?(:nothemes) %}
+      bake_selected_themes
+    {% else %}
+      bake_folder "../styles", __DIR__
+    {% end %}
   end
 
   def self.theme(name : String) : Theme
