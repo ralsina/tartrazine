@@ -9,7 +9,7 @@ module Tartrazine
 
     macro bake_selected_lexers
       {% for lexer in env("TT_LEXERS").split "," %}
-      bake_file {{ lexer }}+".xml", {{ read_file "lexers/" + lexer + ".xml" }}
+      bake_file {{ lexer }}+".xml", {{ read_file "#{__DIR__}/../lexers/" + lexer + ".xml" }}
       {% end %}
     end
 
