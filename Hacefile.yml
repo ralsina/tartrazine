@@ -121,3 +121,17 @@ tasks:
       - src
     commands: |
       tokei src -e src/constants/
+
+  aur:
+    phony: true
+    always_run: true
+    commands: |
+      rm -rf aur-{{NAME}}
+      git clone ssh://aur@aur.archlinux.org/{{NAME}}.git aur-{{NAME}}
+      sed s/pkgver=.*/pkgver=$(shards version)/ -i aur-{{NAME}}/PKGBUILD
+      sed s/pkgrel=.*/pkgrel=1/ -i aur-{{NAME}}/PKGBUILD
+      cd aur-{{NAME}} && updpkgsums && makepkg --printsrcinfo > .SRCINFO
+      cd aur-{{NAME}} && makepkg -fsr
+      cd aur-{{NAME}} && git add PKGBUILD .SRCINFO
+      cd aur-{{NAME}} && git commit -a -m "Update to $(shards version)"
+      cd aur-{{NAME}} && git push
