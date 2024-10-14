@@ -2,6 +2,12 @@
 
 All notable changes to this project will be documented in this file.
 
+## [0.11.0] - 2024-10-14
+
+### 🚀 Features
+
+- Support selecting only some themes
+
 ## [0.10.0] - 2024-09-26
 
 ### 🚀 Features
