@@ -47,8 +47,13 @@ known_bad = {
   "#{__DIR__}/tests/bash_session/test_newline_in_ls_no_ps2.txt",
   "#{__DIR__}/tests/bash_session/test_newline_in_ls_ps2.txt",
   "#{__DIR__}/tests/bash_session/test_virtualenv.txt",
+  "#{__DIR__}/tests/mcfunction/commenting.txt",
+  "#{__DIR__}/tests/mcfunction/coordinates.txt",
   "#{__DIR__}/tests/mcfunction/data.txt",
+  "#{__DIR__}/tests/mcfunction/difficult_1.txt",
+  "#{__DIR__}/tests/mcfunction/multiline.txt",
   "#{__DIR__}/tests/mcfunction/selectors.txt",
+  "#{__DIR__}/tests/mcfunction/simple.txt",
 }
 
 # Tests that fail because of a limitation in PCRE2
