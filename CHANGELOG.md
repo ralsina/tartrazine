@@ -2,6 +2,21 @@
 
 All notable changes to this project will be documented in this file.
 
+## [0.12.0] - 2025-01-21
+
+### 🚀 Features
+
+- Bumped to latest chroma release
+
+### ⚙️ Miscellaneous Tasks
+
+- Pin ubuntu version in CI
+- Mark more mcfunction tests as bad
+
+### Build
+
+- Automate AUR release
+
 ## [0.11.1] - 2024-10-14
 
 ### 🐛 Bug Fixes
