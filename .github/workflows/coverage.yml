@@ -15,7 +15,7 @@ jobs:
         uses: crystal-lang/install-crystal@v1
       - name: Run tests using kcov
         run: |
-          sudo apt update && sudo apt install kcov
+          sudo apt update && sudo apt upgrade && sudo apt install -y kcov
           wget https://github.com/alecthomas/chroma/releases/download/v2.14.0/chroma-2.14.0-linux-amd64.tar.gz
           tar xzvf chroma-2.14.0*gz
           mkdir ~/.local/bin -p
