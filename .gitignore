@@ -12,3 +12,6 @@ venv/
 .croupier
 coverage/
 run_tests
+
+# We use the internal crystal lexer
+lexers/crystal.xml

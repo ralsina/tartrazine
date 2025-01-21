@@ -3,7 +3,6 @@
     <name>Groff</name>
     <alias>groff</alias>
     <alias>nroff</alias>
-    <alias>roff</alias>
     <alias>man</alias>
     <filename>*.[1-9]</filename>
     <filename>*.1p</filename>
