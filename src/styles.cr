@@ -35,8 +35,8 @@ module Tartrazine
     end
     begin
       Theme.from_xml(ThemeFiles.get("/#{name}.xml").gets_to_end)
-    rescue
-      raise Exception.new("Theme #{name} not found")
+    rescue ex ; Exception
+      raise Exception.new("Error loading theme #{name}: #{ex.message}")
     end
   end
 
