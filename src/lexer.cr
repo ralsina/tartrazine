@@ -350,6 +350,14 @@ module Tartrazine
   class CustomCrystalHighlighter < Crystal::SyntaxHighlighter
     @tokens = [] of Token
 
+    def highlight(text)
+      super
+    rescue ex : Crystal::SyntaxException
+      # Fallback to Ruby highlighting
+      Log.warn { "Highlighting as Ruby, Crystal syntax highlighting failed: #{ex.message}" }
+      @tokens = Tartrazine.lexer("ruby").tokenizer(text).to_a
+    end
+
     def render_delimiter(&block)
       @tokens << {type: "LiteralString", value: block.call.to_s}
     end
