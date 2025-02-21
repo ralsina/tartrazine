@@ -28,6 +28,13 @@ module Tartrazine
     property? surrounding_pre : Bool = true
     property? wrap_long_lines : Bool = false
     property weight_of_bold : Int32 = 600
+    property template : String = <<-TEMPLATE
+<!DOCTYPE html><html><head><style>
+{{style_defs}}
+</style></head><body>
+{{body}}
+</body></html>
+TEMPLATE
 
     property theme : Theme
 
@@ -42,7 +49,8 @@ module Tartrazine
                    @standalone : Bool = false,
                    @surrounding_pre : Bool = true,
                    @wrap_long_lines : Bool = false,
-                   @weight_of_bold : Int32 = 600)
+                   @weight_of_bold : Int32 = 600,
+                   @template : String = @template)
     end
 
     def format(text : String, lexer : Lexer) : String
@@ -61,11 +69,15 @@ module Tartrazine
     # Wrap text into a full HTML document, including the CSS for the theme
     def wrap_standalone
       output = String.build do |outp|
-        outp << "<!DOCTYPE html><html><head><style>"
-        outp << style_defs
-        outp << "</style></head><body>"
+        if @template.includes? "{{style_defs}}"
+          outp << @template.split("{{style_defs}}")[0]
+          outp << style_defs
+          outp << @template.split("{{style_defs}}")[1].split("{{body}}")[0]
+        else
+          outp << @template.split("{{body}}")[0]
+        end
       end
-      {output.to_s, "</body></html>"}
+      {output.to_s, @template.split("{{body}}")[1]}
     end
 
     private def line_label(i : Int32) : String

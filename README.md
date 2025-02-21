@@ -127,6 +127,33 @@ pico
 
 Be careful not to build without any themes at all, nothing will work.
 
+## Templates for standalone HTML output
+
+If you are using the HTML formatter, you can pass a template to use for the output. The template is a string where the following placeholders will be replaced:
+
+* `{{style_defs}}` will be replaced by the CSS styles needed for the theme
+* `{{code}}` will be replaced by the highlighted code
+
+This is an example template that changes the padding around the code:
+
+```jinja2
+<!DOCTYPE html>
+<html>
+  <head>
+    <style>
+      {{style_defs}}
+      pre {
+      padding: 1em;
+      }
+    </style>
+  </head>
+  <body>
+    {{body}}
+  </body>
+</html>
+```
+
+
 ## Contributing
 
 1. Fork it (<https://github.com/ralsina/tartrazine/fork>)

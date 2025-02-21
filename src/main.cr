@@ -10,8 +10,8 @@ Keep in mind that not all formatters support all features.
 
 Usage:
   tartrazine (-h, --help)
-  tartrazine FILE -f html [-t theme][--standalone][--line-numbers]
-                          [-l lexer][-o output]
+  tartrazine FILE -f html [-t theme][--standalone [--template file]]
+                          [--line-numbers][-l lexer][-o output]
   tartrazine -f html -t theme --css
   tartrazine FILE -f terminal [-t theme][-l lexer][--line-numbers]
                               [-o output]
@@ -35,6 +35,7 @@ Options:
                       all style information. If not given, it will generate just
                       a HTML fragment ready to include in your own page.
   --css               Generate a CSS file for the theme called <theme>.css
+  --template <file>   Use a custom template for the HTML output [default: none]
   --line-numbers      Include line numbers in the output
   -h, --help          Show this screen
   -v, --version       Show version number
@@ -64,6 +65,12 @@ if options["--list-formatters"]
 end
 
 theme = Tartrazine.theme(options["-t"].as(String))
+template = options["--template"].as(String)
+if template != "none" # Otherwise we will use the default template
+  template = File.open(template).gets_to_end
+else
+  template = nil
+end
 
 if options["-f"]
   formatter = options["-f"].as(String)
@@ -73,6 +80,7 @@ if options["-f"]
     formatter.standalone = options["--standalone"] != nil
     formatter.line_numbers = options["--line-numbers"] != nil
     formatter.theme = theme
+    formatter.template = template if template
   when "terminal"
     formatter = Tartrazine::Ansi.new
     formatter.line_numbers = options["--line-numbers"] != nil
