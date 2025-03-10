@@ -2,6 +2,23 @@
 
 All notable changes to this project will be documented in this file.
 
+## [0.13.0] - 2025-03-10
+
+### 🚀 Features
+
+- Support custom template for HTML standalone output
+
+### 🐛 Bug Fixes
+
+- Better error message when loading a XML theme
+- When the internal crystal highlighter fails, fallback to ruby. Fixes #13
+- Don't log when falling back to ruby, it breaks stuff
+
+### ⚙️ Miscellaneous Tasks
+
+- Upgrade ci image
+- Typo
+
 ## [0.12.0] - 2025-01-21
 
 ### 🚀 Features
