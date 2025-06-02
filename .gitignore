@@ -12,6 +12,7 @@ venv/
 .croupier
 coverage/
 run_tests
+aur-tartrazine/
 
 # We use the internal crystal lexer
 lexers/crystal.xml
