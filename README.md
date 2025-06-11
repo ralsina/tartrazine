@@ -108,8 +108,10 @@ Themes come from two places, tartrazine itself and [Sixteen](https://github.com/
 To only embed selected themes, build your project with the `-Dnothemes` option, and
 you can set two environment variables to control which themes are included:
 
-* `TT_THEMES` is a comma-separated list of themes to include from tartrazine (see the styles directory in the source)
-* `SIXTEEN_THEMES` is a comma-separated list of themes to include from Sixteen (see the base16 directory in the sixteen source)
+* `TT_THEMES` is a comma-separated list of themes to include from tartrazine (see
+  [the styles directory in the source(https://github.com/ralsina/tartrazine/tree/main/styles))
+* `SIXTEEN_THEMES` is a comma-separated list of themes to include from Sixteen (see
+  [the base16 directory in the sixteen source](https://github.com/ralsina/sixteen/tree/main/base16))
 
 For example (using the tartrazine CLI as the project):
 
