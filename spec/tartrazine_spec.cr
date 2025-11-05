@@ -121,7 +121,7 @@ describe Tartrazine do
         )
       else
         ansi.should eq(
-          "\e[38;2;171;70;66mputs\e[0m\e[38;2;216;216;216m \e[0m\e[38;2;161;181;108m'Hello, World!'\e[0m"
+          "\e[38;2;171;70;66mputs\e[39m\e[38;2;216;216;216m \e[39m\e[38;2;161;181;108m'Hello, World!'\e[39m"
         )
       end
     end
