@@ -82,6 +82,29 @@ puts formatter.format("puts \"Hello, world!\"", lexer)
 The reason you may want to use the manual version is to reuse
 the lexer and formatter objects for performance reasons.
 
+## Experimental CSS Highlights API Formatter
+
+Tartrazine also includes an experimental `highlights` formatter that uses the
+[CSS Custom Highlights API](https://developer.mozilla.org/en-US/docs/Web/CSS/CSS_Custom_Highlights_API)
+instead of traditional DOM manipulation with `<span>` elements.
+
+**Note**: This is experimental and shows little to no performance benefit in modern browsers
+even for large files. The traditional HTML formatter is recommended for production use.
+
+```bash
+# Generate syntax highlighting with CSS Highlights API
+tartrazine code.cr -f highlights -t github --standalone
+```
+
+**Browser Support**: Chrome/Edge 105+, Firefox 114+ (requires flag in Firefox)
+
+**Limitations**: The CSS Highlights API only supports a limited subset of CSS properties:
+- ✅ Supported: `color`, `background-color`, `text-decoration`, `text-shadow`
+- ❌ Not supported: `font-weight`, `font-style`, `border`, `tab-size`
+
+This means the highlights formatter cannot apply bold, italic, or border styling that
+the traditional HTML formatter supports.
+
 ## Choosing what Lexers you want
 
 By default Tartrazine will support all its lexers by embedding

@@ -20,13 +20,16 @@ Usage:
   tartrazine FILE -f png  [-t theme][--line-numbers]
                           [-l lexer][-o output]
   tartrazine FILE -f json [-o output]
+  tartrazine FILE -f highlights [-t theme][--standalone [--template file]]
+                              [--line-numbers][-l lexer][-o output]
+  tartrazine -f highlights -t theme --css
   tartrazine --list-themes
   tartrazine --list-lexers
   tartrazine --list-formatters
   tartrazine --version
 
 Options:
-  -f <formatter>      Format to use (html, terminal, json, svg)
+  -f <formatter>      Format to use (html, terminal, json, svg, highlights)
   -t <theme>          Theme to use, see --list-themes [default: default-dark]
   -l <lexer>          Lexer (language) to use, see --list-lexers. Use more than
                       one lexer with "+" (e.g. jinja+yaml) [default: autodetect]
@@ -35,6 +38,7 @@ Options:
                       all style information. If not given, it will generate just
                       a HTML fragment ready to include in your own page.
   --css               Generate a CSS file for the theme called <theme>.css
+                      (works with html and highlights formatters)
   --template <file>   Use a custom template for the HTML output [default: none]
   --line-numbers      Include line numbers in the output
   -h, --help          Show this screen
@@ -60,14 +64,14 @@ if options["--list-lexers"]
 end
 
 if options["--list-formatters"]
-  puts "html\njson\nterminal"
+  puts "html\njson\nterminal\nsvg\npng\nhighlights"
   exit 0
 end
 
 theme = Tartrazine.theme(options["-t"].as(String))
-template = options["--template"].as(String)
-if template != "none" # Otherwise we will use the default template
-  template = File.open(template).gets_to_end
+template = options["--template"]?
+if template && template != "none" # Otherwise we will use the default template
+  template = File.open(template.as(String)).gets_to_end
 else
   template = nil
 end
@@ -96,12 +100,18 @@ if options["-f"]
     formatter = Tartrazine::Png.new
     formatter.line_numbers = options["--line-numbers"] != nil
     formatter.theme = theme
+  when "highlights"
+    formatter = Tartrazine::Highlights.new
+    formatter.standalone = options["--standalone"] != nil
+    formatter.line_numbers = options["--line-numbers"] != nil
+    formatter.theme = theme
+    formatter.template = template if template
   else
     puts "Invalid formatter: #{formatter}"
     exit 1
   end
 
-  if formatter.is_a?(Tartrazine::Html) && options["--css"]
+  if (formatter.is_a?(Tartrazine::Html) || formatter.is_a?(Tartrazine::Highlights)) && options["--css"]
     File.open("#{options["-t"].as(String)}.css", "w") do |outf|
       outf << formatter.style_defs
     end
