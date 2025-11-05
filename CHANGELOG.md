@@ -2,6 +2,25 @@
 
 All notable changes to this project will be documented in this file.
 
+## [0.14.0] - 2025-11-05
+
+### 🚀 Features
+
+- Add experimental CSS Highlights API formatter
+
+### 📚 Documentation
+
+- Link to where themes are
+
+### 🧪 Testing
+
+- Fix broken test
+
+### ⚙️ Miscellaneous Tasks
+
+- Ignore
+- AUR build
+
 ## [0.13.0] - 2025-03-10
 
 ### 🚀 Features

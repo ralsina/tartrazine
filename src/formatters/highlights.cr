@@ -108,7 +108,6 @@ TEMPLATE
         token_text = HTML.escape(token[:value])
         end_pos = start_pos + token[:value].size
 
-
         text_content << token_text
         current_pos = end_pos
 
