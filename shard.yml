@@ -17,7 +17,7 @@ dependencies:
   sixteen:
     github: ralsina/sixteen
   docopt:
-    github: chenkovsky/docopt.cr
+    github: ralsina/docopt.cr
   stumpy_utils:
     github: stumpycr/stumpy_utils
   stumpy_png:
