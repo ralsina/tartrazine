@@ -97,7 +97,17 @@ module Tartrazine
   # Return a list of all lexers
   def self.lexers : Array(String)
     file_map = LexerFiles.files.map(&.path)
-    LEXERS_BY_NAME.keys.select { |k| file_map.includes?("/#{k}.xml") }.sort!
+    xml_lexers = LEXERS_BY_NAME.keys.select { |k| file_map.includes?("/#{k}.xml") }.sort!
+
+    # Add crystal lexer as a special case
+    xml_lexers += ["crystal"]
+    xml_lexers.uniq.sort!
+  end
+
+  # Return file extensions for a specific lexer by name
+  def self.lexer_extensions(lexer_name : String) : Array(String)
+    lexer = lexer(lexer_name)
+    lexer.extensions
   end
 
   # A token, the output of the tokenizer
@@ -188,6 +198,12 @@ module Tartrazine
     def tokenizer(text : String, secondary = false) : BaseTokenizer
       Tokenizer.new(self, text, secondary)
     end
+
+    # Return the file extensions supported by this lexer
+    # Override in subclasses to provide specific extensions
+    def extensions : Array(String)
+      [] of String
+    end
   end
 
   # This implements a lexer for Pygments RegexLexers as expressed
@@ -217,6 +233,28 @@ module Tartrazine
         end
       end
       result
+    end
+
+    # Return file extensions for this XML lexer
+    def extensions : Array(String)
+      return [] of String unless @config[:name]?
+
+      # Try to find the XML file for this lexer
+      begin
+        lexer_file_name = LEXERS_BY_NAME[@config[:name]]?
+        return [] of String unless lexer_file_name
+
+        xml_content = LexerFiles.get("/#{lexer_file_name}.xml").gets_to_end
+        xml = XML.parse(xml_content)
+
+        xml.first_element_child.try do |root|
+          root.children.find { |node| node.name == "config" }.try do |config|
+            config.children.select { |node| node.name == "filename" }.map(&.content.to_s)
+          end
+        end || [] of String
+      rescue ex
+        [] of String
+      end
     end
 
     def self.from_xml(xml : String) : Lexer
@@ -428,6 +466,11 @@ module Tartrazine
   class CrystalLexer < BaseLexer
     def tokenizer(text : String, secondary = false) : BaseTokenizer
       CrystalTokenizer.new(self, text, secondary)
+    end
+
+    # Return file extensions for Crystal lexer
+    def extensions : Array(String)
+      ["*.cr"]
     end
   end
 end

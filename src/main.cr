@@ -25,6 +25,7 @@ Usage:
   tartrazine -f highlights -t theme --css
   tartrazine --list-themes
   tartrazine --list-lexers
+  tartrazine --list-extensions <lexer>
   tartrazine --list-formatters
   tartrazine --version
 
@@ -41,6 +42,7 @@ Options:
                       (works with html and highlights formatters)
   --template <file>   Use a custom template for the HTML output [default: none]
   --line-numbers      Include line numbers in the output
+  --list-extensions <lexer>  List file extensions for a lexer
   -h, --help          Show this screen
   -v, --version       Show version number
 HELP
@@ -65,6 +67,18 @@ end
 
 if options["--list-formatters"]
   puts "html\njson\nterminal\nsvg\npng\nhighlights"
+  exit 0
+end
+
+if options["--list-extensions"]
+  lexer_name = options["--list-extensions"].as(String)
+  begin
+    extensions = Tartrazine.lexer_extensions(lexer_name)
+    puts extensions.join(", ")
+  rescue ex
+    puts "Error: #{ex.message}"
+    exit 1
+  end
   exit 0
 end
 

@@ -5,7 +5,8 @@
       "Bash(./bin/tartrazine:*)",
       "Bash(hace lint:*)",
       "Bash(hace build:*)",
-      "Bash(python3:*)"
+      "Bash(python3:*)",
+      "Bash(./aur-tartrazine/src/tartrazine-0.14.0/bin/tartrazine:*)"
     ],
     "deny": [],
     "ask": []

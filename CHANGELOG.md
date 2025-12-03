@@ -2,6 +2,12 @@
 
 All notable changes to this project will be documented in this file.
 
+## [0.14.1] - 2025-12-03
+
+### ⚙️ Miscellaneous Tasks
+
+- Use my docopt fork
+
 ## [0.14.0] - 2025-11-05
 
 ### 🚀 Features
