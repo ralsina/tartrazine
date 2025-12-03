@@ -2,6 +2,12 @@
 
 All notable changes to this project will be documented in this file.
 
+## [0.14.2] - 2025-12-03
+
+### ⚙️ Miscellaneous Tasks
+
+- Release script
+
 ## [0.14.1] - 2025-12-03
 
 ### ⚙️ Miscellaneous Tasks
