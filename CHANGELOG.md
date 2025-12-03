@@ -8,11 +8,17 @@ All notable changes to this project will be documented in this file.
 
 - Release script
 
-## [0.14.1] - 2025-12-03
+### 🚀 Features
 
-### ⚙️ Miscellaneous Tasks
+- New `Lexer.extensions()` method
 
-- Use my docopt fork
+### 🐛 Bug Fixes
+
+- Add crystal to the list of lexers given by --list-lexers
+
+### Bump
+
+- Release v0.14.2
 
 ## [0.14.0] - 2025-11-05
 
