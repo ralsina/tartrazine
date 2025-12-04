@@ -6,7 +6,8 @@
       "Bash(hace lint:*)",
       "Bash(hace build:*)",
       "Bash(python3:*)",
-      "Bash(./aur-tartrazine/src/tartrazine-0.14.0/bin/tartrazine:*)"
+      "Bash(./aur-tartrazine/src/tartrazine-0.14.0/bin/tartrazine:*)",
+      "Bash(crystal eval:*)"
     ],
     "deny": [],
     "ask": []
