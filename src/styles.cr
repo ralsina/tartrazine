@@ -44,10 +44,16 @@ module Tartrazine
   def self.themes
     themes = Set(String).new
     ThemeFiles.files.each do |file|
-      themes << file.path.split("/").last.split(".").first
+      filename = file.path.split("/").last
+      # Skip non-theme files like LICENSE, README
+      next if filename == "LICENSE" || filename == "README"
+      themes << filename.split(".").first
     end
     Sixteen::DataFiles.files.each do |file|
-      themes << file.path.split("/").last.split(".").first
+      filename = file.path.split("/").last
+      # Only include YAML theme files from Sixteen (skip LICENSE, README, etc.)
+      next unless filename.ends_with?(".yaml")
+      themes << filename.split(".").first
     end
     themes.to_a.sort!
   end
