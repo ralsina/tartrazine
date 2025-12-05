@@ -2,6 +2,12 @@
 
 All notable changes to this project will be documented in this file.
 
+## [0.15.0] - 2025-12-05
+
+### 🚀 Features
+
+- Add configurable font support for PNG formatter
+
 ## [0.14.3] - 2025-12-04
 
 ### 🐛 Bug Fixes

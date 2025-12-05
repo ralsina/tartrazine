@@ -10,7 +10,8 @@
       "Bash(crystal eval:*)",
       "Bash(crystal tool format:*)",
       "Bash(rm:*)",
-      "WebSearch"
+      "WebSearch",
+      "Bash(git commit:*)"
     ],
     "deny": [],
     "ask": []
