@@ -7,7 +7,10 @@
       "Bash(hace build:*)",
       "Bash(python3:*)",
       "Bash(./aur-tartrazine/src/tartrazine-0.14.0/bin/tartrazine:*)",
-      "Bash(crystal eval:*)"
+      "Bash(crystal eval:*)",
+      "Bash(crystal tool format:*)",
+      "Bash(rm:*)",
+      "WebSearch"
     ],
     "deny": [],
     "ask": []

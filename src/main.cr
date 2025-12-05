@@ -18,7 +18,7 @@ Usage:
   tartrazine FILE -f svg  [-t theme][--standalone][--line-numbers]
                           [-l lexer][-o output]
   tartrazine FILE -f png  [-t theme][--line-numbers]
-                          [-l lexer][-o output]
+                          [-l lexer][-o output][--font-path path][--font-size size]
   tartrazine FILE -f json [-o output]
   tartrazine FILE -f highlights [-t theme][--standalone [--template file]]
                               [--line-numbers][-l lexer][-o output]
@@ -42,6 +42,8 @@ Options:
                       (works with html and highlights formatters)
   --template <file>   Use a custom template for the HTML output [default: none]
   --line-numbers      Include line numbers in the output
+  --font-path <path>  Path to custom font file or directory for PNG output
+  --font-size <size>  Font size for PNG output (width,height, e.g. 20,32)
   --list-extensions <lexer>  List file extensions for a lexer
   -h, --help          Show this screen
   -v, --version       Show version number
@@ -91,8 +93,9 @@ else
 end
 
 if options["-f"]
-  formatter = options["-f"].as(String)
-  case formatter
+  formatter_name = options["-f"].as(String)
+  formatter = uninitialized Tartrazine::Formatter
+  case formatter_name
   when "html"
     formatter = Tartrazine::Html.new
     formatter.standalone = options["--standalone"] != nil
@@ -111,9 +114,31 @@ if options["-f"]
     formatter.line_numbers = options["--line-numbers"] != nil
     formatter.theme = theme
   when "png"
-    formatter = Tartrazine::Png.new
-    formatter.line_numbers = options["--line-numbers"] != nil
-    formatter.theme = theme
+    font_path = options["--font-path"]?.try &.as(String)
+    font_size = options["--font-size"]?.try &.as(String)
+    if font_size
+      size_parts = font_size.split(",")
+      if size_parts.size != 2
+        puts "Font size must be in format: width,height (e.g. 20,32)"
+        exit 1
+      end
+      begin
+        font_width = size_parts[0].to_i
+        font_height = size_parts[1].to_i
+        formatter = Tartrazine::Png.new(theme: theme, line_numbers: options["--line-numbers"] != nil, font_path: font_path, font_width: font_width, font_height: font_height)
+      rescue ex
+        puts "Invalid font size: #{ex.message}"
+        exit 1
+      end
+    else
+      begin
+        formatter = Tartrazine::Png.new(theme: theme, line_numbers: options["--line-numbers"] != nil, font_path: font_path)
+      rescue ex
+        puts "Warning: Failed to load custom font: #{ex.message}"
+        puts "Falling back to default font."
+        formatter = Tartrazine::Png.new(theme: theme, line_numbers: options["--line-numbers"] != nil)
+      end
+    end
   when "highlights"
     formatter = Tartrazine::Highlights.new
     formatter.standalone = options["--standalone"] != nil

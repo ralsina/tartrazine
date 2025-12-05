@@ -147,9 +147,16 @@ module Tartrazine
         @content_index.each do |i|
           content += String.new(match[i].value)
         end
-        Tartrazine.lexer(String.new(match[@lexer_index].value)).tokenizer(
-          content,
-          secondary: true).to_a
+        begin
+          Tartrazine.lexer(String.new(match[@lexer_index].value)).tokenizer(
+            content,
+            secondary: true).to_a
+        rescue ex
+          # Fallback to text lexer if requested lexer is not found
+          Tartrazine.lexer("text").tokenizer(
+            content,
+            secondary: true).to_a
+        end
       else
         raise Exception.new("Unknown action type: #{@type}")
       end

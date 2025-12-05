@@ -3,6 +3,7 @@
     <name>Django/Jinja</name>
     <alias>django</alias>
     <alias>jinja</alias>
+    <alias>jinja2</alias>
     <mime_type>application/x-django-templating</mime_type>
     <mime_type>application/x-jinja</mime_type>
     <dot_all>true</dot_all>

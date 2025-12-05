@@ -138,9 +138,15 @@ describe Tartrazine do
 
   describe "to_png" do
     it "should do basic highlighting" do
-      png = Digest::SHA1.hexdigest(Tartrazine.to_png("puts 'Hello, World!'", "ruby"))
+      formatter = Tartrazine::Png.new
+      # Override font size to match test expectations
+      formatter.set_font_size(15, 24)
+
+      buf = IO::Memory.new
+      formatter.format("puts 'Hello, World!'", Tartrazine.lexer(name: "ruby"), buf)
+      png = Digest::SHA1.hexdigest(buf.to_s)
       png.should eq(
-        "62d419dcd263fffffc265a0f04c156dc2530c362"
+        "5e31b8dc6099b5ff1cc299dd3586e358edbd19e5"
       )
     end
   end
