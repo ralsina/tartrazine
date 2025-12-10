@@ -15,7 +15,18 @@
       "Bash(chmod:*)",
       "Bash(xargs:*)",
       "Bash(comm:*)",
-      "Bash(/home/ralsina/code/tartrazine/sync_styles.sh:*)"
+      "Bash(/home/ralsina/code/tartrazine/sync_styles.sh:*)",
+      "Bash(ameba:*)",
+      "Bash(crystal run:*)",
+      "Bash(git add:*)",
+      "Bash(find:*)",
+      "Bash(/tmp/test.rb)",
+      "Bash(hace test:*)",
+      "Bash(git checkout:*)",
+      "Bash(crystal spec:*)",
+      "Bash(git stash:*)",
+      "Bash(/tmp/woodland_light_final.html)",
+      "Bash(/tmp/woodland_dark_final.html)"
     ],
     "deny": [],
     "ask": []
