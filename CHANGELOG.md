@@ -2,6 +2,22 @@
 
 All notable changes to this project will be documented in this file.
 
+## [0.16.0] - 2025-12-10
+
+### 🚀 Features
+
+- Sync lexers and themes from Chroma main branch
+- Update sixteen dependency to v0.6.0
+- Add dark/light theme variant support and fix formatter error handling
+- Add dark/light theme variant support with proper base16 integration
+
+### ⚙️ Miscellaneous Tasks
+
+- Cleanup
+- Cleanup
+- Cleanup
+- Cleanup
+
 ## [0.15.0] - 2025-12-05
 
 ### 🚀 Features
