@@ -20,11 +20,9 @@ module Tartrazine
     end
 
     def load_lexer_xml(name : String) : String?
-      begin
-        LexerFiles.get("/#{name}.xml").gets_to_end
-      rescue ex : BakedFileSystem::NoSuchFileError
-        @fallback.try(&.load_lexer_xml(name))
-      end
+      LexerFiles.get("/#{name}.xml").gets_to_end
+    rescue ex : BakedFileSystem::NoSuchFileError
+      @fallback.try(&.load_lexer_xml(name))
     end
 
     def available_lexers : Array(String)
@@ -68,15 +66,12 @@ module Tartrazine
     end
 
     def load_lexer_xml(name : String) : String?
-      begin
-        url = "#{@base_url.chomp('/')}/#{name}.xml"
-        # This would need to be implemented based on the HTTP client available in WASM
-        # For now, return fallback
-        @fallback.try(&.load_lexer_xml(name))
-      rescue ex
-        Log.error { "Failed to load lexer #{name} from network: #{ex.message}" }
-        @fallback.try(&.load_lexer_xml(name))
-      end
+      # This would need to be implemented based on the HTTP client available in WASM
+      # For now, return fallback
+      @fallback.try(&.load_lexer_xml(name))
+    rescue ex
+      Log.error { "Failed to load lexer #{name} from network: #{ex.message}" }
+      @fallback.try(&.load_lexer_xml(name))
     end
 
     def available_lexers : Array(String)
@@ -166,7 +161,7 @@ module Tartrazine
   def self.configure_lexer_loader(
     file_paths : Array(String)? = nil,
     network_url : String? = nil,
-    fallback : LexerLoader? = nil
+    fallback : LexerLoader? = nil,
   )
     loaders = [] of LexerLoader
 

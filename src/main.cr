@@ -11,19 +11,19 @@ Keep in mind that not all formatters support all features.
 Usage:
   tartrazine (-h, --help)
   tartrazine FILE -f html [-t theme][--standalone [--template file]]
-                          [--line-numbers][-l lexer][-o output]
+                          [--line-numbers][-l lexer][-o output][--light|--dark]
   tartrazine -f html -t theme --css
   tartrazine FILE -f terminal [-t theme][-l lexer][--line-numbers]
-                              [-o output]
+                              [-o output][--light|--dark]
   tartrazine FILE -f svg  [-t theme][--standalone][--line-numbers]
-                          [-l lexer][-o output]
+                          [-l lexer][-o output][--light|--dark]
   tartrazine FILE -f png  [-t theme][--line-numbers]
-                          [-l lexer][-o output][--font-path path][--font-size size]
+                          [-l lexer][-o output][--font-path path][--font-size size][--light|--dark]
   tartrazine FILE -f json [-o output]
   tartrazine FILE -f highlights [-t theme][--standalone [--template file]]
-                              [--line-numbers][-l lexer][-o output]
+                              [--line-numbers][-l lexer][-o output][--light|--dark]
   tartrazine -f highlights -t theme --css
-  tartrazine --list-themes
+  tartrazine --list-themes [--show-variants]
   tartrazine --list-lexers
   tartrazine --list-extensions <lexer>
   tartrazine --list-formatters
@@ -32,6 +32,8 @@ Usage:
 Options:
   -f <formatter>      Format to use (html, terminal, json, svg, highlights)
   -t <theme>          Theme to use, see --list-themes [default: default-dark]
+  --light             Force light variant of the theme (if available)
+  --dark              Force dark variant of the theme (if available)
   -l <lexer>          Lexer (language) to use, see --list-lexers. Use more than
                       one lexer with "+" (e.g. jinja+yaml) [default: autodetect]
   -o <output>         Output file. Default is stdout.
@@ -45,6 +47,7 @@ Options:
   --font-path <path>  Path to custom font file or directory for PNG output
   --font-size <size>  Font size for PNG output (width,height, e.g. 20,32)
   --list-extensions <lexer>  List file extensions for a lexer
+  --show-variants    Show theme variant information in theme list
   -h, --help          Show this screen
   -v, --version       Show version number
 HELP
@@ -58,7 +61,24 @@ if options["--version"]
 end
 
 if options["--list-themes"]
-  puts Tartrazine.themes.join("\n")
+  if options["--show-variants"]
+    # Show themes with variant information
+    Tartrazine.themes_with_variants.each do |theme|
+      variant_info = [] of String
+      variant_info << "[L]" if theme[:has_light]
+      variant_info << "[D]" if theme[:has_dark]
+      variant_info << "light" if theme[:is_light]
+      variant_info << "dark" if theme[:is_dark]
+
+      if variant_info.empty?
+        puts theme[:name]
+      else
+        puts "#{theme[:name]} #{variant_info.join(" ")}"
+      end
+    end
+  else
+    puts Tartrazine.themes.join("\n")
+  end
   exit 0
 end
 
@@ -84,7 +104,15 @@ if options["--list-extensions"]
   exit 0
 end
 
-theme = Tartrazine.theme(options["-t"].as(String))
+# Handle theme variant preferences
+theme_variant = nil
+if options["--light"]
+  theme_variant = "light"
+elsif options["--dark"]
+  theme_variant = "dark"
+end
+
+theme = Tartrazine.theme(options["-t"].as(String), theme_variant)
 template = options["--template"]?
 if template && template != "none" # Otherwise we will use the default template
   template = File.open(template.as(String)).gets_to_end
@@ -146,7 +174,8 @@ if options["-f"]
     formatter.theme = theme
     formatter.template = template if template
   else
-    puts "Invalid formatter: #{formatter}"
+    puts "Invalid formatter: #{formatter_name}"
+    puts "Available formatters: html, json, terminal, svg, png, highlights"
     exit 1
   end
 

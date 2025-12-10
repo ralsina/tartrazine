@@ -27,16 +27,81 @@ module Tartrazine
     {% end %}
   end
 
-  def self.theme(name : String) : Theme
-    begin
-      return Theme.from_base16(name)
-    rescue ex : Exception
-      raise ex unless ex.message.try &.includes? "Theme not found"
+  def self.theme(name : String, variant : String? = nil) : Theme
+    # Handle variant preference for base16 themes
+    if variant
+      case variant.downcase
+      when "light"
+        # Special handling for Catppuccin
+        if name == "catppuccin"
+          begin
+            return Theme.from_xml(ThemeFiles.get("/catppuccin-latte.xml").gets_to_end)
+          rescue
+            # Fallback to base16 if XML variant not found
+            begin
+              light_theme = Sixteen.light_variant(name)
+              return Theme.from_base16(light_theme.name)
+            rescue ex : Exception
+              raise ex unless ex.message.try &.includes? "Theme not found"
+            end
+          end
+        end
+
+        # For other themes, check if XML variant exists
+        xml_light_name = "#{name}-light"
+        begin
+          return Theme.from_xml(ThemeFiles.get("/#{xml_light_name}.xml").gets_to_end)
+        rescue
+          # Fallback to base16
+          begin
+            light_theme = Sixteen.light_variant(name)
+            return Theme.from_base16(light_theme.name)
+          rescue ex : Exception
+            raise ex unless ex.message.try &.includes? "Theme not found"
+          end
+        end
+      when "dark"
+        # Special handling for Catppuccin
+        if name == "catppuccin"
+          begin
+            return Theme.from_xml(ThemeFiles.get("/catppuccin-mocha.xml").gets_to_end)
+          rescue
+            # Fallback to base16 if XML variant not found
+            begin
+              dark_theme = Sixteen.dark_variant(name)
+              return Theme.from_base16(dark_theme.name)
+            rescue ex : Exception
+              raise ex unless ex.message.try &.includes? "Theme not found"
+            end
+          end
+        end
+
+        # For other themes, check if XML variant exists
+        xml_dark_name = "#{name}-dark"
+        begin
+          return Theme.from_xml(ThemeFiles.get("/#{xml_dark_name}.xml").gets_to_end)
+        rescue
+          # Fallback to base16
+          begin
+            dark_theme = Sixteen.dark_variant(name)
+            return Theme.from_base16(dark_theme.name)
+          rescue ex : Exception
+            raise ex unless ex.message.try &.includes? "Theme not found"
+          end
+        end
+      end
     end
+
+    # Original theme loading logic - prefer XML themes first, then fallback to base16
     begin
       Theme.from_xml(ThemeFiles.get("/#{name}.xml").gets_to_end)
     rescue ex : Exception
-      raise Exception.new("Error loading theme #{name}: #{ex.message}")
+      # XML theme not found, try base16
+      begin
+        Theme.from_base16(name)
+      rescue ex : Exception
+        raise Exception.new("Error loading theme #{name}: #{ex.message}")
+      end
     end
   end
 
@@ -56,6 +121,51 @@ module Tartrazine
       themes << filename.split(".").first
     end
     themes.to_a.sort!
+  end
+
+  # Get theme families that have both dark and light variants
+  def self.theme_families : Array(Sixteen::ThemeFamily)
+    Sixteen.theme_families.select { |family|
+      !family.dark_themes.empty? && !family.light_themes.empty?
+    }
+  end
+
+  # Get themes with variant information
+  def self.themes_with_variants : Array({name: String, has_light: Bool, has_dark: Bool, is_light: Bool, is_dark: Bool})
+    result = [] of {name: String, has_light: Bool, has_dark: Bool, is_light: Bool, is_dark: Bool}
+
+    # Add XML themes (typically don't have variants)
+    themes = Set(String).new
+    ThemeFiles.files.each do |file|
+      filename = file.path.split("/").last
+      next if filename == "LICENSE" || filename == "README"
+      theme_name = filename.split(".").first
+      result << {name: theme_name, has_light: false, has_dark: false, is_light: false, is_dark: false}
+    end
+
+    # Add base16 themes with variant info
+    Sixteen::DataFiles.files.each do |file|
+      filename = file.path.split("/").last
+      next unless filename.ends_with?(".yaml")
+      base_name = filename.split(".").first
+
+      begin
+        theme = Sixteen.theme(base_name)
+        family = Sixteen.theme_families.find { |theme_family| theme_family.base_name == base_name }
+
+        has_light = family ? !family.light_themes.empty? : false
+        has_dark = family ? !family.dark_themes.empty? : false
+        is_light = theme.variant == "light"
+        is_dark = theme.variant == "dark"
+
+        result << {name: base_name, has_light: has_light, has_dark: has_dark, is_light: is_light, is_dark: is_dark}
+      rescue
+        # Skip if theme can't be loaded
+        next
+      end
+    end
+
+    result.sort_by { |theme_item| theme_item[:name] }
   end
 
   struct Style
