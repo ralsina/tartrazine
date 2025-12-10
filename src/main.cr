@@ -24,6 +24,7 @@ Usage:
                               [--line-numbers][-l lexer][-o output][--light|--dark]
   tartrazine -f highlights -t theme --css
   tartrazine --list-themes [--show-variants]
+  tartrazine --list-variant-themes
   tartrazine --list-lexers
   tartrazine --list-extensions <lexer>
   tartrazine --list-formatters
@@ -100,6 +101,23 @@ if options["--list-extensions"]
   rescue ex
     puts "Error: #{ex.message}"
     exit 1
+  end
+  exit 0
+end
+
+if options["--list-variant-themes"]
+  # List only themes that have light/dark variants
+  themes = Tartrazine.themes_with_variants_only
+  themes.each do |theme|
+    variant_info = [] of String
+    variant_info << "[L]" if theme[:has_light]
+    variant_info << "[D]" if theme[:has_dark]
+
+    if variant_info.empty?
+      puts theme[:name]
+    else
+      puts "#{theme[:name]} #{variant_info.join(" ")}"
+    end
   end
   exit 0
 end
