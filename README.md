@@ -9,7 +9,7 @@ a port of [Pygments](https://pygments.org/) to
 
 It also provides a CLI tool which can be used to highlight many things in many styles.
 
-Currently Tartrazine supports 273 languages and has 334 themes (66 from Chroma,
+Currently Tartrazine supports 273 languages and has hundreds of themes (69 from Chroma,
 the rest are base16 themes via [Sixteen](https://github.com/ralsina/sixteen)
 
 ## Installation

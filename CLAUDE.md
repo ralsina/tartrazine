@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-Tartrazine is a Crystal language syntax highlighting library, ported from Pygments. It provides both a CLI tool and library supporting 273+ languages with 334+ themes. The project uses XML-based lexer definitions ported from Chroma (Go's Pygments port) and focuses on performance optimizations.
+Tartrazine is a Crystal language syntax highlighting library, ported from Pygments. It provides both a CLI tool and library supporting 273+ languages with hundreds of themes. The project uses XML-based lexer definitions ported from Chroma (Go's Pygments port) and focuses on performance optimizations.
 
 ## Build Commands
 
@@ -101,3 +101,4 @@ The project builds a single binary target (`tartrazine`) with the following feat
 - **Default build**: Includes all lexers and themes (larger binary)
 - **Selective build**: Use environment variables to include specific lexers/themes
 - **Static binaries**: Cross-platform distribution without runtime dependencies
+- we don't commit shard.lock because this is a library
