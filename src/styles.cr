@@ -212,25 +212,53 @@ module Tartrazine
 
     base_xml_themes.each do |base_name|
       # Check if this base theme has explicit variants
-      has_light = xml_themes.any?(&.starts_with?("#{base_name}-light"))
-      has_dark = xml_themes.any?(&.starts_with?("#{base_name}-dark"))
-      is_light = xml_themes.includes?(base_name) && base_name.ends_with?("-light")
-      is_dark = xml_themes.includes?(base_name) && base_name.ends_with?("-dark")
+      has_explicit_light = xml_themes.any?(&.starts_with?("#{base_name}-light"))
+      has_explicit_dark = xml_themes.any?(&.starts_with?("#{base_name}-dark"))
+
+      # Check if the base theme itself exists and determine its variant
+      base_theme_exists = xml_themes.includes?(base_name)
+      base_is_light = false
+      base_is_dark = false
+
+      if base_theme_exists
+        begin
+          theme = Tartrazine.theme(base_name)
+          base_is_light = theme.light?
+          base_is_dark = theme.dark?
+        rescue
+          # If we can't determine, assume it's not a variant
+        end
+      end
+
+      # Determine overall light/dark availability
+      has_light = has_explicit_light || (base_theme_exists && base_is_light)
+      has_dark = has_explicit_dark || (base_theme_exists && base_is_dark)
+
+      # Determine if this specific name is a variant
+      is_light = base_name.ends_with?("-light") || (base_theme_exists && base_is_light && !has_explicit_dark)
+      is_dark = base_name.ends_with?("-dark") || (base_theme_exists && base_is_dark && !has_explicit_light)
 
       result << {name: base_name, has_light: has_light, has_dark: has_dark, is_light: is_light, is_dark: is_dark}
     end
 
-    # Add base16 themes using theme families to avoid duplicates
+    # Add base16 themes using theme families with proper consolidation
+    base16_family_names = Set(String).new
+
     Sixteen.theme_families.each do |family|
-      base_name = family.base_name
+      # Extract the true base name by removing -light, -dark, and variant suffixes
+      true_base_name = family.base_name.gsub(/-(light|dark)(-.+)?$/, "")
 
       # Skip base16 themes that are simple -light/-dark variants of existing XML themes
       # (XML themes are higher quality than base16 equivalents)
-      if base_name.ends_with?("-light") || base_name.ends_with?("-dark")
-        xml_base_name = base_name.gsub(/-(light|dark)$/, "")
-        next if base_xml_themes.includes?(xml_base_name)
+      if family.base_name.ends_with?("-light") || family.base_name.ends_with?("-dark")
+        next if base_xml_themes.includes?(true_base_name)
       end
 
+      base16_family_names.add(true_base_name)
+    end
+
+    # Create consolidated base16 theme entries
+    base16_family_names.each do |base_name|
       # All base16 theme families have both light and dark variants (sixteen auto-generates missing ones)
       has_light = true
       has_dark = true
@@ -310,6 +338,50 @@ module Tartrazine
         parents << parts[..i].join("")
       end
       parents
+    end
+
+    # Check if this is a light theme
+    def light? : Bool
+      # First try to determine from base16 metadata
+      begin
+        sixteen_theme = Sixteen.theme(@name)
+        return sixteen_theme.variant == "light"
+      rescue
+        # Not a base16 theme, fall back to background color analysis
+      end
+
+      # For XML themes, analyze the background color
+      bg_style = styles["Background"]?
+      return false unless bg_style
+
+      bg_color = bg_style.background
+      return false unless bg_color
+
+      # Consider a theme "light" if background brightness > 0.5 (50%)
+      # Using a simple approximation based on RGB values
+      bg_color.light?
+    end
+
+    # Check if this is a dark theme
+    def dark? : Bool
+      # First try to determine from base16 metadata
+      begin
+        sixteen_theme = Sixteen.theme(@name)
+        return sixteen_theme.variant == "dark"
+      rescue
+        # Not a base16 theme, fall back to background color analysis
+      end
+
+      # For XML themes, analyze the background color
+      bg_style = styles["Background"]?
+      return false unless bg_style
+
+      bg_color = bg_style.background
+      return false unless bg_color
+
+      # Consider a theme "dark" if background brightness <= 0.5 (50%)
+      # Using a simple approximation based on RGB values
+      bg_color.dark?
     end
 
     # Load from a base16 theme name using Sixteen
