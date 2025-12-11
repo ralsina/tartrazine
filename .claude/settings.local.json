@@ -26,7 +26,8 @@
       "Bash(crystal spec:*)",
       "Bash(git stash:*)",
       "Bash(/tmp/woodland_light_final.html)",
-      "Bash(/tmp/woodland_dark_final.html)"
+      "Bash(/tmp/woodland_dark_final.html)",
+      "Bash(sed:*)"
     ],
     "deny": [],
     "ask": []

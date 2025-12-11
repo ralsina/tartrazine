@@ -2,6 +2,12 @@
 
 All notable changes to this project will be documented in this file.
 
+## [0.17.0] - 2025-12-11
+
+### 🚀 Features
+
+- Dramatically improve base16 theme token coverage and styling
+
 ## [0.16.0] - 2025-12-10
 
 ### 🚀 Features
