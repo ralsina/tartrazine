@@ -330,6 +330,7 @@ module Tartrazine
     property name : String = ""
 
     property styles = {} of String => Style
+    property is_base16 : Bool = false # Whether this theme was loaded from base16
 
     def style_parents(token)
       parents = ["Background"]
@@ -343,14 +344,17 @@ module Tartrazine
     # Check if this is a light theme
     def light? : Bool
       # First try to determine from base16 metadata
-      begin
-        sixteen_theme = Sixteen.theme(@name)
-        return sixteen_theme.variant == "light"
-      rescue
-        # Not a base16 theme, fall back to background color analysis
+      if base16?
+        # This is a base16 theme, use metadata
+        begin
+          sixteen_theme = Sixteen.theme(@name)
+          return sixteen_theme.variant == "light"
+        rescue
+          # Fallback to analysis if metadata fails
+        end
       end
 
-      # For XML themes, analyze the background color
+      # For XML themes or base16 fallback, analyze the background color
       bg_style = styles["Background"]?
       return false unless bg_style
 
@@ -365,14 +369,17 @@ module Tartrazine
     # Check if this is a dark theme
     def dark? : Bool
       # First try to determine from base16 metadata
-      begin
-        sixteen_theme = Sixteen.theme(@name)
-        return sixteen_theme.variant == "dark"
-      rescue
-        # Not a base16 theme, fall back to background color analysis
+      if base16?
+        # This is a base16 theme, use metadata
+        begin
+          sixteen_theme = Sixteen.theme(@name)
+          return sixteen_theme.variant == "dark"
+        rescue
+          # Fallback to analysis if metadata fails
+        end
       end
 
-      # For XML themes, analyze the background color
+      # For XML themes or base16 fallback, analyze the background color
       bg_style = styles["Background"]?
       return false unless bg_style
 
@@ -382,6 +389,11 @@ module Tartrazine
       # Consider a theme "dark" if background brightness <= 0.5 (50%)
       # Using a simple approximation based on RGB values
       bg_color.dark?
+    end
+
+    # Check if this is a base16 theme
+    def base16? : Bool
+      @is_base16
     end
 
     # Load from a base16 theme name using Sixteen
@@ -394,6 +406,7 @@ module Tartrazine
     def self.create_theme_from_sixteen(sixteen_theme : Sixteen::Theme, theme_name : String? = nil) : Theme
       theme = Theme.new
       theme.name = theme_name || sixteen_theme.name
+      theme.is_base16 = true # Mark this as a base16 theme
       # The color assignments are adapted from
       # https://github.com/mohd-akram/base16-pygments/
 
