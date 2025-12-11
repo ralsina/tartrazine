@@ -2,6 +2,17 @@
 
 All notable changes to this project will be documented in this file.
 
+## [0.18.0] - 2025-12-11
+
+### 🚀 Features
+
+- Add light? and dark? methods to Theme and fix theme family detection
+- Add base16 property and optimize theme type detection
+
+### ⚙️ Miscellaneous Tasks
+
+- Lint
+
 ## [0.17.0] - 2025-12-11
 
 ### 🚀 Features
