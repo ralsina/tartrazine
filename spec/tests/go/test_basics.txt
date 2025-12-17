@@ -1,0 +1,73 @@
+---input---
+package main
+
+import (
+	"fmt"
+	"os"
+	"strings"
+)
+
+// Type definition for a function
+type Operation func(int, int) int
+
+// Constants
+const (
+	PI      = 3.14159
+	VERSION = "1.0.0"
+)
+
+// Global variables
+var (
+	counter int
+	name    string = "test"
+)
+
+func add(a, b int) int {
+	return a + b
+}
+
+func main() {
+	// Basic arithmetic
+	x := 10
+	y := 20
+
+	result := add(x, y)
+	fmt.Printf("Result: %d\n", result)
+
+	// Slice operations
+	numbers := []int{1, 2, 3, 4, 5}
+	for i, num := range numbers {
+		fmt.Printf("Index %d: %d\n", i, num)
+	}
+
+	// Map operations
+	m := make(map[string]int)
+	m["one"] = 1
+	m["two"] = 2
+
+	if val, ok := m["one"]; ok {
+		fmt.Printf("Found value: %d\n", val)
+	}
+
+	// Channel operation
+	ch := make(chan int, 1)
+	ch <- 42
+	go func() {
+		value := <-ch
+		fmt.Printf("Received from channel: %d\n", value)
+	}()
+
+	// String manipulation
+	text := "Hello, World!"
+	if strings.Contains(text, "World") {
+		fmt.Println("Found 'World' in text")
+	}
+
+	// Error handling
+	file, err := os.Open("test.txt")
+	if err != nil {
+		fmt.Printf("Error opening file: %v\n", err)
+		return
+	}
+	defer file.Close()
+}
