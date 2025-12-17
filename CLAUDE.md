@@ -46,7 +46,14 @@ Tartrazine is a Crystal language syntax highlighting library, ported from Pygmen
 ### Resource Management
 - **lexers/*.xml**: Language lexer definitions (compiled into binary via baked_file_system)
 - **styles/*.xml**: Theme definitions (also compiled into binary)
+- **src/constants/lexers.cr**: **AUTO-GENERATED** file created by `scripts/lexer_metadata.py` - DO NOT EDIT MANUALLY
 - **Selective embedding**: Use `TT_LEXERS` and `TT_THEMES` environment variables with `-Dnolexers`/`-Dnothemes` flags to reduce binary size
+
+### Build System and Lexer Management
+- **scripts/lexer_metadata.py**: Scans all XML lexer files and generates lexer constants automatically
+- **src/constants/lexers.cr**: Contains LEXERS_BY_NAME, LEXERS_BY_MIMETYPE, and LEXERS_BY_FILENAME mappings
+- **Adding new lexers**: Create `lexers/newlexer.xml` and run `python3 scripts/lexer_metadata.py` to update constants
+- **copy_lexers.sh**: Syncs lexers from Chroma source when substantial differences are detected
 
 ## Development Patterns
 
