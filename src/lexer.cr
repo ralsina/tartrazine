@@ -20,20 +20,34 @@ module Tartrazine
     {% end %}
   end
 
+  # Thread-safe lexer template containing only static data (rules, states, config)
+  struct LexerTemplate
+    property config : Hash(Symbol, String | Bool | Float64)
+    property states : Hash(String, State)
+
+    def initialize(@config, @states)
+    end
+  end
+
+  # Template cache for parsed lexer data - thread-safe for read access
+  @@lexer_templates = {} of String => LexerTemplate
+  @@template_mutex = Mutex.new
+
   # Get the lexer object for a language name
   def self.lexer(name : String? = nil, filename : String? = nil, mimetype : String? = nil) : BaseLexer
     return lexer_by_name(name) if name && name != "autodetect"
     return lexer_by_filename(filename) if filename
     return lexer_by_mimetype(mimetype) if mimetype
 
-    RegexLexer.from_xml(LexerFiles.get("/#{LEXERS_BY_NAME["plaintext"]}.xml").gets_to_end)
+    lexer_file_name = LEXERS_BY_NAME["plaintext"]
+    create_from_template(lexer_file_name)
   end
 
   private def self.lexer_by_mimetype(mimetype : String) : BaseLexer
     lexer_file_name = LEXERS_BY_MIMETYPE.fetch(mimetype, nil)
     raise Exception.new("Unknown mimetype: #{mimetype}") if lexer_file_name.nil?
 
-    RegexLexer.from_xml(LexerFiles.get("/#{lexer_file_name}.xml").gets_to_end)
+    create_from_template(lexer_file_name)
   end
 
   private def self.lexer_by_name(name : String) : BaseLexer
@@ -42,7 +56,7 @@ module Tartrazine
     return create_delegating_lexer(name) if lexer_file_name.nil? && name.includes? "+"
     raise Exception.new("Unknown lexer: #{name}") if lexer_file_name.nil?
 
-    RegexLexer.from_xml(LexerFiles.get("/#{lexer_file_name}.xml").gets_to_end)
+    create_from_template(lexer_file_name)
   rescue ex : BakedFileSystem::NoSuchFileError
     raise Exception.new("Unknown lexer: #{name}")
   end
@@ -71,7 +85,7 @@ module Tartrazine
       end
     end
 
-    RegexLexer.from_xml(LexerFiles.get("/#{lexer_file_name}.xml").gets_to_end)
+    create_from_template(lexer_file_name)
   end
 
   private def self.lexer_by_content(fname : String) : String?
@@ -92,6 +106,123 @@ module Tartrazine
     language_lexer = lexer(language)
     root_lexer = lexer(root)
     DelegatingLexer.new(language_lexer, root_lexer)
+  end
+
+  # Create a fresh lexer instance from cached template data
+  private def self.create_from_template(lexer_file_name : String) : BaseLexer
+    template = get_or_create_template(lexer_file_name)
+
+    # Create fresh lexer instance with cached data
+    lexer = RegexLexer.new
+    lexer.config = {
+      name:             template.config[:name].as(String),
+      priority:         template.config[:priority].as(Float64),
+      case_insensitive: template.config[:case_insensitive].as(Bool),
+      dot_all:          template.config[:dot_all].as(Bool),
+      not_multiline:    template.config[:not_multiline].as(Bool),
+      ensure_nl:        template.config[:ensure_nl].as(Bool),
+    }
+    lexer.states = template.states
+    lexer
+  end
+
+  # Get or create a lexer template with thread-safe caching
+  private def self.get_or_create_template(lexer_file_name : String) : LexerTemplate
+    # Fast path: template already cached (read-only access, thread-safe)
+    return @@lexer_templates[lexer_file_name] if @@lexer_templates.has_key?(lexer_file_name)
+
+    # Slow path: need to parse XML and create template (requires lock)
+    @@template_mutex.synchronize do
+      # Double-check in case another thread created it while we waited
+      return @@lexer_templates[lexer_file_name] if @@lexer_templates.has_key?(lexer_file_name)
+
+      # Parse XML and extract only the static data
+      xml = LexerFiles.get("/#{lexer_file_name}.xml").gets_to_end
+      template = parse_xml_to_template(xml)
+      @@lexer_templates[lexer_file_name] = template
+      template
+    end
+  end
+
+  # Parse XML and extract only static data (no stateful objects)
+  private def self.parse_xml_to_template(xml : String) : LexerTemplate
+    lexer_node = XML.parse(xml).first_element_child
+    raise Exception.new("Invalid lexer XML") unless lexer_node
+
+    # Extract config
+    config = extract_config(lexer_node)
+
+    # Extract states and rules (static data only)
+    states = extract_states(lexer_node, config)
+
+    LexerTemplate.new(config, states)
+  end
+
+  # Extract configuration from XML node
+  private def self.extract_config(lexer_node : XML::Node) : Hash(Symbol, String | Bool | Float64)
+    config_node = lexer_node.children.find { |node| node.name == "config" }
+    return {
+      :name             => "",
+      :priority         => 0.0,
+      :not_multiline    => false,
+      :dot_all          => false,
+      :case_insensitive => false,
+      :ensure_nl        => false,
+    } unless config_node
+
+    {
+      :name             => xml_to_s(config_node, name) || "",
+      :priority         => xml_to_f(config_node, priority) || 0.0,
+      :not_multiline    => xml_to_s(config_node, not_multiline) == "true",
+      :dot_all          => xml_to_s(config_node, dot_all) == "true",
+      :case_insensitive => xml_to_s(config_node, case_insensitive) == "true",
+      :ensure_nl        => xml_to_s(config_node, ensure_nl) == "true",
+    }
+  end
+
+  # Extract states and rules from XML node
+  private def self.extract_states(lexer_node : XML::Node, config : Hash(Symbol, String | Bool | Float64)) : Hash(String, State)
+    states = {} of String => State
+
+    rules_node = lexer_node.children.find { |node| node.name == "rules" }
+    return states unless rules_node
+
+    rules_node.children.select { |node| node.name == "state" }.each do |state_node|
+      state = State.new
+      state.name = state_node["name"]
+
+      if states.has_key?(state.name)
+        raise Exception.new("Duplicate state: #{state.name}")
+      end
+
+      # Extract rules from this state
+      state_node.children.select { |node| node.name == "rule" }.each do |rule_node|
+        rule = create_rule_from_node(rule_node, config)
+        state.rules << rule if rule
+      end
+
+      states[state.name] = state
+    end
+
+    states
+  end
+
+  # Create a rule from XML node (factory method)
+  private def self.create_rule_from_node(rule_node : XML::Node, config : Hash(Symbol, String | Bool | Float64)) : BaseRule?
+    pattern = rule_node["pattern"]?
+
+    if pattern
+      Rule.new(rule_node,
+        multiline: !config[:not_multiline],
+        dotall: config[:dot_all],
+        ignorecase: config[:case_insensitive])
+    else
+      if rule_node.first_element_child.try &.name == "include"
+        IncludeStateRule.new(rule_node)
+      else
+        UnconditionalRule.new(rule_node)
+      end
+    end
   end
 
   # Return a list of all lexers

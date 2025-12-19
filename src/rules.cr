@@ -40,7 +40,8 @@ module Tartrazine
     end
 
     def initialize(node : XML::Node, multiline, dotall, ignorecase)
-      pattern = node["pattern"]
+      pattern = node["pattern"]?
+      raise Exception.new("Missing attribute: pattern") unless pattern
       pattern = "(?m)" + pattern if multiline
       @pattern = Regex.new(pattern, multiline, dotall, ignorecase, true)
       add_actions(node)
