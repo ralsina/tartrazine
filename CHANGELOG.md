@@ -2,6 +2,12 @@
 
 All notable changes to this project will be documented in this file.
 
+## [0.19.1] - 2025-12-19
+
+### 🐛 Bug Fixes
+
+- Improve lexer creation performance
+
 ## [0.19.0] - 2025-12-17
 
 ### 🚀 Features
