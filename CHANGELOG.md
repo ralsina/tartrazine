@@ -2,6 +2,16 @@
 
 All notable changes to this project will be documented in this file.
 
+## [0.19.2] - 2025-12-27
+
+### 🐛 Bug Fixes
+
+- Remove duplicate CSS class abbreviations
+
+### 🧪 Testing
+
+- Fix tests
+
 ## [0.19.1] - 2025-12-19
 
 ### 🐛 Bug Fixes
