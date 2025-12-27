@@ -115,7 +115,7 @@ describe Tartrazine do
     it "should do basic highlighting" do
       html = Tartrazine.to_html("puts 'Hello, World!'", "ruby", standalone: false)
       html.should eq(
-        "<pre class=\"b\" ><code class=\"b\"><span class=\"nb\">puts</span><span class=\"t\"> </span><span class=\"lss\">&#39;Hello, World!&#39;</span></code></pre>"
+        "<pre class=\"b\" ><code class=\"b\"><span class=\"nb\">puts</span><span class=\"t\"> </span><span class=\"s1\">&#39;Hello, World!&#39;</span></code></pre>"
       )
     end
   end
