@@ -2,6 +2,12 @@
 
 All notable changes to this project will be documented in this file.
 
+## [0.19.3] - 2026-01-02
+
+### 🚜 Refactor
+
+- Add ImageFormatter base class and Crimage-based formatters
+
 ## [0.19.2] - 2025-12-27
 
 ### 🐛 Bug Fixes
