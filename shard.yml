@@ -19,10 +19,8 @@ dependencies:
     version: ~> 0.6.0
   docopt:
     github: ralsina/docopt.cr
-  stumpy_utils:
-    github: stumpycr/stumpy_utils
-  stumpy_png:
-    github: stumpycr/stumpy_png
+  crimage:
+    github: naqvis/crimage
 
 crystal: ">= 1.13.0"
 

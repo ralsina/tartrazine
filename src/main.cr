@@ -4,7 +4,7 @@ require "./tartrazine"
 HELP = <<-HELP
 tartrazine: a syntax highlighting tool
 
-You can use the CLI to generate HTML, terminal, JSON or SVG output
+You can use the CLI to generate HTML, terminal, JSON, SVG, PNG, JPEG or WebP output
 from a source file using different themes.
 Keep in mind that not all formatters support all features.
 
@@ -19,6 +19,10 @@ Usage:
                           [-l lexer][-o output][--light|--dark]
   tartrazine FILE -f png  [-t theme][--line-numbers]
                           [-l lexer][-o output][--font-path path][--font-size size][--light|--dark]
+  tartrazine FILE -f jpeg [-t theme][--line-numbers]
+                          [-l lexer][-o output][--font-path path][--font-size size][--quality q][--light|--dark]
+  tartrazine FILE -f webp [-t theme][--line-numbers]
+                          [-l lexer][-o output][--font-path path][--font-size size][--quality q][--light|--dark]
   tartrazine FILE -f json [-o output]
   tartrazine FILE -f highlights [-t theme][--standalone [--template file]]
                               [--line-numbers][-l lexer][-o output][--light|--dark]
@@ -31,7 +35,7 @@ Usage:
   tartrazine --version
 
 Options:
-  -f <formatter>      Format to use (html, terminal, json, svg, highlights)
+  -f <formatter>      Format to use (html, terminal, json, svg, png, jpeg, webp, highlights)
   -t <theme>          Theme to use, see --list-themes [default: default-dark]
   --light             Force light variant of the theme (if available)
   --dark              Force dark variant of the theme (if available)
@@ -45,8 +49,10 @@ Options:
                       (works with html and highlights formatters)
   --template <file>   Use a custom template for the HTML output [default: none]
   --line-numbers      Include line numbers in the output
-  --font-path <path>  Path to custom font file or directory for PNG output
-  --font-size <size>  Font size for PNG output (width,height, e.g. 20,32)
+  --font-path <path>  Path to TrueType/OpenType font file (.ttf or .otf) for image output
+                      (default: bundled JetBrains Mono)
+  --font-size <size>  Font point size for image output (e.g. 14) [default: 14]
+  --quality <q>       JPEG/WebP quality (1-100, default: 90)
   --list-extensions <lexer>  List file extensions for a lexer
   --show-variants    Show theme variant information in theme list
   -h, --help          Show this screen
@@ -89,7 +95,7 @@ if options["--list-lexers"]
 end
 
 if options["--list-formatters"]
-  puts "html\njson\nterminal\nsvg\npng\nhighlights"
+  puts "html\njson\nterminal\nsvg\npng\njpeg\nwebp\nhighlights"
   exit 0
 end
 
@@ -130,7 +136,7 @@ elsif options["--dark"]
   theme_variant = "dark"
 end
 
-theme = Tartrazine.theme(options["-t"].as(String), theme_variant)
+theme = Tartrazine.theme(options["-t"].try(&.to_s) || "default-dark", theme_variant)
 template = options["--template"]?
 if template && template != "none" # Otherwise we will use the default template
   template = File.open(template.as(String)).gets_to_end
@@ -159,31 +165,69 @@ if options["-f"]
     formatter.standalone = options["--standalone"] != nil
     formatter.line_numbers = options["--line-numbers"] != nil
     formatter.theme = theme
-  when "png"
+  when "png", "jpeg", "webp"
     font_path = options["--font-path"]?.try &.as(String)
     font_size = options["--font-size"]?.try &.as(String)
+    quality = options["--quality"]?.try &.as(String)
+
+    # Parse font size (single point size value)
+    parsed_font_size = 14 # default
     if font_size
-      size_parts = font_size.split(",")
-      if size_parts.size != 2
-        puts "Font size must be in format: width,height (e.g. 20,32)"
+      begin
+        parsed_font_size = font_size.to_i
+      rescue ex
+        puts "Invalid font size: #{font_size}. Must be a number (e.g., 14)"
         exit 1
       end
+    end
+
+    # Parse quality (for JPEG/WebP)
+    parsed_quality = 90 # default
+    if quality
       begin
-        font_width = size_parts[0].to_i
-        font_height = size_parts[1].to_i
-        formatter = Tartrazine::Png.new(theme: theme, line_numbers: options["--line-numbers"] != nil, font_path: font_path, font_width: font_width, font_height: font_height)
+        parsed_quality = quality.to_i
+        if parsed_quality < 1 || parsed_quality > 100
+          puts "Quality must be between 1 and 100"
+          exit 1
+        end
       rescue ex
-        puts "Invalid font size: #{ex.message}"
+        puts "Invalid quality: #{quality}. Must be a number between 1 and 100"
         exit 1
       end
-    else
-      begin
-        formatter = Tartrazine::Png.new(theme: theme, line_numbers: options["--line-numbers"] != nil, font_path: font_path)
-      rescue ex
-        puts "Warning: Failed to load custom font: #{ex.message}"
-        puts "Falling back to default font."
-        formatter = Tartrazine::Png.new(theme: theme, line_numbers: options["--line-numbers"] != nil)
+    end
+
+    # Create the appropriate formatter
+    begin
+      case formatter_name
+      when "png"
+        formatter = Tartrazine::Png.new(
+          theme: theme,
+          line_numbers: options["--line-numbers"] != nil,
+          font_path: font_path,
+          font_size: parsed_font_size
+        )
+      when "jpeg"
+        formatter = Tartrazine::Jpeg.new(
+          theme: theme,
+          line_numbers: options["--line-numbers"] != nil,
+          font_path: font_path,
+          font_size: parsed_font_size,
+          quality: parsed_quality
+        )
+      when "webp"
+        formatter = Tartrazine::Webp.new(
+          theme: theme,
+          line_numbers: options["--line-numbers"] != nil,
+          font_path: font_path,
+          font_size: parsed_font_size,
+          quality: parsed_quality
+        )
       end
+    rescue ex
+      puts "Error creating #{formatter_name.upcase} formatter: #{ex.message}"
+      puts "Note: --font-path is optional for image output (uses bundled JetBrains Mono by default)"
+      puts "      You can specify a custom font with --font-path pointing to a .ttf or .otf file"
+      exit 1
     end
   when "highlights"
     formatter = Tartrazine::Highlights.new
@@ -193,18 +237,18 @@ if options["-f"]
     formatter.template = template if template
   else
     puts "Invalid formatter: #{formatter_name}"
-    puts "Available formatters: html, json, terminal, svg, png, highlights"
+    puts "Available formatters: html, json, terminal, svg, png, jpeg, webp, highlights"
     exit 1
   end
 
   if (formatter.is_a?(Tartrazine::Html) || formatter.is_a?(Tartrazine::Highlights)) && options["--css"]
-    File.open("#{options["-t"].as(String)}.css", "w") do |outf|
+    File.open("#{options["-t"].try(&.to_s) || "default-dark"}.css", "w") do |outf|
       outf << formatter.style_defs
     end
     exit 0
   end
 
-  lexer = Tartrazine.lexer(name: options["-l"].as(String), filename: options["FILE"].as(String))
+  lexer = Tartrazine.lexer(name: options["-l"].try(&.to_s), filename: options["FILE"].to_s)
 
   input = File.open(options["FILE"].as(String)).gets_to_end
 
