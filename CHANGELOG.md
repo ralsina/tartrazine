@@ -2,6 +2,12 @@
 
 All notable changes to this project will be documented in this file.
 
+## [0.20.0] - 2026-01-03
+
+### 🚀 Features
+
+- Add image size options and fix first-line positioning bug
+
 ## [0.19.3] - 2026-01-02
 
 ### 🚜 Refactor
