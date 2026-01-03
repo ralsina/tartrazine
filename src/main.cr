@@ -18,11 +18,11 @@ Usage:
   tartrazine FILE -f svg  [-t theme][--standalone][--line-numbers]
                           [-l lexer][-o output][--light|--dark]
   tartrazine FILE -f png  [-t theme][--line-numbers]
-                          [-l lexer][-o output][--font-path path][--font-size size][--light|--dark]
+                          [-l lexer][-o output][--font-path path][--font-size size][--width w][--height h][--light|--dark]
   tartrazine FILE -f jpeg [-t theme][--line-numbers]
-                          [-l lexer][-o output][--font-path path][--font-size size][--quality q][--light|--dark]
+                          [-l lexer][-o output][--font-path path][--font-size size][--width w][--height h][--quality q][--light|--dark]
   tartrazine FILE -f webp [-t theme][--line-numbers]
-                          [-l lexer][-o output][--font-path path][--font-size size][--quality q][--light|--dark]
+                          [-l lexer][-o output][--font-path path][--font-size size][--width w][--height h][--quality q][--light|--dark]
   tartrazine FILE -f json [-o output]
   tartrazine FILE -f highlights [-t theme][--standalone [--template file]]
                               [--line-numbers][-l lexer][-o output][--light|--dark]
@@ -52,6 +52,8 @@ Options:
   --font-path <path>  Path to TrueType/OpenType font file (.ttf or .otf) for image output
                       (default: bundled JetBrains Mono)
   --font-size <size>  Font point size for image output (e.g. 14) [default: 14]
+  --width <w>         Maximum image width in pixels (0 = auto based on content) [default: 0]
+  --height <h>        Maximum image height in pixels (0 = auto based on content) [default: 0]
   --quality <q>       JPEG/WebP quality (1-100, default: 90)
   --list-extensions <lexer>  List file extensions for a lexer
   --show-variants    Show theme variant information in theme list
@@ -168,6 +170,8 @@ if options["-f"]
   when "png", "jpeg", "webp"
     font_path = options["--font-path"]?.try &.as(String)
     font_size = options["--font-size"]?.try &.as(String)
+    width = options["--width"]?.try &.as(String)
+    height = options["--height"]?.try &.as(String)
     quality = options["--quality"]?.try &.as(String)
 
     # Parse font size (single point size value)
@@ -177,6 +181,36 @@ if options["-f"]
         parsed_font_size = font_size.to_i
       rescue ex
         puts "Invalid font size: #{font_size}. Must be a number (e.g., 14)"
+        exit 1
+      end
+    end
+
+    # Parse width
+    parsed_max_width = 0 # 0 means auto
+    if width
+      begin
+        parsed_max_width = width.to_i
+        if parsed_max_width < 0
+          puts "Width must be >= 0 (0 = auto)"
+          exit 1
+        end
+      rescue ex
+        puts "Invalid width: #{width}. Must be a number (e.g., 800)"
+        exit 1
+      end
+    end
+
+    # Parse height
+    parsed_max_height = 0 # 0 means auto
+    if height
+      begin
+        parsed_max_height = height.to_i
+        if parsed_max_height < 0
+          puts "Height must be >= 0 (0 = auto)"
+          exit 1
+        end
+      rescue ex
+        puts "Invalid height: #{height}. Must be a number (e.g., 600)"
         exit 1
       end
     end
@@ -204,7 +238,9 @@ if options["-f"]
           theme: theme,
           line_numbers: options["--line-numbers"] != nil,
           font_path: font_path,
-          font_size: parsed_font_size
+          font_size: parsed_font_size,
+          max_width: parsed_max_width,
+          max_height: parsed_max_height
         )
       when "jpeg"
         formatter = Tartrazine::Jpeg.new(
@@ -212,6 +248,8 @@ if options["-f"]
           line_numbers: options["--line-numbers"] != nil,
           font_path: font_path,
           font_size: parsed_font_size,
+          max_width: parsed_max_width,
+          max_height: parsed_max_height,
           quality: parsed_quality
         )
       when "webp"
@@ -220,6 +258,8 @@ if options["-f"]
           line_numbers: options["--line-numbers"] != nil,
           font_path: font_path,
           font_size: parsed_font_size,
+          max_width: parsed_max_width,
+          max_height: parsed_max_height,
           quality: parsed_quality
         )
       end

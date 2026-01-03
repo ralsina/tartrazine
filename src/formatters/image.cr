@@ -13,6 +13,9 @@ module Tartrazine
     property? line_numbers : Bool = false
     property font_path : String? = nil
     property font_size : Int32 = 14
+    # Maximum dimensions (0 = auto-size based on content)
+    property max_width : Int32 = 0
+    property max_height : Int32 = 0
     # Padding properties
     property padding_left : Int32 = 20
     property padding_right : Int32 = 20
@@ -24,7 +27,9 @@ module Tartrazine
     def initialize(@theme : Theme = Tartrazine.theme("default-dark"),
                    @line_numbers : Bool = false,
                    @font_path : String? = nil,
-                   @font_size : Int32 = 14)
+                   @font_size : Int32 = 14,
+                   @max_width : Int32 = 0,
+                   @max_height : Int32 = 0)
       # Font will be loaded when needed
     end
 
@@ -78,8 +83,13 @@ module Tartrazine
       char_width = (font_size * 0.6).to_i32
       line_height = (font_size * 1.2).to_i32
 
-      canvas_width = text_width * char_width + padding_left + padding_right
-      canvas_height = lines.size * line_height + padding_top + padding_bottom
+      # Calculate canvas size based on content
+      calculated_width = text_width * char_width + padding_left + padding_right
+      calculated_height = lines.size * line_height + padding_top + padding_bottom
+
+      # Apply size constraints if specified
+      canvas_width = max_width > 0 ? max_width : calculated_width
+      canvas_height = max_height > 0 ? max_height : calculated_height
 
       # Create image with background color
       bg_style = theme.styles["Background"]
@@ -129,9 +139,10 @@ module Tartrazine
             drawer.draw_text(line_label(i), x, y)
             x += 5 * char_width
           end
+        else
+          # Only advance x if token didn't have a newline
+          x += t.size * char_width
         end
-
-        x += token[:value].size * char_width
       end
 
       # Write image to output using the appropriate encoder

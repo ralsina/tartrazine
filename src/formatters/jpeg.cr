@@ -11,7 +11,9 @@ module Tartrazine
                    padding_bottom : Int32 = 20,
                    font_path : String? = nil,
                    font_size : Int32 = 14,
-                   quality : Int32 = 90) : String
+                   quality : Int32 = 90,
+                   max_width : Int32 = 0,
+                   max_height : Int32 = 0) : String
     buf = IO::Memory.new
 
     formatter = Tartrazine::Jpeg.new(
@@ -19,7 +21,9 @@ module Tartrazine
       line_numbers: line_numbers,
       font_path: font_path,
       font_size: font_size,
-      quality: quality
+      quality: quality,
+      max_width: max_width,
+      max_height: max_height
     )
     formatter.padding_left = padding_left
     formatter.padding_right = padding_right
@@ -37,7 +41,9 @@ module Tartrazine
                    @line_numbers : Bool = false,
                    @font_path : String? = nil,
                    @font_size : Int32 = 14,
-                   @quality : Int32 = 90)
+                   @quality : Int32 = 90,
+                   @max_width : Int32 = 0,
+                   @max_height : Int32 = 0)
       # Font will be loaded when needed
     end
 

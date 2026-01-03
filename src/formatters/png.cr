@@ -10,14 +10,18 @@ module Tartrazine
                   padding_top : Int32 = 20,
                   padding_bottom : Int32 = 20,
                   font_path : String? = nil,
-                  font_size : Int32 = 14) : String
+                  font_size : Int32 = 14,
+                  max_width : Int32 = 0,
+                  max_height : Int32 = 0) : String
     buf = IO::Memory.new
 
     formatter = Tartrazine::Png.new(
       theme: Tartrazine.theme(theme),
       line_numbers: line_numbers,
       font_path: font_path,
-      font_size: font_size
+      font_size: font_size,
+      max_width: max_width,
+      max_height: max_height
     )
     formatter.padding_left = padding_left
     formatter.padding_right = padding_right
