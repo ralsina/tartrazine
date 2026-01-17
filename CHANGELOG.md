@@ -2,6 +2,12 @@
 
 All notable changes to this project will be documented in this file.
 
+## [0.20.1] - 2026-01-17
+
+### ⚙️ Miscellaneous Tasks
+
+- Unpin sixteen version
+
 ## [0.20.0] - 2026-01-03
 
 ### 🚀 Features
