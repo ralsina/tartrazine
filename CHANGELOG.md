@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file.
 
+## [0.21.1] - 2026-08-23
+
+### 🐛 Bug Fixes
+
+- *(build)* Make hace aur work under persistent shell
+- Unpin crimage, expect new png hash
+
 ## [0.21.0] - 2026-08-23
 
 ### 🚀 Features
