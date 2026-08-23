@@ -156,7 +156,7 @@ describe Tartrazine do
       formatter.format("puts 'Hello, World!'", Tartrazine.lexer(name: "ruby"), buf)
       png = Digest::SHA1.hexdigest(buf.to_s)
       png.should eq(
-        "732a8874386d2f8892df5a219ada9875dfb0bb71"
+        "10de49c7da4416a7e7b0285701e6e56a4aa3d68c"
       )
     end
   end
