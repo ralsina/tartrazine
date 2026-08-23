@@ -2,6 +2,21 @@
 
 All notable changes to this project will be documented in this file.
 
+## [0.21.0] - 2026-08-23
+
+### 🚀 Features
+
+- Sync lexers with chroma v2.27.0
+
+### 🐛 Bug Fixes
+
+- Pin crimage to known-good revision
+
+### ⚡ Performance
+
+- *(build)* Cross-compile static binaries, link in minimal containers
+- Eliminate hot-path allocations in lexer and html formatter
+
 ## [0.20.1] - 2026-01-17
 
 ### ⚙️ Miscellaneous Tasks
