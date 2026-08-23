@@ -1,34 +1,48 @@
 # CLAUDE.md
 
-This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
+This file provides guidance to Claude Code (claude.ai/code) when working
+with code in this repository.
 
 ## Project Overview
 
-Tartrazine is a Crystal language syntax highlighting library, ported from Pygments. It provides both a CLI tool and library supporting 273+ languages with hundreds of themes. The project uses XML-based lexer definitions ported from Chroma (Go's Pygments port) and focuses on performance optimizations.
+Tartrazine is a Crystal language syntax highlighting library, ported from
+Pygments. It provides both a CLI tool and library supporting 273+ languages
+with hundreds of themes. The project uses XML-based lexer definitions ported
+from Chroma (Go's Pygments port) and focuses on performance optimizations.
 
 ## Build Commands
 
 ### Core Development
+
 - **Build**: `hace build` (builds with debug flags `-d --error-trace`)
 - **Install dependencies**: `hace get-deps` (runs `shards install`)
 - **Clean**: `hace clean` (removes shard.lock, bin, lib directories)
 - **Install locally**: `hace install` (copies binary to ~/.local/bin/)
 
 ### Testing and Quality
+
 - **Run tests**: `hace test` (runs `crystal spec -v --error-trace`)
 - **Linting**: `hace lint` (runs `crystal tool format` and `ameba --fix`)
 - **Coverage**: `hace coverage` (generates coverage report using kcov)
 - **Documentation**: `hace docs` (generates API docs)
 
 ### Release and Distribution
+
 - **Release build**: `hace build-release` (builds with `--release` flag)
-- **Static binaries**: `hace static` (creates static Linux binaries for AMD64/ARM64)
+- **Static binaries**: `hace static` (creates static Linux binaries for
+  AMD64/ARM64). Cross-compiles object files natively
+  (`crystal build --cross-compile --target <musl triple>`) and only
+  statically links inside minimal per-arch Alpine containers (see
+  `Dockerfile.link`), so the compiler never runs under QEMU emulation.
+  Takes ~1 minute total.
 - **AUR package**: `hace aur` (updates Arch Linux AUR package)
 
 ## Project Architecture
 
 ### Core Components
-- **src/tartrazine.cr**: Main module with VERSION, logging, and XML parsing macros
+
+- **src/tartrazine.cr**: Main module with VERSION, logging, and XML parsing
+  macros
 - **src/main.cr**: CLI entry point using docopt (matches user preference)
 - **src/lexer.cr**: Lexer engine with RegexLexer and BaseLexer classes
 - **src/actions.cr**: Lexer actions (Token, Push, Pop, Include, Using, etc.)
@@ -37,6 +51,7 @@ Tartrazine is a Crystal language syntax highlighting library, ported from Pygmen
 - **src/styles.cr**: Theme and style management
 
 ### Formatters Directory
+
 - **formatters/html.cr**: HTML output formatter with standalone mode support
 - **formatters/terminal.cr**: ANSI terminal output
 - **formatters/json.cr**: JSON token output
@@ -44,26 +59,37 @@ Tartrazine is a Crystal language syntax highlighting library, ported from Pygmen
 - **formatters/png.cr**: PNG image generation (requires StumpyPNG)
 
 ### Resource Management
-- **lexers/*.xml**: Language lexer definitions (compiled into binary via baked_file_system)
-- **styles/*.xml**: Theme definitions (also compiled into binary)
-- **src/constants/lexers.cr**: **AUTO-GENERATED** file created by `scripts/lexer_metadata.py` - DO NOT EDIT MANUALLY
-- **Selective embedding**: Use `TT_LEXERS` and `TT_THEMES` environment variables with `-Dnolexers`/`-Dnothemes` flags to reduce binary size
+
+- **lexers/\*.xml**: Language lexer definitions (compiled into binary via
+  baked_file_system)
+- **styles/\*.xml**: Theme definitions (also compiled into binary)
+- **src/constants/lexers.cr**: **AUTO-GENERATED** file created by
+  `scripts/lexer_metadata.py` - DO NOT EDIT MANUALLY
+- **Selective embedding**: Use `TT_LEXERS` and `TT_THEMES` environment
+  variables with `-Dnolexers`/`-Dnothemes` flags to reduce binary size
 
 ### Build System and Lexer Management
-- **scripts/lexer_metadata.py**: Scans all XML lexer files and generates lexer constants automatically
-- **src/constants/lexers.cr**: Contains LEXERS_BY_NAME, LEXERS_BY_MIMETYPE, and LEXERS_BY_FILENAME mappings
-- **Adding new lexers**: Create `lexers/newlexer.xml` and run `python3 scripts/lexer_metadata.py` to update constants
-- **copy_lexers.sh**: Syncs lexers from Chroma source when substantial differences are detected
+
+- **scripts/lexer_metadata.py**: Scans all XML lexer files and generates
+  lexer constants automatically
+- **src/constants/lexers.cr**: Contains LEXERS_BY_NAME, LEXERS_BY_MIMETYPE,
+  and LEXERS_BY_FILENAME mappings
+- **Adding new lexers**: Create `lexers/newlexer.xml` and run
+  `python3 scripts/lexer_metadata.py` to update constants
+- **copy_lexers.sh**: Syncs lexers from Chroma source when substantial
+  differences are detected
 
 ## Development Patterns
 
 ### Lexer System
+
 - XML-based lexer definitions converted to Crystal at compile time
 - State machine with push/pop for complex language parsing
 - Byte-level regex processing for performance
 - Heuristics for automatic language detection from filenames/mimetypes
 
 ### Testing Structure
+
 - **spec/tartrazine_spec.cr**: Main test suite
 - **spec/examples/**: Real language code samples for testing
 - **spec/tests/**: External test cases from Pygments/Chroma
@@ -71,6 +97,7 @@ Tartrazine is a Crystal language syntax highlighting library, ported from Pygmen
 - Test validation compares output against Pygments/Chroma (96.8% pass rate)
 
 ### Code Quality Tools
+
 - **Ameba**: Linter with auto-fix (`ameba --fix`)
 - **Crystal formatter**: Enforces consistent code style
 - **Pre-commit hooks**: Automatic formatting and linting on commit
@@ -78,7 +105,9 @@ Tartrazine is a Crystal language syntax highlighting library, ported from Pygmen
 
 ## Binary Configuration
 
-The project builds a single binary target (`tartrazine`) with the following features:
+The project builds a single binary target (`tartrazine`) with the following
+features:
+
 - Multiple output formats: html, terminal, json, svg, png
 - Theme selection and CSS generation
 - Line numbering and standalone HTML support
@@ -88,24 +117,31 @@ The project builds a single binary target (`tartrazine`) with the following feat
 ## Important Development Notes
 
 ### User Preferences Met
+
 - **docopt**: CLI uses docopt for argument parsing as requested
 - **No not_nil!**: Codebase avoids this pattern as specified
 - **shards build**: Uses standard Crystal build system
 - **No --release flag**: Development builds avoid this flag per preference
 
 ### External Dependencies
+
 - **lib/**: Contains vendored dependencies that cannot be modified
-- Built-in alternatives: Some dependencies have custom Crystal implementations
+- Built-in alternatives: Some dependencies have custom Crystal
+  implementations
 - Specific versions are pinned for compatibility
 
 ### Performance Optimizations
+
 - Byte-level processing instead of string operations
 - Pre-compiled regex patterns
 - Baked resources eliminate runtime file I/O
 - Efficient state machine with minimal allocations
 
 ### Build Variants
+
 - **Default build**: Includes all lexers and themes (larger binary)
-- **Selective build**: Use environment variables to include specific lexers/themes
-- **Static binaries**: Cross-platform distribution without runtime dependencies
-- we don't commit shard.lock because this is a library
+- **Selective build**: Use environment variables to include specific lexers
+  and themes
+- **Static binaries**: Cross-platform distribution without runtime
+  dependencies
+- We don't commit shard.lock because this is a library
