@@ -255,6 +255,27 @@ module Tartrazine
     @dq = Deque(Token).new
     property state_stack = ["root"]
 
+    # States created on the fly for this tokenization only (Combined),
+    # kept off the shared lexer template to avoid unbounded growth
+    @local_states = {} of String => State
+
+    # Resolve a state by name, preferring locally created states.
+    # Results are cached because lookups happen on every step.
+    def state_for(name : String) : State
+      cached = @local_states[name]?
+      return cached if cached
+      state = @lexer.states[name]?
+      raise Exception.new("Unknown state: #{name}") if state.nil?
+      @local_states[name] = state
+      state
+    end
+
+    # Keep a tokenization-local state so it does not leak into the
+    # shared lexer template
+    def remember_state(state : State)
+      @local_states[state.name] = state
+    end
+
     def initialize(@lexer : BaseLexer, text : String, secondary = false)
       # Respect the `ensure_nl` config option
       if text.size > 0 && text[-1] != '\n' && @lexer.config[:ensure_nl] && !secondary
@@ -264,49 +285,50 @@ module Tartrazine
     end
 
     def next : Iterator::Stop | Token
-      if @dq.size > 0
-        return @dq.shift
+      while @dq.size == 0
+        return stop if pos == @text.size
+        step
       end
-      if pos == @text.size
-        return stop
-      end
+      @dq.shift
+    end
 
+    private def step : Nil
       matched = false
-      while @pos < @text.size
-        @lexer.states[@state_stack.last].rules.each do |rule|
-          matched, new_pos, new_tokens = rule.match(@text, @pos, self)
-          if matched
-            @pos = new_pos
-            split_tokens(new_tokens).each { |token| @dq << token }
-            break
-          end
-        end
-        if !matched
-          if @text[@pos] == 10u8
-            @dq << {type: "Text", value: "\n"}
-            @state_stack = ["root"]
-          else
-            @dq << {type: "Error", value: String.new(@text[@pos..@pos])}
-          end
-          @pos += 1
+      rules = state_for(@state_stack.last).rules
+      rules.each do |rule|
+        matched, new_pos, new_tokens = rule.match(@text, @pos, self)
+        if matched
+          @pos = new_pos
+          split_tokens(new_tokens).each { |token| @dq << token }
           break
         end
       end
-      self.next
+      if !matched
+        if @text[@pos] == 10u8
+          @dq << {type: "Text", value: "\n"}
+          @state_stack = ["root"]
+        else
+          @dq << {type: "Error", value: String.new(@text[@pos..@pos])}
+        end
+        @pos += 1
+      end
     end
 
     # If a token contains a newline, split it into two tokens
     def split_tokens(tokens : Array(Token)) : Array(Token)
+      needs_split = tokens.any?(&.[:value].byte_index('\n'.ord))
+      return tokens unless needs_split
+
       split_tokens = [] of Token
       tokens.each do |token|
-        if token[:value].includes?("\n")
-          values = token[:value].split("\n")
-          values.each_with_index do |value, index|
-            value += "\n" if index < values.size - 1
-            split_tokens << {type: token[:type], value: value}
-          end
-        else
+        unless token[:value].byte_index('\n'.ord)
           split_tokens << token
+          next
+        end
+        values = token[:value].split("\n")
+        values.each_with_index do |value, index|
+          value += "\n" if index < values.size - 1
+          split_tokens << {type: token[:type], value: value}
         end
       end
       split_tokens

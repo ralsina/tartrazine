@@ -38,6 +38,8 @@ TEMPLATE
 
     property theme : Theme
 
+    @class_cache = {} of String => String
+
     def initialize(@theme : Theme = Tartrazine.theme("default-dark"), *,
                    @highlight_lines = [] of Range(Int32, Int32),
                    @class_prefix : String = "",
@@ -97,13 +99,39 @@ TEMPLATE
       outp << "<code class=\"#{get_css_class("Background")}\">"
       outp << line_label(i) if line_numbers?
       tokenizer.each do |token|
-        outp << "<span class=\"#{get_css_class(token[:type])}\">#{HTML.escape(token[:value])}</span>"
+        outp << "<span class=\""
+        outp << get_css_class(token[:type])
+        outp << "\">"
+        escape_to_io(token[:value], outp)
+        outp << "</span>"
         if token[:value].ends_with? "\n"
           i += 1
           outp << line_label(i) if line_numbers?
         end
       end
       outp << "</code></pre>"
+    end
+
+    # Write text escaping HTML special characters without building
+    # intermediate strings
+    private def escape_to_io(text : String, io : IO) : Nil
+      start = 0
+      bytes = text.to_slice
+      bytes.each_with_index do |byte, index|
+        entity = case byte
+                 when '&'.ord  then "&amp;"
+                 when '<'.ord  then "&lt;"
+                 when '>'.ord  then "&gt;"
+                 when '"'.ord  then "&quot;"
+                 when '\''.ord then "&#39;"
+                 else               nil
+                 end
+        next if entity.nil?
+        io.write(bytes[start, index - start]) if index > start
+        io << entity
+        start = index + 1
+      end
+      io.write(bytes[start, text.bytesize - start]) if start < text.bytesize
     end
 
     # ameba:disable Metrics/CyclomaticComplexity
@@ -133,6 +161,9 @@ TEMPLATE
 
     # Given a token type, return the CSS class to use.
     def get_css_class(token : String) : String
+      cached = @class_cache[token]?
+      return cached if cached
+
       if !theme.styles.has_key? token
         # Themes don't contain information for each specific
         # token type. However, they may contain information
@@ -143,7 +174,7 @@ TEMPLATE
         }
         theme.styles[token] = theme.styles[parent]
       end
-      class_prefix + Abbreviations[token]
+      @class_cache[token] = class_prefix + Abbreviations[token]
     end
   end
 end

@@ -15,6 +15,49 @@ module Tartrazine
   alias Match = BytesRegex::Match
   alias MatchData = Array(Match)
 
+  # A view over a snapshot of the results of one match. Safe against
+  # reentrant matching (eg. usingself actions) because the offsets
+  # are copied at match time.
+  struct MatchDataView
+    getter text : Bytes
+
+    @bounds : Slice(Int32)
+
+    def initialize(@text : Bytes, @bounds : Slice(Int32))
+    end
+
+    # View over an empty match, for rules that match unconditionally
+    def initialize(@text : Bytes)
+      @bounds = Slice(Int32).new(0)
+    end
+
+    def size : Int32
+      @bounds.size // 2
+    end
+
+    def group_start(index : Int32) : Int32
+      @bounds[2 * index]
+    end
+
+    def group_end(index : Int32) : Int32
+      @bounds[2 * index + 1]
+    end
+
+    def group(index : Int32) : Bytes
+      return Bytes.empty if index >= size
+      start = group_start(index)
+      finish = group_end(index)
+      return Bytes.empty if start < 0 || start >= finish
+      @text[start...finish]
+    end
+
+    def empty? : Bool
+      size == 0 || group_start(0) < 0
+    end
+  end
+
+  EMPTY_TOKENS = [] of Token
+
   abstract struct BaseRule
     abstract def match(text : Bytes, pos : Int32, tokenizer : Tokenizer) : Tuple(Bool, Int32, Array(Token))
 
@@ -32,11 +75,12 @@ module Tartrazine
     property pattern : Regex = Regex.new ""
 
     def match(text : Bytes, pos, tokenizer) : Tuple(Bool, Int32, Array(Token))
-      match = pattern.match(text, pos)
+      rc = pattern.match!(text, pos)
 
       # No match
-      return false, pos, [] of Token if match.size == 0
-      return true, pos + match[0].size, @actions.flat_map(&.emit(match, tokenizer))
+      return false, pos, EMPTY_TOKENS if rc == 0
+      view = MatchDataView.new(text, pattern.snapshot_ovector(text.bytesize))
+      return true, view.group_end(0), @actions.flat_map(&.emit(view, tokenizer))
     end
 
     def initialize(node : XML::Node, multiline, dotall, ignorecase)
@@ -54,11 +98,11 @@ module Tartrazine
     @state : String = ""
 
     def match(text : Bytes, pos : Int32, tokenizer : Tokenizer) : Tuple(Bool, Int32, Array(Token))
-      tokenizer.@lexer.states[@state].rules.each do |rule|
+      tokenizer.state_for(@state).rules.each do |rule|
         matched, new_pos, new_tokens = rule.match(text, pos, tokenizer)
         return true, new_pos, new_tokens if matched
       end
-      return false, pos, [] of Token
+      return false, pos, EMPTY_TOKENS
     end
 
     def initialize(node : XML::Node)
@@ -72,7 +116,7 @@ module Tartrazine
 
   # This rule always matches, unconditionally
   struct UnconditionalRule < BaseRule
-    NO_MATCH = [] of Match
+    NO_MATCH = MatchDataView.new(Bytes.empty)
 
     def match(text, pos, tokenizer) : Tuple(Bool, Int32, Array(Token))
       return true, pos, @actions.flat_map(&.emit(NO_MATCH, tokenizer))

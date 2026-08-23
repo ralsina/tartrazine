@@ -23,6 +23,7 @@ module BytesRegex
         raise Exception.new "Error #{msg} compiling regex at offset #{erroroffset}"
       end
       @match_data = LibPCRE2.match_data_create_from_pattern(@re, nil)
+      @last_rc = 0
     end
 
     def finalize
@@ -30,15 +31,40 @@ module BytesRegex
       LibPCRE2.code_free(@re)
     end
 
-    def match(str : Bytes, pos = 0) : Array(Match)
+    # Number of captured groups of the last successful match
+    def group_count : Int32
+      @last_rc
+    end
+
+    # Copy the offsets of all captured groups of the last match,
+    # sanitizing non-participating groups (marked by PCRE2 with an
+    # unset value) to -1. The snapshot stays valid even if this
+    # regex is matched again (eg. by reentrant tokenization).
+    def snapshot_ovector(text_bytesize : Int32) : Slice(Int32)
+      ovector = LibPCRE2.get_ovector_pointer(@match_data)
+      Slice(Int32).new(@last_rc * 2) do |index|
+        raw = ovector[index]
+        raw > text_bytesize ? -1 : raw.to_i32
+      end
+    end
+
+    # Run a match and return the number of captured groups,
+    # or 0 if there was no match. Results stay available through
+    # group_start/group_end until the next match on this Regex.
+    def match!(text : Bytes, pos = 0) : Int32
       rc = LibPCRE2.match(
         @re,
-        str,
-        str.size,
+        text,
+        text.size,
         pos,
         LibPCRE2::NO_UTF_CHECK,
         @match_data,
         nil)
+      @last_rc = rc > 0 ? rc : 0
+    end
+
+    def match(str : Bytes, pos = 0) : Array(Match)
+      rc = match!(str, pos)
       if rc > 0
         ovector = LibPCRE2.get_ovector_pointer(@match_data)
         (0...rc).map do |i|
