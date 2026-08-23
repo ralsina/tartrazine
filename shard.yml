@@ -20,6 +20,7 @@ dependencies:
     github: ralsina/docopt.cr
   crimage:
     github: naqvis/crimage
+    commit: b65f67df27f4cb8807a34d94a90dfd4162acf45a
 
 crystal: ">= 1.13.0"
 
