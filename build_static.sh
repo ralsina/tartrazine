@@ -8,8 +8,10 @@ set -e
 # NOTE: the linker image provides the C libraries the object files expect.
 # Host Crystal >= 1.21 requires libxml2 >= 2.13 (Alpine >= 3.22).
 
-mkdir -p build
+mkdir -p build bin
 rm -f bin/tartrazine-static-linux-amd64 bin/tartrazine-static-linux-arm64
+
+shards install
 
 echo "==> Cross-compiling x86_64 object file"
 crystal build src/main.cr --release --static --cross-compile \

@@ -41,11 +41,9 @@ tasks:
       cp bin/{{NAME}} ${HOME}/.local/bin/{{NAME}}
 
   static:
-    outputs:
-      - bin/{{NAME}}-static-linux-amd64
-      - bin/{{NAME}}-static-linux-arm64
+    phony: true
+    always_run: true
     commands: |
-      hace clean
       ./build_static.sh
 
   test:
