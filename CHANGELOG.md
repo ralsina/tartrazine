@@ -2,6 +2,12 @@
 
 All notable changes to this project will be documented in this file.
 
+## [0.21.2] - 2026-08-28
+
+### 🐛 Bug Fixes
+
+- Add missing token type abbreviations
+
 ## [0.21.1] - 2026-08-23
 
 ### 🐛 Bug Fixes
