@@ -2,6 +2,12 @@
 
 All notable changes to this project will be documented in this file.
 
+## [0.21.3] - 2026-08-28
+
+### 🐛 Bug Fixes
+
+- Keep multi-byte UTF-8 characters intact in Error tokens
+
 ## [0.21.2] - 2026-08-28
 
 ### 🐛 Bug Fixes
