@@ -307,11 +307,31 @@ module Tartrazine
         if @text[@pos] == 10u8
           @dq << {type: "Text", value: "\n"}
           @state_stack = ["root"]
+          @pos += 1
         else
-          @dq << {type: "Error", value: String.new(@text[@pos..@pos])}
+          # Consume a whole UTF-8 codepoint so multi-byte characters
+          # don't get split into invalid single-byte Error tokens.
+          char_size = utf8_char_size(@text[@pos])
+          char_bytes = @text[@pos, char_size]
+          # Malformed sequences are never split, invalid bytes are just dropped
+          error_value = String.new(char_bytes, "UTF-8", invalid: :skip)
+          @dq << {type: "Error", value: error_value}
+          @pos += char_size
         end
-        @pos += 1
       end
+    end
+
+    # Number of bytes of the UTF-8 codepoint that starts with the given byte.
+    # Malformed lead bytes are treated as single-byte sequences.
+    private def utf8_char_size(lead_byte : UInt8) : Int32
+      size = case lead_byte
+             when 0x00..0x7f then 1
+             when 0xc0..0xdf then 2
+             when 0xe0..0xef then 3
+             when 0xf0..0xf7 then 4
+             else                 1
+             end
+      Math.min(size, @text.size - pos)
     end
 
     # If a token contains a newline, split it into two tokens

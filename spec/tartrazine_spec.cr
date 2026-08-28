@@ -120,6 +120,26 @@ describe Tartrazine do
     end
   end
 
+  describe "utf8" do
+    it "does not split multi-byte characters into per-byte Error tokens" do
+      # From https://github.com/ralsina/tartrazine/issues/22:
+      # box-drawing characters after a quoted string ended up as
+      # three single-byte Error tokens each
+      source = %(select name from 'packages.csv' where maintainers like '%alerque%';
+┌───────────┐
+│   name    │
+└───────────┘)
+      lexer = Tartrazine.lexer("sql")
+      tokens = lexer.tokenizer(source).to_a
+      tokens.each do |token|
+        token[:value].valid_encoding?.should be_true, "#{token.inspect} is not valid UTF-8"
+      end
+      source.each_char do |char|
+        tokens.any?(&.[:value].includes?(char)).should be_true, "missing character #{char.inspect}"
+      end
+    end
+  end
+
   describe "to_ansi" do
     it "should do basic highlighting" do
       ansi = Tartrazine.to_ansi("puts 'Hello, World!'", "ruby")
