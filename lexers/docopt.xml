@@ -72,7 +72,7 @@
       <rule pattern="[A-Z][A-Z0-9_]*+(?![a-z/-])">
         <token type="NameVariable"/>
       </rule>
-      <!-- Options: -h, -abc, --speed, -- -->
+      <!-- Options: short, stacked short and long flags -->
       <rule pattern="(?&lt;![\w])-[\w-]*">
         <token type="NameAttribute"/>
       </rule>
@@ -133,7 +133,7 @@
         <pop depth="1"/>
         <push state="usage"/>
       </rule>
-      <!-- Option flags: -h, -abc, --speed, -- -->
+      <!-- Option flags: short, stacked short and long flags -->
       <rule pattern="^([ \t]*)(-[\w-]*)">
         <bygroups>
           <token type="Text"/>
@@ -149,7 +149,7 @@
       <rule pattern="(?&lt;![\w])-[\w-]*">
         <token type="NameAttribute"/>
       </rule>
-      <!-- Option arguments: --speed=&lt;kn&gt;, -p PATH -->
+      <!-- Option arguments: flag=&lt;arg&gt; or flag ARG -->
       <rule pattern="=">
         <token type="Operator"/>
       </rule>
