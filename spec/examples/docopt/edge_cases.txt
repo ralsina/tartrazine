@@ -1,0 +1,20 @@
+Tool for copying files, see file(1).
+
+Usage: copytool [-v | -vv] [--force] SRC... DEST
+  copytool [-abc] [-p PATH] [--output=<file>]
+  copytool [--] FILE
+  copytool -h | --help
+Options:
+  -v            Be verbose. Repeat for more.
+  -a, --all     Copy all files.
+  -p PATH, --path=PATH  Where to copy [default: ./out]
+  --output=<file>  Write a manifest [env: MANIFEST]
+  -h, --help    Show this help. Alias: --usage
+
+Arguments:
+  DEST          Destination folder. Use it first.
+  FILE          An existing file [deprecated].
+
+Commands:
+  verify        Check copies [deprecated].
+  diff          Compare two folders.
