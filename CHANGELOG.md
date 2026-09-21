@@ -2,6 +2,29 @@
 
 All notable changes to this project will be documented in this file.
 
+## [0.24.0] - 2026-09-21
+
+### ⚡ Performance
+
+- Second round of lexer/tokenizer optimizations: include rules resolve
+  their state once, Combined states are memoized per tokenization,
+  split_tokens slices bytes directly, lexer instances are cached
+  process-wide, snapshot_ovector reuses a scratch buffer, and
+  delegating tokenizers iterate instead of recursing (html 1.14x,
+  terminal 1.74x, json 1.21x on a 690 KB C header)
+- Streaming formatters and hot-path allocation removal: formatters
+  stream tokens instead of materializing the whole list, per-type
+  style caches in ansi/svg/image/highlights, incremental token
+  collapsing, and byte-level HTML escaping shared across formatters.
+  Peak memory roughly halved on large inputs
+- Cache heuristics.yml parsing and lexer extensions parsing
+- Add a multi-lexer tokenize benchmark (scripts/multibench.cr)
+
+### 🐛 Bug Fixes
+
+- Include the lexer files missing from the previous commit, which
+  broke the build at that revision
+
 ## [0.23.0] - 2026-09-21
 
 ### 🚀 Features
