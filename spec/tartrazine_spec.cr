@@ -145,17 +145,9 @@ describe Tartrazine do
   describe "to_ansi" do
     it "should do basic highlighting" do
       ansi = Tartrazine.to_ansi("puts 'Hello, World!'", "ruby")
-      if ENV.fetch("CI", nil)
-        # In Github Actions there is no terminal so these don't
-        # really work
-        ansi.should eq(
-          "puts 'Hello, World!'"
-        )
-      else
-        ansi.should eq(
-          "\e[38;2;171;70;66mputs\e[39m\e[38;2;216;216;216m \e[39m\e[38;2;161;181;108m'Hello, World!'\e[39m"
-        )
-      end
+      ansi.should eq(
+        "\e[38;2;171;70;66mputs\e[39m\e[38;2;216;216;216m \e[39m\e[38;2;161;181;108m'Hello, World!'\e[39m"
+      )
     end
   end
 

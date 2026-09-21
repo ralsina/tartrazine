@@ -46,6 +46,9 @@ module Tartrazine
         end]
       end
       colorized = text.colorize
+      # Always emit ANSI codes: this is an explicit request for ANSI
+      # output, so the caller's stdout being a pipe must not disable it
+      colorized.toggle(true)
       s.color.try { |col| colorized = colorized.fore(col.colorize) }
       # Intentionally not setting background color
       colorized.mode(:bold) if s.bold
