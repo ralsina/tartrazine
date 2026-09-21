@@ -9,7 +9,8 @@ a port of [Pygments](https://pygments.org/) to
 
 It also provides a CLI tool which can be used to highlight many things in many styles.
 
-Currently Tartrazine supports 273 languages and has hundreds of themes (69 from Chroma,
+Currently Tartrazine supports 273 languages and has hundreds of themes
+(69 from Chroma,
 the rest are base16 themes via [Sixteen](https://github.com/ralsina/sixteen)
 
 ## Installation
@@ -82,14 +83,35 @@ puts formatter.format("puts \"Hello, world!\"", lexer)
 The reason you may want to use the manual version is to reuse
 the lexer and formatter objects for performance reasons.
 
+## A note about performance of static binaries
+
+Statically-linked binaries built with Crystal 1.21 for Linux (musl) suffer
+a fixed wall-clock penalty of roughly 40ms per run: the parallel garbage
+collector spawns one thread per core, and every GC cycle pays a futex
+wake/park cost that is much higher under musl than glibc. The extra time
+is spent off-CPU, so it does not show up as increased CPU usage.
+
+Since tartrazine is usually a short-lived CLI process, the penalty is
+noticeable. You can avoid it by starting the collector with a large enough
+initial heap (about 16MB covers lexer setup, which triggers most GC cycles)
+so the heap-growth phase doesn't trigger collections:
+
+```bash
+GC_INITIAL_HEAP_SIZE=16M tartrazine file.py -f html
+```
+
+That is a runtime setting, no rebuild needed. It makes affected binaries
+about 2x faster on startup-dominated workloads.
+
 ## Experimental CSS Highlights API Formatter
 
 Tartrazine also includes an experimental `highlights` formatter that uses the
 [CSS Custom Highlights API](https://developer.mozilla.org/en-US/docs/Web/CSS/CSS_Custom_Highlights_API)
 instead of traditional DOM manipulation with `<span>` elements.
 
-**Note**: This is experimental and shows little to no performance benefit in modern browsers
-even for large files. The traditional HTML formatter is recommended for production use.
+**Note**: This is experimental and shows little to no performance benefit
+in modern browsers even for large files. The traditional HTML formatter
+is recommended for production use.
 
 ```bash
 # Generate syntax highlighting with CSS Highlights API
@@ -99,24 +121,26 @@ tartrazine code.cr -f highlights -t github --standalone
 **Browser Support**: Chrome/Edge 105+, Firefox 114+ (requires flag in Firefox)
 
 **Limitations**: The CSS Highlights API only supports a limited subset of CSS properties:
+
 - ✅ Supported: `color`, `background-color`, `text-decoration`, `text-shadow`
 - ❌ Not supported: `font-weight`, `font-style`, `border`, `tab-size`
 
-This means the highlights formatter cannot apply bold, italic, or border styling that
-the traditional HTML formatter supports.
+This means the highlights formatter cannot apply bold, italic, or
+border styling that the traditional HTML formatter supports.
 
 ## Choosing what Lexers you want
 
 By default Tartrazine will support all its lexers by embedding
 them in the binary. This makes the binary large. If you are
-using it as a library, you may want to just include a selection of lexers. To do that:
+using it as a library, you may want to just include a selection of
+lexers. To do that:
 
-* Pass the `-Dnolexers` flag to the compiler
-* Set the `TT_LEXERS` environment variable to a
+- Pass the `-Dnolexers` flag to the compiler
+- Set the `TT_LEXERS` environment variable to a
   comma-separated list of lexers you want to include.
 
-
-This builds a binary with only the python, markdown, bash and yaml lexers (enough to highlight this `README.md`):
+This builds a binary with only the python, markdown, bash and yaml
+lexers (enough to highlight this `README.md`):
 
 ```bash
 > TT_LEXERS=python,markdown,bash,yaml shards build -Dnolexers -d --error-trace
@@ -128,12 +152,13 @@ Building: tartrazine
 
 Themes come from two places, tartrazine itself and [Sixteen](https://github.com/ralsina/sixteen).
 
-To only embed selected themes, build your project with the `-Dnothemes` option, and
-you can set two environment variables to control which themes are included:
+To only embed selected themes, build your project with the
+`-Dnothemes` option, and you can set two environment variables to
+control which themes are included:
 
-* `TT_THEMES` is a comma-separated list of themes to include from tartrazine (see
-  [the styles directory in the source(https://github.com/ralsina/tartrazine/tree/main/styles))
-* `SIXTEEN_THEMES` is a comma-separated list of themes to include from Sixteen (see
+- `TT_THEMES` is a comma-separated list of themes to include from tartrazine (see
+  [the styles directory in the source](https://github.com/ralsina/tartrazine/tree/main/styles))
+- `SIXTEEN_THEMES` is a comma-separated list of themes to include from Sixteen (see
   [the base16 directory in the sixteen source](https://github.com/ralsina/sixteen/tree/main/base16))
 
 For example (using the tartrazine CLI as the project):
@@ -154,10 +179,12 @@ Be careful not to build without any themes at all, nothing will work.
 
 ## Templates for standalone HTML output
 
-If you are using the HTML formatter, you can pass a template to use for the output. The template is a string where the following placeholders will be replaced:
+If you are using the HTML formatter, you can pass a template to use
+for the output. The template is a string where the following
+placeholders will be replaced:
 
-* `{{style_defs}}` will be replaced by the CSS styles needed for the theme
-* `{{code}}` will be replaced by the highlighted code
+- `{{style_defs}}` will be replaced by the CSS styles needed for the theme
+- `{{code}}` will be replaced by the highlighted code
 
 This is an example template that changes the padding around the code:
 
@@ -177,7 +204,6 @@ This is an example template that changes the padding around the code:
   </body>
 </html>
 ```
-
 
 ## Contributing
 

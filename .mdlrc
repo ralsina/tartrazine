@@ -1,1 +1,5 @@
-style ".md.rb"
+# MD013 (line length) is disabled because the README has badge and
+# reference URLs that cannot be wrapped.
+# MD029 (ordered list item prefix) is disabled because CommonMark
+# renders incremental numbering from any prefix.
+rules "~MD013", "~MD029"
