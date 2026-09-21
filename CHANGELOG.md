@@ -2,6 +2,26 @@
 
 All notable changes to this project will be documented in this file.
 
+## [0.23.0] - 2026-09-21
+
+### 🚀 Features
+
+- Add perf regression tests for formatter scaling
+
+### 🐛 Bug Fixes
+
+- Resolve all ameba lint issues
+- Always emit ANSI codes in the ANSI formatter
+- Address issues #24, #25, #26, #27, #28
+- Followups on issues #26, #27, #28
+
+### ⚙️ Miscellaneous Tasks
+
+- Remove unused WASM port leftovers
+- Exclude aur-tartrazine and lib from ameba linting
+- Run perf regression tests on every push
+- Require Crystal 1.20 and use Time.instant
+
 ## [0.21.3] - 2026-08-28
 
 ### 🐛 Bug Fixes
