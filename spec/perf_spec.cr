@@ -33,9 +33,9 @@ def benchmark_formatter(name : String, code : String) : Float64
   # Best of 3 runs to reduce noise from GC and scheduler
   3.times do
     outp = IO::Memory.new
-    t0 = Time.monotonic
+    t0 = Time.instant
     formatter.format(code, lexer, outp)
-    seconds = (Time.monotonic - t0).total_seconds
+    seconds = (Time.instant - t0).total_seconds
     elapsed = seconds if elapsed == 0 || seconds < elapsed
   end
   elapsed
