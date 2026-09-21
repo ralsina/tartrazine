@@ -160,9 +160,9 @@ module Tartrazine
         # token type. However, they may contain information
         # for a parent style. Worst case, we go to the root
         # (Background) style.
-        s = theme.styles[theme.style_parents(token).reverse.find { |parent|
+        s = theme.styles[theme.style_parents(token).reverse.find do |parent|
           theme.styles.has_key?(parent)
-        }]
+        end]
       end
 
       # Get the default text color

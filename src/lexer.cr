@@ -57,7 +57,7 @@ module Tartrazine
     raise Exception.new("Unknown lexer: #{name}") if lexer_file_name.nil?
 
     create_from_template(lexer_file_name)
-  rescue ex : BakedFileSystem::NoSuchFileError
+  rescue BakedFileSystem::NoSuchFileError
     raise Exception.new("Unknown lexer: #{name}")
   end
 
@@ -77,10 +77,10 @@ module Tartrazine
     when 1
       lexer_file_name = candidates.first
     else
-      lexer_file_name = self.lexer_by_content(filename)
+      lexer_file_name = lexer_by_content(filename)
       begin
-        return self.lexer(lexer_file_name)
-      rescue ex : Exception
+        return lexer(lexer_file_name)
+      rescue Exception
         raise Exception.new("Multiple lexers match the filename: #{candidates.to_a.join(", ")}, heuristics suggest #{lexer_file_name} but there is no matching lexer.")
       end
     end
@@ -425,7 +425,7 @@ module Tartrazine
             config.children.select { |node| node.name == "filename" }.map(&.content.to_s)
           end
         end || [] of String
-      rescue ex
+      rescue
         [] of String
       end
     end
@@ -434,9 +434,9 @@ module Tartrazine
       l = RegexLexer.new
       lexer = XML.parse(xml).first_element_child
       if lexer
-        config = lexer.children.find { |node|
+        config = lexer.children.find do |node|
           node.name == "config"
-        }
+        end
         if config
           l.config = {
             name:             xml_to_s(config, name) || "",
@@ -448,14 +448,14 @@ module Tartrazine
           }
         end
 
-        rules = lexer.children.find { |node|
+        rules = lexer.children.find do |node|
           node.name == "rules"
-        }
+        end
         if rules
           # Rules contains states 🤷
-          rules.children.select { |node|
+          rules.children.select do |node|
             node.name == "state"
-          }.each do |state_node|
+          end.each do |state_node|
             state = State.new
             state.name = state_node["name"]
             if l.states.has_key?(state.name)
@@ -464,9 +464,9 @@ module Tartrazine
               l.states[state.name] = state
             end
             # And states contain rules 🤷
-            state_node.children.select { |node|
+            state_node.children.select do |node|
               node.name == "rule"
-            }.each do |rule_node|
+            end.each do |rule_node|
               case rule_node["pattern"]?
               when nil
                 if rule_node.first_element_child.try &.name == "include"
@@ -563,7 +563,7 @@ module Tartrazine
 
     def highlight(text)
       super
-    rescue ex : Crystal::SyntaxException
+    rescue Crystal::SyntaxException
       # Fallback to Ruby highlighting
       @tokens = Tartrazine.lexer("ruby").tokenizer(text).to_a
     end

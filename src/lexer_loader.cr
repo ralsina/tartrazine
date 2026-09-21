@@ -21,7 +21,7 @@ module Tartrazine
 
     def load_lexer_xml(name : String) : String?
       LexerFiles.get("/#{name}.xml").gets_to_end
-    rescue ex : BakedFileSystem::NoSuchFileError
+    rescue BakedFileSystem::NoSuchFileError
       @fallback.try(&.load_lexer_xml(name))
     end
 
@@ -123,7 +123,7 @@ module Tartrazine
 
       # Load and parse the lexer
       xml_content = loader.load_lexer_xml(name)
-      return nil unless xml_content
+      return unless xml_content
 
       lexer = RegexLexer.from_xml(xml_content)
       cache_put(name, lexer)

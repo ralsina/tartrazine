@@ -125,10 +125,12 @@ describe Tartrazine do
       # From https://github.com/ralsina/tartrazine/issues/22:
       # box-drawing characters after a quoted string ended up as
       # three single-byte Error tokens each
-      source = %(select name from 'packages.csv' where maintainers like '%alerque%';
-┌───────────┐
-│   name    │
-└───────────┘)
+      source = <<-SQL
+        select name from 'packages.csv' where maintainers like '%alerque%';
+        ┌───────────┐
+        │   name    │
+        └───────────┘
+        SQL
       lexer = Tartrazine.lexer("sql")
       tokens = lexer.tokenizer(source).to_a
       tokens.each do |token|

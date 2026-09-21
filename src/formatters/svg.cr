@@ -58,10 +58,12 @@ module Tartrazine
     # Wrap text into a full HTML document, including the CSS for the theme
     def wrap_standalone
       output = String.build do |outp|
-        outp << %(<?xml version="1.0" encoding="utf-8"?>
-        <!DOCTYPE svg PUBLIC "-//W3C//DTD SVG 1.0//EN" "http://www.w3.org/TR/2001/REC-SVG-20010904/DTD/svg10.dtd">
-        <svg xmlns="http://www.w3.org/2000/svg">
-        <g font-family="#{self.@font_family}" font-size="#{self.@font_size}">)
+        outp << (<<-SVG).chomp
+          <?xml version="1.0" encoding="utf-8"?>
+                <!DOCTYPE svg PUBLIC "-//W3C//DTD SVG 1.0//EN" "http://www.w3.org/TR/2001/REC-SVG-20010904/DTD/svg10.dtd">
+                <svg xmlns="http://www.w3.org/2000/svg">
+                <g font-family="#{self.@font_family}" font-size="#{self.@font_size}">
+          SVG
       end
       {output.to_s, "</g></svg>"}
     end
@@ -106,9 +108,9 @@ module Tartrazine
         # token type. However, they may contain information
         # for a parent style. Worst case, we go to the root
         # (Background) style.
-        parent = theme.style_parents(token).reverse.find { |dad|
+        parent = theme.style_parents(token).reverse.find do |dad|
           theme.styles.has_key?(dad)
-        }
+        end
         theme.styles[token] = theme.styles[parent]
       end
       output = String.build do |outp|

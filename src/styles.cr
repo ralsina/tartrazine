@@ -183,9 +183,9 @@ module Tartrazine
 
   # Get theme families that have both dark and light variants
   def self.theme_families : Array(Sixteen::ThemeFamily)
-    Sixteen.theme_families.select { |family|
+    Sixteen.theme_families.select do |family|
       !family.dark_themes.empty? && !family.light_themes.empty?
-    }
+    end
   end
 
   # Get themes with variant information
@@ -311,7 +311,7 @@ module Tartrazine
     end
 
     macro merge_prop(prop)
-      new.{{prop}} = other.{{prop}}.nil? ? self.{{prop}} : other.{{prop}}
+      new.{{ prop }} = other.{{ prop }}.nil? ? self.{{ prop }} : other.{{ prop }}
     end
 
     def +(other : Style)

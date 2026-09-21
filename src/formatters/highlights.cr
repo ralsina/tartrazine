@@ -26,12 +26,12 @@ module Tartrazine
     property? surrounding_pre : Bool = true
     property? wrap_long_lines : Bool = false
     property template : String = <<-TEMPLATE
-<!DOCTYPE html><html><head><style>
-{{style_defs}}
-</style></head><body>
-{{body}}
-</body></html>
-TEMPLATE
+      <!DOCTYPE html><html><head><style>
+      {{style_defs}}
+      </style></head><body>
+      {{body}}
+      </body></html>
+      TEMPLATE
 
     property theme : Theme
 
@@ -210,9 +210,9 @@ TEMPLATE
         # token type. However, they may contain information
         # for a parent style. Worst case, we go to the root
         # (Background) style.
-        parent = theme.style_parents(token).reverse.find { |dad|
+        parent = theme.style_parents(token).reverse.find do |dad|
           theme.styles.has_key?(dad)
-        }
+        end
         theme.styles[token] = theme.styles[parent]
       end
       class_prefix + Abbreviations[token]

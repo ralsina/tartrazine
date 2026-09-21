@@ -6,6 +6,7 @@
 Excluded:
 - aur-tartrazine/**/*
 - lib/**/*
+- scratch/**/*
 
 # Problems found: 2
 # Run `ameba --only Metrics/CyclomaticComplexity` for details

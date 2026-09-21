@@ -54,17 +54,17 @@ module Tartrazine
       when ActionType::Token
         @token_type = xml["type"]
       when ActionType::Push
-        @states_to_push = xml.attributes.select { |attrib|
+        @states_to_push = xml.attributes.select do |attrib|
           attrib.name == "state"
-        }.map &.content
+        end.map &.content
       when ActionType::Pop
         @depth = xml["depth"].to_i
       when ActionType::Using
         @lexer_name = xml["lexer"].downcase
       when ActionType::Combined
-        @states = xml.attributes.select { |attrib|
+        @states = xml.attributes.select do |attrib|
           attrib.name == "state"
-        }.map &.content
+        end.map &.content
       when ActionType::Usingbygroup
         @lexer_index = xml["lexer"].to_i
         @content_index = xml["content"].split(",").map(&.to_i)
@@ -129,11 +129,11 @@ module Tartrazine
           secondary: true).to_a
       when ActionType::Combined
         # Combine two or more states into one anonymous state
-        new_state = @states.map { |name|
+        new_state = @states.map do |name|
           tokenizer.state_for(name)
-        }.reduce { |state1, state2|
+        end.reduce do |state1, state2|
           state1 + state2
-        }
+        end
         tokenizer.remember_state(new_state)
         tokenizer.state_stack << new_state.name
         EMPTY_TOKENS
@@ -149,7 +149,7 @@ module Tartrazine
           Tartrazine.lexer(lexer_name).tokenizer(
             content.to_s,
             secondary: true).to_a
-        rescue ex
+        rescue
           # Fallback to text lexer if requested lexer is not found
           Tartrazine.lexer("text").tokenizer(
             content.to_s,

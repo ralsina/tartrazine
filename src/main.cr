@@ -2,64 +2,64 @@ require "docopt"
 require "./tartrazine"
 
 HELP = <<-HELP
-tartrazine: a syntax highlighting tool
+  tartrazine: a syntax highlighting tool
 
-You can use the CLI to generate HTML, terminal, JSON, SVG, PNG, JPEG or WebP output
-from a source file using different themes.
-Keep in mind that not all formatters support all features.
+  You can use the CLI to generate HTML, terminal, JSON, SVG, PNG, JPEG or WebP output
+  from a source file using different themes.
+  Keep in mind that not all formatters support all features.
 
-Usage:
-  tartrazine (-h, --help)
-  tartrazine FILE -f html [-t theme][--standalone [--template file]]
-                          [--line-numbers][-l lexer][-o output][--light|--dark]
-  tartrazine -f html -t theme --css
-  tartrazine FILE -f terminal [-t theme][-l lexer][--line-numbers]
-                              [-o output][--light|--dark]
-  tartrazine FILE -f svg  [-t theme][--standalone][--line-numbers]
-                          [-l lexer][-o output][--light|--dark]
-  tartrazine FILE -f png  [-t theme][--line-numbers]
-                          [-l lexer][-o output][--font-path path][--font-size size][--width w][--height h][--light|--dark]
-  tartrazine FILE -f jpeg [-t theme][--line-numbers]
-                          [-l lexer][-o output][--font-path path][--font-size size][--width w][--height h][--quality q][--light|--dark]
-  tartrazine FILE -f webp [-t theme][--line-numbers]
-                          [-l lexer][-o output][--font-path path][--font-size size][--width w][--height h][--quality q][--light|--dark]
-  tartrazine FILE -f json [-o output]
-  tartrazine FILE -f highlights [-t theme][--standalone [--template file]]
-                              [--line-numbers][-l lexer][-o output][--light|--dark]
-  tartrazine -f highlights -t theme --css
-  tartrazine --list-themes [--show-variants]
-  tartrazine --list-variant-themes
-  tartrazine --list-lexers
-  tartrazine --list-extensions <lexer>
-  tartrazine --list-formatters
-  tartrazine --version
+  Usage:
+    tartrazine (-h, --help)
+    tartrazine FILE -f html [-t theme][--standalone [--template file]]
+                            [--line-numbers][-l lexer][-o output][--light|--dark]
+    tartrazine -f html -t theme --css
+    tartrazine FILE -f terminal [-t theme][-l lexer][--line-numbers]
+                                [-o output][--light|--dark]
+    tartrazine FILE -f svg  [-t theme][--standalone][--line-numbers]
+                            [-l lexer][-o output][--light|--dark]
+    tartrazine FILE -f png  [-t theme][--line-numbers]
+                            [-l lexer][-o output][--font-path path][--font-size size][--width w][--height h][--light|--dark]
+    tartrazine FILE -f jpeg [-t theme][--line-numbers]
+                            [-l lexer][-o output][--font-path path][--font-size size][--width w][--height h][--quality q][--light|--dark]
+    tartrazine FILE -f webp [-t theme][--line-numbers]
+                            [-l lexer][-o output][--font-path path][--font-size size][--width w][--height h][--quality q][--light|--dark]
+    tartrazine FILE -f json [-o output]
+    tartrazine FILE -f highlights [-t theme][--standalone [--template file]]
+                                [--line-numbers][-l lexer][-o output][--light|--dark]
+    tartrazine -f highlights -t theme --css
+    tartrazine --list-themes [--show-variants]
+    tartrazine --list-variant-themes
+    tartrazine --list-lexers
+    tartrazine --list-extensions <lexer>
+    tartrazine --list-formatters
+    tartrazine --version
 
-Options:
-  -f <formatter>      Format to use (html, terminal, json, svg, png, jpeg, webp, highlights)
-  -t <theme>          Theme to use, see --list-themes [default: default-dark]
-  --light             Force light variant of the theme (if available)
-  --dark              Force dark variant of the theme (if available)
-  -l <lexer>          Lexer (language) to use, see --list-lexers. Use more than
-                      one lexer with "+" (e.g. jinja+yaml) [default: autodetect]
-  -o <output>         Output file. Default is stdout.
-  --standalone        Generate a standalone HTML file, which includes
-                      all style information. If not given, it will generate just
-                      a HTML fragment ready to include in your own page.
-  --css               Generate a CSS file for the theme called <theme>.css
-                      (works with html and highlights formatters)
-  --template <file>   Use a custom template for the HTML output [default: none]
-  --line-numbers      Include line numbers in the output
-  --font-path <path>  Path to TrueType/OpenType font file (.ttf or .otf) for image output
-                      (default: bundled JetBrains Mono)
-  --font-size <size>  Font point size for image output (e.g. 14) [default: 14]
-  --width <w>         Maximum image width in pixels (0 = auto based on content) [default: 0]
-  --height <h>        Maximum image height in pixels (0 = auto based on content) [default: 0]
-  --quality <q>       JPEG/WebP quality (1-100, default: 90)
-  --list-extensions <lexer>  List file extensions for a lexer
-  --show-variants    Show theme variant information in theme list
-  -h, --help          Show this screen
-  -v, --version       Show version number
-HELP
+  Options:
+    -f <formatter>      Format to use (html, terminal, json, svg, png, jpeg, webp, highlights)
+    -t <theme>          Theme to use, see --list-themes [default: default-dark]
+    --light             Force light variant of the theme (if available)
+    --dark              Force dark variant of the theme (if available)
+    -l <lexer>          Lexer (language) to use, see --list-lexers. Use more than
+                        one lexer with "+" (e.g. jinja+yaml) [default: autodetect]
+    -o <output>         Output file. Default is stdout.
+    --standalone        Generate a standalone HTML file, which includes
+                        all style information. If not given, it will generate just
+                        a HTML fragment ready to include in your own page.
+    --css               Generate a CSS file for the theme called <theme>.css
+                        (works with html and highlights formatters)
+    --template <file>   Use a custom template for the HTML output [default: none]
+    --line-numbers      Include line numbers in the output
+    --font-path <path>  Path to TrueType/OpenType font file (.ttf or .otf) for image output
+                        (default: bundled JetBrains Mono)
+    --font-size <size>  Font point size for image output (e.g. 14) [default: 14]
+    --width <w>         Maximum image width in pixels (0 = auto based on content) [default: 0]
+    --height <h>        Maximum image height in pixels (0 = auto based on content) [default: 0]
+    --quality <q>       JPEG/WebP quality (1-100, default: 90)
+    --list-extensions <lexer>  List file extensions for a lexer
+    --show-variants    Show theme variant information in theme list
+    -h, --help          Show this screen
+    -v, --version       Show version number
+  HELP
 
 options = Docopt.docopt(HELP, ARGV)
 
@@ -179,7 +179,7 @@ if options["-f"]
     if font_size
       begin
         parsed_font_size = font_size.to_i
-      rescue ex
+      rescue
         puts "Invalid font size: #{font_size}. Must be a number (e.g., 14)"
         exit 1
       end
@@ -194,7 +194,7 @@ if options["-f"]
           puts "Width must be >= 0 (0 = auto)"
           exit 1
         end
-      rescue ex
+      rescue
         puts "Invalid width: #{width}. Must be a number (e.g., 800)"
         exit 1
       end
@@ -209,7 +209,7 @@ if options["-f"]
           puts "Height must be >= 0 (0 = auto)"
           exit 1
         end
-      rescue ex
+      rescue
         puts "Invalid height: #{height}. Must be a number (e.g., 600)"
         exit 1
       end
@@ -224,7 +224,7 @@ if options["-f"]
           puts "Quality must be between 1 and 100"
           exit 1
         end
-      rescue ex
+      rescue
         puts "Invalid quality: #{quality}. Must be a number between 1 and 100"
         exit 1
       end

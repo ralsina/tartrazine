@@ -106,9 +106,9 @@ module Tartrazine
     end
 
     def initialize(node : XML::Node)
-      include_node = node.children.find { |child|
+      include_node = node.children.find do |child|
         child.name == "include"
-      }
+      end
       @state = include_node["state"] if include_node
       add_actions(node)
     end
