@@ -24,3 +24,17 @@ jobs:
           shards install
           crystal tool format --check
           crystal spec -v
+
+  # Timing-based, but only measures linearity (time ratio between two
+  # input sizes), which is stable enough for shared runners
+  perf:
+    runs-on: ubuntu-22.04
+    steps:
+      - name: Download source
+        uses: actions/checkout@v4
+      - name: Install Crystal
+        uses: crystal-lang/install-crystal@v1
+      - name: Run perf regression tests
+        run: |
+          shards install
+          TT_PERF=1 crystal spec spec/perf_spec.cr
