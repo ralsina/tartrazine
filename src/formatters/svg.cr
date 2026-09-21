@@ -49,23 +49,27 @@ module Tartrazine
     end
 
     def format(text : String, lexer : BaseLexer, io : IO) : Nil
-      pre, post = wrap_standalone
-      io << pre if standalone?
-      format_text(text, lexer, io)
-      io << post if standalone?
-    end
-
-    # Wrap text into a full HTML document, including the CSS for the theme
-    def wrap_standalone
-      output = String.build do |outp|
-        outp << (<<-SVG).chomp
-          <?xml version="1.0" encoding="utf-8"?>
-                <!DOCTYPE svg PUBLIC "-//W3C//DTD SVG 1.0//EN" "http://www.w3.org/TR/2001/REC-SVG-20010904/DTD/svg10.dtd">
-                <svg xmlns="http://www.w3.org/2000/svg">
-                <g font-family="#{self.@font_family}" font-size="#{self.@font_size}">
-          SVG
+      unless standalone?
+        format_text(text, lexer, io)
+        return
       end
-      {output.to_s, "</g></svg>"}
+      # Render the content first so the document dimensions
+      # can be derived from it
+      content = String.build { |outp| format_text(text, lexer, outp) }
+      lines = text.split("\n")
+      # Rough monospace advance width, good enough for the viewport
+      char_width = (fs * 0.6).ceil.to_i
+      padding = fs
+      width = padding * 2 + (line_numbers? ? 5 * ystep : 0) +
+              {lines.max_of(&.size), 1}.max * char_width
+      height = padding + lines.size * ystep + padding // 2
+      background = theme.styles["Background"]?.try &.background.try &.hex
+      io << %(<?xml version="1.0" encoding="utf-8"?>\n)
+      io << %(<svg xmlns="http://www.w3.org/2000/svg" width="#{width}" height="#{height}" viewBox="0 0 #{width} #{height}">\n)
+      io << %(<rect width="100%" height="100%" fill="##{background}"/>\n) if background
+      io << %(<g font-family="#{@font_family}" font-size="#{@font_size}">)
+      io << content
+      io << "</g></svg>"
     end
 
     private def line_label(i : Int32, x : Int32, y : Int32) : String
@@ -123,7 +127,7 @@ module Tartrazine
         outp << " font-style=\"italic\"" if style.italic
         outp << " font-style=\"normal\"" if style.italic == false
         outp << " text-decoration=\"underline\"" if style.underline
-        outp << " text-decoration=\"none" if style.underline == false
+        outp << " text-decoration=\"none\"" if style.underline == false
       end
       output
     end

@@ -293,10 +293,10 @@ if options["-f"]
   input = File.open(options["FILE"].as(String)).gets_to_end
 
   if options["-o"].nil?
-    outf = STDOUT
+    formatter.format(input, lexer, STDOUT)
   else
-    outf = File.open(options["-o"].as(String), "w")
+    File.open(options["-o"].as(String), "w") do |outf|
+      formatter.format(input, lexer, outf)
+    end
   end
-  formatter.format(input, lexer, outf)
-  outf.close
 end

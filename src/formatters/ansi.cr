@@ -24,9 +24,13 @@ module Tartrazine
       tokenizer = lexer.tokenizer(text)
       i = 0
       outp << line_label(i) if line_numbers?
-      tokenizer.each do |token|
+      # Line numbers are emitted after a newline only when more
+      # tokens follow, so a trailing newline doesn't produce a
+      # phantom line number for a nonexistent last line
+      tokens = tokenizer.to_a
+      tokens.each_with_index do |token, index|
         outp << colorize(token[:value], token[:type])
-        if token[:value].includes?("\n")
+        if token[:value].includes?("\n") && tokens[index + 1..].any? { |remaining| !remaining[:value].empty? }
           i += 1
           outp << line_label(i) if line_numbers?
         end

@@ -40,19 +40,20 @@ module Tartrazine
       @font_size = (height.to_f * 0.45).to_i32
     end
 
-    private def load_font_face : FreeType::TrueType::Face
-      path = font_path || default_font_path
+    # The bundled Tiny-Regular.ttf font (JetBrains Mono), embedded at
+    # compile time so image formatters work in distributed binaries
+    # where the build-time source tree does not exist
+    DefaultFont = FreeType::TrueType::Font.new({{ read_file "#{__DIR__}/../../fonts/Tiny-Regular.ttf" }}.to_slice)
 
+    private def load_font_face : FreeType::TrueType::Face
       @font_face ||= begin
-        # Load font file (either user-provided or default bundled font)
-        font = FreeType::TrueType.load(path)
+        if font_path = @font_path
+          font = FreeType::TrueType.load(font_path)
+        else
+          font = DefaultFont
+        end
         FreeType::TrueType.new_face(font, font_size.to_f64)
       end
-    end
-
-    private def default_font_path : String
-      # Path to bundled Tiny-Regular.ttf font (JetBrains Mono)
-      File.join(__DIR__, "../../fonts/Tiny-Regular.ttf")
     end
 
     private def line_label(i : Int32) : String

@@ -98,13 +98,17 @@ module Tartrazine
       end
       outp << "<code class=\"#{get_css_class("Background")}\">"
       outp << line_label(i) if line_numbers?
-      tokenizer.each do |token|
+      # Line numbers are emitted after a newline only when more
+      # tokens follow, so a trailing newline doesn't produce a
+      # phantom line number for a nonexistent last line
+      tokens = tokenizer.to_a
+      tokens.each_with_index do |token, index|
         outp << "<span class=\""
         outp << get_css_class(token[:type])
         outp << "\">"
         escape_to_io(token[:value], outp)
         outp << "</span>"
-        if token[:value].ends_with? "\n"
+        if token[:value].ends_with?("\n") && tokens[index + 1..].any? { |remaining| !remaining[:value].empty? }
           i += 1
           outp << line_label(i) if line_numbers?
         end
