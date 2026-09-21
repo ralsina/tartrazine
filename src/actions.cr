@@ -71,12 +71,14 @@ module Tartrazine
       end
     end
 
+    # Emit tokens into the accumulator, so matching a rule does not
+    # allocate intermediate arrays per action.
     # ameba:disable Metrics/CyclomaticComplexity
-    def emit(match : MatchDataView, tokenizer : Tokenizer, match_group = 0) : Array(Token)
+    def emit(match : MatchDataView, tokenizer : Tokenizer, tokens : Array(Token), match_group = 0) : Nil
       case @type
       when ActionType::Token
         raise Exception.new "Can't have a token without a match" if match.empty?
-        [Token.new(type: @token_type, value: String.new(match.group(match_group)))]
+        tokens << Token.new(type: @token_type, value: String.new(match.group(match_group)))
       when ActionType::Push
         if @states_to_push.empty?
           tokenizer.state_stack << tokenizer.state_stack.last
@@ -91,11 +93,9 @@ module Tartrazine
             end
           end
         end
-        EMPTY_TOKENS
       when ActionType::Pop
         to_pop = [@depth, tokenizer.state_stack.size - 1].min
         tokenizer.state_stack.pop(to_pop)
-        EMPTY_TOKENS
       when ActionType::Bygroups
         # FIXME: handle
         # ><bygroups>
@@ -108,23 +108,21 @@ module Tartrazine
 
         # Each group matches an action. If the group match is empty,
         # the action is skipped.
-        result = [] of Token
         @actions.each_with_index do |e, action_index|
           group_index = action_index + 1
-          next if group_index >= match.size || match.group(group_index).empty?
-          result.concat(e.emit(match, tokenizer, group_index))
+          next if group_index >= match.size || match.group_empty?(group_index)
+          e.emit(match, tokenizer, tokens, group_index)
         end
-        result
       when ActionType::Using
         # Shunt to another lexer entirely
-        return EMPTY_TOKENS if match.empty?
-        Tartrazine.lexer(@lexer_name).tokenizer(
+        return if match.empty?
+        tokens.concat Tartrazine.lexer(@lexer_name).tokenizer(
           String.new(match.group(match_group)),
           secondary: true).to_a
       when ActionType::Usingself
         # Shunt to another copy of this lexer
-        return EMPTY_TOKENS if match.empty?
-        tokenizer.lexer.tokenizer(
+        return if match.empty?
+        tokens.concat tokenizer.lexer.tokenizer(
           String.new(match.group(match_group)),
           secondary: true).to_a
       when ActionType::Combined
@@ -136,22 +134,21 @@ module Tartrazine
         end
         tokenizer.remember_state(new_state)
         tokenizer.state_stack << new_state.name
-        EMPTY_TOKENS
       when ActionType::Usingbygroup
         # Shunt to content-specified lexer
-        return EMPTY_TOKENS if match.empty?
+        return if match.empty?
         content = IO::Memory.new
         @content_index.each do |group_index|
           content.write(match.group(group_index))
         end
         lexer_name = String.new(match.group(@lexer_index))
         begin
-          Tartrazine.lexer(lexer_name).tokenizer(
+          tokens.concat Tartrazine.lexer(lexer_name).tokenizer(
             content.to_s,
             secondary: true).to_a
         rescue
           # Fallback to text lexer if requested lexer is not found
-          Tartrazine.lexer("text").tokenizer(
+          tokens.concat Tartrazine.lexer("text").tokenizer(
             content.to_s,
             secondary: true).to_a
         end

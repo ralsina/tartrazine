@@ -35,6 +35,10 @@ module Tartrazine
 
     property theme : Theme
 
+    # Cache of token type → highlight name, to skip the
+    # parent-style resolution on every token
+    @name_cache = {} of String => String
+
     def initialize(@theme : Theme = Tartrazine.theme("default-dark"), *,
                    @highlight_lines = [] of Range(Int32, Int32),
                    @class_prefix : String = "",
@@ -76,6 +80,29 @@ module Tartrazine
       {output.to_s, @template.split("{{body}}")[1]}
     end
 
+    # Collapse adjacent same-type tokens into single tokens,
+    # streaming from the tokenizer
+    private def collapsed_tokens(tokenizer : BaseTokenizer) : Array(Token)
+      collapsed = [] of Token
+      previous_type = ""
+      accumulated = String::Builder.new
+      accumulating = false
+      tokenizer.each do |token|
+        next if token[:value].empty?
+        if accumulating && previous_type == token[:type]
+          accumulated << token[:value]
+          next
+        end
+        collapsed << {type: previous_type, value: accumulated.to_s} if accumulating
+        accumulated = String::Builder.new
+        previous_type = token[:type]
+        accumulated << token[:value]
+        accumulating = true
+      end
+      collapsed << {type: previous_type, value: accumulated.to_s} if accumulating
+      collapsed
+    end
+
     private def line_label(i : Int32) : String
       line_label = "#{i + 1}".rjust(4).ljust(5)
       "#{line_label} "
@@ -91,8 +118,9 @@ module Tartrazine
         outp << "<pre id=\"code\">"
       end
 
-      # First collect and collapse tokens like JSON formatter does
-      all_raw_tokens = Tartrazine::RegexLexer.collapse_tokens(tokenizer.to_a)
+      # Collapse tokens incrementally while streaming, like the
+      # JSON formatter does
+      all_raw_tokens = collapsed_tokens(tokenizer)
       current_pos = 0
       text_content = String::Builder.new
       all_tokens = [] of {type: String, text: String, start_pos: Int32, end_pos: Int32}
@@ -128,17 +156,17 @@ module Tartrazine
       outp << "</pre>"
 
       # Generate ranges using the actual text length
-      token_ranges_by_type = Hash(String, Array(String)).new
+      token_ranges_by_type = Hash(String, Array(Tuple(Int32, Int32))).new
       text_length = final_text.size
 
       all_tokens.each do |token|
         # Ensure positions are within bounds
-        start_pos = [token[:start_pos], text_length].min
-        end_pos = [token[:end_pos], text_length].min
+        start_pos = {token[:start_pos], text_length}.min
+        end_pos = {token[:end_pos], text_length}.min
 
         range_name = get_highlight_name(token[:type])
-        token_ranges_by_type[range_name] ||= [] of String
-        token_ranges_by_type[range_name] << "range.setStart(textNode, #{start_pos}); range.setEnd(textNode, #{end_pos});"
+        token_ranges_by_type[range_name] ||= [] of Tuple(Int32, Int32)
+        token_ranges_by_type[range_name] << {start_pos, end_pos}
       end
 
       # Add JavaScript for highlights registration
@@ -148,7 +176,7 @@ module Tartrazine
     end
 
     # Generate compact JavaScript to register CSS highlights with known positions
-    private def generate_simple_highlight_script(token_ranges_by_type : Hash(String, Array(String))) : String
+    private def generate_simple_highlight_script(token_ranges_by_type : Hash(String, Array(Tuple(Int32, Int32)))) : String
       script = String::Builder.new
 
       script << "(function(){"
@@ -159,14 +187,9 @@ module Tartrazine
       token_ranges_by_type.each do |type, ranges|
         next if ranges.empty?
         script << "const #{type}Ranges=["
-        ranges.each_with_index do |range_code, i|
+        ranges.each_with_index do |range, i|
           script << "," if i > 0
-          # Parse the range code to extract start and end positions
-          if match = range_code.match(/range\.setStart\(textNode, (\d+)\);.*range\.setEnd\(textNode, (\d+)\)/)
-            start_pos = match[1]
-            end_pos = match[2]
-            script << "[#{start_pos},#{end_pos}]"
-          end
+          script << "[#{range[0]},#{range[1]}]"
         end
         script << "];"
         script << "CSS.highlights.set('#{type}',new Highlight(...#{type}Ranges.map(([s,e])=>{const r=new Range();r.setStart(textNode,Math.min(s,textNode.length));r.setEnd(textNode,Math.min(e,textNode.length));return r;})));"
@@ -205,6 +228,9 @@ module Tartrazine
     # Given a token type, return the highlight name to use.
     # This needs to be a valid CSS custom highlight name
     def get_highlight_name(token : String) : String
+      cached = @name_cache[token]?
+      return cached if cached
+
       if !theme.styles.has_key? token
         # Themes don't contain information for each specific
         # token type. However, they may contain information
@@ -215,7 +241,7 @@ module Tartrazine
         end
         theme.styles[token] = theme.styles[parent]
       end
-      class_prefix + Abbreviations[token]
+      @name_cache[token] = class_prefix + Abbreviations[token]
     end
   end
 end

@@ -13,6 +13,10 @@ module Tartrazine
   class Ansi < Formatter
     property? line_numbers : Bool = false
 
+    # Cache of token type → (escape prefix, reset suffix), built
+    # once per type instead of a Colorize::Object per token
+    @style_cache = {} of String => Tuple(String, String)
+
     def initialize(@theme : Theme = Tartrazine.theme("default-dark"), @line_numbers : Bool = false)
     end
 
@@ -24,44 +28,60 @@ module Tartrazine
       tokenizer = lexer.tokenizer(text)
       i = 0
       outp << line_label(i) if line_numbers?
-      # Line numbers are emitted after a newline only when more
-      # tokens follow, so a trailing newline doesn't produce a
+      # Stream tokens; a newline only emits a line number when more
+      # content follows, so a trailing newline doesn't produce a
       # phantom line number for a nonexistent last line
-      tokens = tokenizer.to_a
-      # Index of the last non-empty token: a trailing newline must not
-      # emit a phantom line number for a nonexistent last line
-      last_content_index = tokens.rindex { |token| !token[:value].empty? } || 0
-      tokens.each_with_index do |token, index|
-        outp << colorize(token[:value], token[:type])
-        if token[:value].includes?("\n") && index < last_content_index
+      TokenStream.new(tokenizer).each do |token, more_content|
+        prefix, reset = style_for(token[:type])
+        outp << prefix << token[:value] << reset
+        if token[:value].includes?("\n") && more_content
           i += 1
           outp << line_label(i) if line_numbers?
         end
       end
     end
 
-    def colorize(text : String, token : String) : String
+    # Resolve the ANSI escape pair for a token type, caching the
+    # result. The pair is derived from a Colorize sample on an empty
+    # string, so the emitted bytes match a per-token colorize call.
+    private def style_for(token : String) : Tuple(String, String)
+      cached = @style_cache[token]?
+      return cached if cached
+
       if theme.styles.has_key?(token)
-        s = theme.styles[token]
+        style = theme.styles[token]
       else
         # Themes don't contain information for each specific
         # token type. However, they may contain information
         # for a parent style. Worst case, we go to the root
         # (Background) style.
-        s = theme.styles[theme.style_parents(token).reverse.find do |parent|
-          theme.styles.has_key?(parent)
-        end]
+        parent = theme.style_parents(token).reverse.find do |dad|
+          theme.styles.has_key?(dad)
+        end
+        style = theme.styles[parent]
+        theme.styles[token] = style
       end
-      colorized = text.colorize
+
+      colorized = "".colorize
       # Always emit ANSI codes: this is an explicit request for ANSI
       # output, so the caller's stdout being a pipe must not disable it
       colorized.toggle(true)
-      s.color.try { |col| colorized = colorized.fore(col.colorize) }
+      style.color.try { |col| colorized = colorized.fore(col.colorize) }
       # Intentionally not setting background color
-      colorized.mode(:bold) if s.bold
-      colorized.mode(:italic) if s.italic
-      colorized.mode(:underline) if s.underline
-      colorized.to_s
+      colorized.mode(:bold) if style.bold
+      colorized.mode(:italic) if style.italic
+      colorized.mode(:underline) if style.underline
+      sample = colorized.to_s
+
+      # With no color or modes the sample is empty: no escapes at all
+      boundary = sample.index('m')
+      result = if boundary
+                 {sample[0..boundary], sample[(boundary + 1)..]}
+               else
+                 {"", ""}
+               end
+      @style_cache[token] = result
+      result
     end
   end
 end

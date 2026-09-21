@@ -28,6 +28,10 @@ module Tartrazine
 
     property theme : Theme
 
+    # Cache of token type → tspan style attributes, built once
+    # per type instead of a String.build per token
+    @style_cache = {} of String => String
+
     def initialize(@theme : Theme = Tartrazine.theme("default-dark"), *,
                    @highlight_lines = [] of Range(Int32, Int32),
                    @class_prefix : String = "",
@@ -88,19 +92,23 @@ module Tartrazine
       line_x = x
       line_x += 5 * ystep if line_numbers?
       tokenizer = lexer.tokenizer(text)
-      tokens = tokenizer.to_a
-      # Index of the last non-empty token: a trailing newline must not
-      # open a phantom last line
-      last_content_index = tokens.rindex { |token| !token[:value].empty? } || 0
       line_open = true
       outp << line_label(i, x, y) if line_numbers?
       outp << %(<text x="#{line_x}" y="#{y}" xml:space="preserve">)
-      tokens.each_with_index do |token, index|
+      # Stream tokens; a trailing newline terminates the last line
+      # rather than opening a phantom extra one
+      TokenStream.new(tokenizer).each do |token, more_content|
         if token[:value].ends_with? "\n"
-          outp << "<tspan #{get_style(token[:type])}>#{HTML.escape(token[:value][0...-1])}</tspan>"
+          # The leading space here is intentional: it matches the
+          # original interpolation "<tspan #{style}>"
+          outp << "<tspan "
+          outp << get_style(token[:type])
+          outp << ">"
+          escape_to_io(token[:value].to_slice[0, token[:value].bytesize - 1], outp)
+          outp << "</tspan>"
           outp << "</text>"
           line_open = false
-          next if index >= last_content_index
+          next unless more_content
           x = 0
           y += ystep
           i += 1
@@ -109,7 +117,11 @@ module Tartrazine
           line_open = true
         else
           next if token[:value].empty?
-          outp << "<tspan#{get_style(token[:type])}>#{HTML.escape(token[:value])}</tspan>"
+          outp << "<tspan"
+          outp << get_style(token[:type])
+          outp << ">"
+          escape_to_io(token[:value], outp)
+          outp << "</tspan>"
           x += token[:value].size * ystep
         end
       end
@@ -118,6 +130,9 @@ module Tartrazine
 
     # Given a token type, return the style.
     def get_style(token : String) : String
+      cached = @style_cache[token]?
+      return cached if cached
+
       if !theme.styles.has_key? token
         # Themes don't contain information for each specific
         # token type. However, they may contain information
@@ -140,7 +155,7 @@ module Tartrazine
         outp << " text-decoration=\"underline\"" if style.underline
         outp << " text-decoration=\"none\"" if style.underline == false
       end
-      output
+      @style_cache[token] = output
     end
   end
 end

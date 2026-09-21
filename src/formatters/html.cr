@@ -98,46 +98,21 @@ module Tartrazine
       end
       outp << "<code class=\"#{get_css_class("Background")}\">"
       outp << line_label(i) if line_numbers?
-      # Line numbers are emitted after a newline only when more
-      # tokens follow, so a trailing newline doesn't produce a
+      # Stream tokens; a newline only opens a new line when more
+      # content follows, so a trailing newline doesn't produce a
       # phantom line number for a nonexistent last line
-      tokens = tokenizer.to_a
-      # Index of the last non-empty token: a trailing newline must not
-      # emit a phantom line number for a nonexistent last line
-      last_content_index = tokens.rindex { |token| !token[:value].empty? } || 0
-      tokens.each_with_index do |token, index|
+      TokenStream.new(tokenizer).each do |token, more_content|
         outp << "<span class=\""
         outp << get_css_class(token[:type])
         outp << "\">"
         escape_to_io(token[:value], outp)
         outp << "</span>"
-        if token[:value].ends_with?("\n") && index < last_content_index
+        if token[:value].ends_with?("\n") && more_content
           i += 1
           outp << line_label(i) if line_numbers?
         end
       end
       outp << "</code></pre>"
-    end
-
-    # Write text escaping HTML special characters without building
-    # intermediate strings
-    private def escape_to_io(text : String, io : IO) : Nil
-      start = 0
-      bytes = text.to_slice
-      bytes.each_with_index do |byte, index|
-        entity = case byte
-                 when '&'.ord  then "&amp;"
-                 when '<'.ord  then "&lt;"
-                 when '>'.ord  then "&gt;"
-                 when '"'.ord  then "&quot;"
-                 when '\''.ord then "&#39;"
-                 end
-        next if entity.nil?
-        io.write(bytes[start, index - start]) if index > start
-        io << entity
-        start = index + 1
-      end
-      io.write(bytes[start, text.bytesize - start]) if start < text.bytesize
     end
 
     # ameba:disable Metrics/CyclomaticComplexity

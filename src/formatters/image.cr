@@ -24,6 +24,10 @@ module Tartrazine
 
     @font_face : FreeType::TrueType::Face? = nil
 
+    # Cache of token type → text color, to skip the parent-style
+    # resolution on every token
+    @token_color_cache = {} of String => CrImage::Color::Color
+
     def initialize(@theme : Theme = Tartrazine.theme("default-dark"),
                    @line_numbers : Bool = false,
                    @font_path : String? = nil,
@@ -122,31 +126,31 @@ module Tartrazine
         x += 5 * char_width
       end
 
-      tokens = tokenizer.to_a
-      # Index of the last non-empty token: a trailing newline must not
-      # draw a phantom last line number
-      last_content_index = tokens.rindex { |token| !token[:value].empty? } || 0
-      tokens.each_with_index do |token, index|
+      tokens_stream = TokenStream.new(tokenizer)
+      # Drawer per color, reused across tokens (few distinct colors)
+      drawer_cache = {} of CrImage::Color::Color => CrImage::Font::Drawer
+      get_drawer = ->(color : CrImage::Color::Color) do
+        drawer_cache[color] ||= CrImage::Font::Drawer.new(
+          img, CrImage::Uniform.new(color), font_face)
+      end
+      tokens_stream.each do |token, more_content|
         t = token[:value].rstrip("\n")
 
         # Get the color for this token
         _, token_color = token_style(token[:type], font_face)
-        token_src = CrImage::Uniform.new(token_color)
 
-        # Create a new drawer with the token's color
-        drawer = CrImage::Font::Drawer.new(img, token_src, font_face)
-        drawer.draw_text(t, x, y)
+        # Draw with this token's color
+        get_drawer.call(token_color).draw_text(t, x, y)
 
         if token[:value].includes?("\n")
           # A trailing newline terminates the last line rather than
           # starting a nonexistent extra one
-          next if index >= last_content_index
+          next unless more_content
           x = padding_left
           y += line_height
           i += 1
           if line_numbers?
-            drawer = CrImage::Font::Drawer.new(img, default_src, font_face)
-            drawer.draw_text(line_label(i), x, y)
+            get_drawer.call(default_color).draw_text(line_label(i), x, y)
             x += 5 * char_width
           end
         else
@@ -163,6 +167,9 @@ module Tartrazine
     private abstract def write_image(outp : IO, img : CrImage::RGBA) : Nil
 
     private def token_style(token : String, font_face : FreeType::TrueType::Face) : {FreeType::TrueType::Face, CrImage::Color::Color}
+      cached = @token_color_cache[token]?
+      return {font_face, cached} if cached
+
       if theme.styles.has_key?(token)
         s = theme.styles[token]
       else
@@ -182,6 +189,7 @@ module Tartrazine
 
       # Note: Bold/italic font variants are not currently supported
       # We use the same font face for all tokens
+      @token_color_cache[token] = color
       {font_face, color}
     end
   end
