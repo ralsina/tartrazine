@@ -56,7 +56,9 @@ module Tartrazine
       # Render the content first so the document dimensions
       # can be derived from it
       content = String.build { |outp| format_text(text, lexer, outp) }
-      lines = text.split("\n")
+      # chomp: a single trailing newline terminates the last line
+      # rather than starting a nonexistent extra one
+      lines = text.chomp.split("\n")
       # Rough monospace advance width, good enough for the viewport
       char_width = (fs * 0.6).ceil.to_i
       padding = fs
@@ -86,23 +88,32 @@ module Tartrazine
       line_x = x
       line_x += 5 * ystep if line_numbers?
       tokenizer = lexer.tokenizer(text)
+      tokens = tokenizer.to_a
+      # Index of the last non-empty token: a trailing newline must not
+      # open a phantom last line
+      last_content_index = tokens.rindex { |token| !token[:value].empty? } || 0
+      line_open = true
       outp << line_label(i, x, y) if line_numbers?
       outp << %(<text x="#{line_x}" y="#{y}" xml:space="preserve">)
-      tokenizer.each do |token|
+      tokens.each_with_index do |token, index|
         if token[:value].ends_with? "\n"
           outp << "<tspan #{get_style(token[:type])}>#{HTML.escape(token[:value][0...-1])}</tspan>"
           outp << "</text>"
+          line_open = false
+          next if index >= last_content_index
           x = 0
           y += ystep
           i += 1
           outp << line_label(i, x, y) if line_numbers?
           outp << %(<text x="#{line_x}" y="#{y}" xml:space="preserve">)
+          line_open = true
         else
+          next if token[:value].empty?
           outp << "<tspan#{get_style(token[:type])}>#{HTML.escape(token[:value])}</tspan>"
           x += token[:value].size * ystep
         end
       end
-      outp << "</text>"
+      outp << "</text>" if line_open
     end
 
     # Given a token type, return the style.

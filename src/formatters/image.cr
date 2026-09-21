@@ -76,7 +76,9 @@ module Tartrazine
       font_face = load_font_face
 
       # Create canvas of correct size with padding
-      lines = text.split("\n")
+      # chomp: a single trailing newline terminates the last line
+      # rather than starting a nonexistent extra one
+      lines = text.chomp.split("\n")
       text_width = lines.max_of(&.size)
       text_width += 5 if line_numbers?
 
@@ -120,7 +122,11 @@ module Tartrazine
         x += 5 * char_width
       end
 
-      tokenizer.each do |token|
+      tokens = tokenizer.to_a
+      # Index of the last non-empty token: a trailing newline must not
+      # draw a phantom last line number
+      last_content_index = tokens.rindex { |token| !token[:value].empty? } || 0
+      tokens.each_with_index do |token, index|
         t = token[:value].rstrip("\n")
 
         # Get the color for this token
@@ -132,6 +138,9 @@ module Tartrazine
         drawer.draw_text(t, x, y)
 
         if token[:value].includes?("\n")
+          # A trailing newline terminates the last line rather than
+          # starting a nonexistent extra one
+          next if index >= last_content_index
           x = padding_left
           y += line_height
           i += 1

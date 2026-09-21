@@ -28,9 +28,12 @@ module Tartrazine
       # tokens follow, so a trailing newline doesn't produce a
       # phantom line number for a nonexistent last line
       tokens = tokenizer.to_a
+      # Index of the last non-empty token: a trailing newline must not
+      # emit a phantom line number for a nonexistent last line
+      last_content_index = tokens.rindex { |token| !token[:value].empty? } || 0
       tokens.each_with_index do |token, index|
         outp << colorize(token[:value], token[:type])
-        if token[:value].includes?("\n") && tokens[index + 1..].any? { |remaining| !remaining[:value].empty? }
+        if token[:value].includes?("\n") && index < last_content_index
           i += 1
           outp << line_label(i) if line_numbers?
         end

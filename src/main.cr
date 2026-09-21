@@ -61,6 +61,10 @@ HELP = <<-HELP
     -v, --version       Show version number
   HELP
 
+# Exit quietly when downstream readers (head, less, ...) close the
+# pipe instead of crashing with an IO::Error stack trace
+Signal::PIPE.trap { exit 0 }
+
 options = Docopt.docopt(HELP, ARGV)
 
 # Handle version manually
