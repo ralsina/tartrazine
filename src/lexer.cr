@@ -33,6 +33,15 @@ module Tartrazine
   @@lexer_templates = {} of String => LexerTemplate
   @@template_mutex = Mutex.new
 
+  # Cache of lexer instances. Lexers are immutable after creation
+  # (all tokenization state lives in the Tokenizer), so a single
+  # instance can be shared by every user.
+  @@lexer_cache = {} of String => BaseLexer
+  @@lexer_mutex = Mutex.new
+
+  # Lazily-parsed heuristics for lexer_by_content
+  @@heuristics : Linguist::Heuristic?
+
   # Get the lexer object for a language name
   def self.lexer(name : String? = nil, filename : String? = nil, mimetype : String? = nil) : BaseLexer
     return lexer_by_name(name) if name && name != "autodetect"
@@ -51,7 +60,11 @@ module Tartrazine
   end
 
   private def self.lexer_by_name(name : String) : BaseLexer
-    return CrystalLexer.new if name == "crystal"
+    if name == "crystal"
+      cached = @@lexer_cache["crystal"]?
+      return cached if cached
+      return @@lexer_mutex.synchronize { @@lexer_cache["crystal"] ||= CrystalLexer.new }
+    end
     lexer_file_name = LEXERS_BY_NAME.fetch(name.downcase, nil)
     return create_delegating_lexer(name) if lexer_file_name.nil? && name.includes? "+"
     raise Exception.new("Unknown lexer: #{name}") if lexer_file_name.nil?
@@ -89,8 +102,9 @@ module Tartrazine
   end
 
   private def self.lexer_by_content(fname : String) : String?
-    h = Linguist::Heuristic.from_yaml(LexerFiles.get("/heuristics.yml").gets_to_end)
-    result = h.run(fname, File.read(fname))
+    # Parsed once and shared: the heuristic rules never change
+    @@heuristics ||= Linguist::Heuristic.from_yaml(LexerFiles.get("/heuristics.yml").gets_to_end)
+    result = @@heuristics.as(Linguist::Heuristic).run(fname, File.read(fname))
     case result
     when Nil
       raise Exception.new "No lexer found for #{fname}"
@@ -102,28 +116,39 @@ module Tartrazine
   end
 
   private def self.create_delegating_lexer(name : String) : BaseLexer
+    cached = @@lexer_cache[name]?
+    return cached if cached
     language, root = name.split("+", 2)
-    language_lexer = lexer(language)
-    root_lexer = lexer(root)
-    DelegatingLexer.new(language_lexer, root_lexer)
+    lexer = DelegatingLexer.new(lexer(language), lexer(root))
+    @@lexer_cache[name] = lexer
+    lexer
   end
 
-  # Create a fresh lexer instance from cached template data
+  # Create a lexer instance from cached template data, caching the
+  # instance itself (lexers are immutable after creation)
   private def self.create_from_template(lexer_file_name : String) : BaseLexer
-    template = get_or_create_template(lexer_file_name)
+    cached = @@lexer_cache[lexer_file_name]?
+    return cached if cached
+    @@lexer_mutex.synchronize do
+      cached = @@lexer_cache[lexer_file_name]?
+      return cached if cached
 
-    # Create fresh lexer instance with cached data
-    lexer = RegexLexer.new
-    lexer.config = {
-      name:             template.config[:name].as(String),
-      priority:         template.config[:priority].as(Float64),
-      case_insensitive: template.config[:case_insensitive].as(Bool),
-      dot_all:          template.config[:dot_all].as(Bool),
-      not_multiline:    template.config[:not_multiline].as(Bool),
-      ensure_nl:        template.config[:ensure_nl].as(Bool),
-    }
-    lexer.states = template.states
-    lexer
+      template = get_or_create_template(lexer_file_name)
+
+      # Create lexer instance with cached data
+      lexer = RegexLexer.new
+      lexer.config = {
+        name:             template.config[:name].as(String),
+        priority:         template.config[:priority].as(Float64),
+        case_insensitive: template.config[:case_insensitive].as(Bool),
+        dot_all:          template.config[:dot_all].as(Bool),
+        not_multiline:    template.config[:not_multiline].as(Bool),
+        ensure_nl:        template.config[:ensure_nl].as(Bool),
+      }
+      lexer.states = template.states
+      @@lexer_cache[lexer_file_name] = lexer
+      lexer
+    end
   end
 
   # Get or create a lexer template with thread-safe caching
@@ -259,6 +284,21 @@ module Tartrazine
     # kept off the shared lexer template to avoid unbounded growth
     @local_states = {} of String => State
 
+    # Memoized Combined states for this tokenization, keyed by the
+    # combined state names, so repeated Combined actions with the
+    # same states reuse the merged rules
+    @combined_states = {} of Array(String) => State
+
+    # Get (or create once) the merged state for a Combined action
+    def combined_state(names : Array(String)) : State
+      cached = @combined_states[names]?
+      return cached if cached
+      new_state = names.map { |name| state_for(name) }.reduce { |state1, state2| state1 + state2 }
+      remember_state(new_state)
+      @combined_states[names] = new_state
+      new_state
+    end
+
     # Resolve a state by name, preferring locally created states.
     # Results are cached because lookups happen on every step.
     def state_for(name : String) : State
@@ -341,15 +381,16 @@ module Tartrazine
 
       split_tokens = [] of Token
       tokens.each do |token|
-        unless token[:value].byte_index('\n'.ord)
-          split_tokens << token
-          next
+        bytes = token[:value].to_slice
+        start = 0
+        # Each newline ends a token that includes it; a final
+        # (possibly empty) token always follows, matching the
+        # previous value.split("\n") behavior
+        while index = bytes.index('\n'.ord, start)
+          split_tokens << {type: token[:type], value: String.new(bytes[start, index + 1 - start])}
+          start = index + 1
         end
-        values = token[:value].split("\n")
-        values.each_with_index do |value, index|
-          value += "\n" if index < values.size - 1
-          split_tokens << {type: token[:type], value: value}
-        end
+        split_tokens << {type: token[:type], value: String.new(bytes[start, bytes.size - start])}
       end
       split_tokens
     end
@@ -390,44 +431,55 @@ module Tartrazine
     # and smaller output
     def self.collapse_tokens(tokens : Array(Tartrazine::Token)) : Array(Tartrazine::Token)
       result = [] of Tartrazine::Token
-      tokens = tokens.reject { |token| token[:value] == "" }
+      # Merge same-type runs via a builder so long runs don't
+      # reallocate a concatenated string per token
+      accumulated = String::Builder.new
+      accumulating = false
+      accumulated_type = ""
       tokens.each do |token|
-        if result.empty?
-          result << token
+        next if token[:value] == ""
+        if accumulating && accumulated_type == token[:type]
+          accumulated << token[:value]
           next
         end
-        last = result.last
-        if last[:type] == token[:type]
-          new_token = {type: last[:type], value: last[:value] + token[:value]}
-          result.pop
-          result << new_token
-        else
-          result << token
-        end
+        result << {type: accumulated_type, value: accumulated.to_s} if accumulating
+        accumulated = String::Builder.new
+        accumulated_type = token[:type]
+        accumulated << token[:value]
+        accumulating = true
       end
+      result << {type: accumulated_type, value: accumulated.to_s} if accumulating
       result
     end
 
-    # Return file extensions for this XML lexer
+    # Return file extensions for this XML lexer. The XML parse is
+    # memoized per lexer name since extensions never change.
+    @@extensions_cache = {} of String => Array(String)
+
     def extensions : Array(String)
       return [] of String unless @config[:name]?
 
+      cached = @@extensions_cache[@config[:name]]?
+      return cached if cached
+      @@extensions_cache[@config[:name]] = parse_extensions
+    end
+
+    private def parse_extensions : Array(String)
       # Try to find the XML file for this lexer
-      begin
-        lexer_file_name = LEXERS_BY_NAME[@config[:name]]?
-        return [] of String unless lexer_file_name
 
-        xml_content = LexerFiles.get("/#{lexer_file_name}.xml").gets_to_end
-        xml = XML.parse(xml_content)
+      lexer_file_name = LEXERS_BY_NAME[@config[:name]]?
+      return [] of String unless lexer_file_name
 
-        xml.first_element_child.try do |root|
-          root.children.find { |node| node.name == "config" }.try do |config|
-            config.children.select { |node| node.name == "filename" }.map(&.content.to_s)
-          end
-        end || [] of String
-      rescue
-        [] of String
-      end
+      xml_content = LexerFiles.get("/#{lexer_file_name}.xml").gets_to_end
+      xml = XML.parse(xml_content)
+
+      xml.first_element_child.try do |root|
+        root.children.find { |node| node.name == "config" }.try do |config|
+          config.children.select { |node| node.name == "filename" }.map(&.content.to_s)
+        end
+      end || [] of String
+    rescue
+      [] of String
     end
 
     def self.from_xml(xml : String) : Lexer
@@ -525,21 +577,20 @@ module Tartrazine
     end
 
     def next : Iterator::Stop | Token
-      if @dq.size > 0
-        return @dq.shift
-      end
-      token = @language_tokenizer.next
-      if token.is_a? Iterator::Stop
-        return stop
-      elsif token.as(Token).[:type] == "Other"
-        root_tokenizer = @lexer.root_lexer.tokenizer(token.as(Token).[:value], true)
-        root_tokenizer.each do |root_token|
-          @dq << root_token
+      loop do
+        return @dq.shift if @dq.size > 0
+        token = @language_tokenizer.next
+        if token.is_a? Iterator::Stop
+          return stop
+        elsif token.as(Token).[:type] == "Other"
+          root_tokenizer = @lexer.root_lexer.tokenizer(token.as(Token).[:value], true)
+          root_tokenizer.each do |root_token|
+            @dq << root_token
+          end
+        else
+          @dq << token.as(Token)
         end
-      else
-        @dq << token.as(Token)
       end
-      self.next
     end
   end
 

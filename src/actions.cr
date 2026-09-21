@@ -127,12 +127,7 @@ module Tartrazine
           secondary: true).to_a
       when ActionType::Combined
         # Combine two or more states into one anonymous state
-        new_state = @states.map do |name|
-          tokenizer.state_for(name)
-        end.reduce do |state1, state2|
-          state1 + state2
-        end
-        tokenizer.remember_state(new_state)
+        new_state = tokenizer.combined_state(@states)
         tokenizer.state_stack << new_state.name
       when ActionType::Usingbygroup
         # Shunt to content-specified lexer

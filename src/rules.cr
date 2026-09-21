@@ -22,17 +22,22 @@ module Tartrazine
     getter text : Bytes
 
     @bounds : Slice(Int32)
+    @count : Int32
 
-    def initialize(@text : Bytes, @bounds : Slice(Int32))
+    def initialize(@text : Bytes, @bounds : Slice(Int32), count : Int32 = -1)
+      # The bounds slice may be a reused scratch buffer larger than
+      # this match's group count; count entries are meaningful
+      @count = count < 0 ? @bounds.size : count
     end
 
     # View over an empty match, for rules that match unconditionally
     def initialize(@text : Bytes)
       @bounds = Slice(Int32).new(0)
+      @count = 0
     end
 
     def size : Int32
-      @bounds.size // 2
+      @count // 2
     end
 
     def group_start(index : Int32) : Int32
@@ -41,6 +46,13 @@ module Tartrazine
 
     def group_end(index : Int32) : Int32
       @bounds[2 * index + 1]
+    end
+
+    # Whether the group matched anything, without copying the bytes
+    def group_empty?(index : Int32) : Bool
+      return true if index >= size
+      start = group_start(index)
+      start < 0 || start >= group_end(index)
     end
 
     def group(index : Int32) : Bytes
@@ -58,7 +70,7 @@ module Tartrazine
 
   EMPTY_TOKENS = [] of Token
 
-  abstract struct BaseRule
+  abstract class BaseRule
     abstract def match(text : Bytes, pos : Int32, tokenizer : Tokenizer) : Tuple(Bool, Int32, Array(Token))
 
     @actions : Array(Action) = [] of Action
@@ -71,16 +83,38 @@ module Tartrazine
     end
   end
 
-  struct Rule < BaseRule
+  class Rule < BaseRule
     property pattern : Regex = Regex.new ""
+
+    # Scratch accumulator reused across matches. Guarded by @busy
+    # because a usingself action can run this same rule reentrantly;
+    # the reentrant call gets fresh scratch instead.
+    @tokens = [] of Token
+    @bounds = Slice(Int32).new(8)
+    @busy = false
 
     def match(text : Bytes, pos, tokenizer) : Tuple(Bool, Int32, Array(Token))
       rc = pattern.match!(text, pos)
 
       # No match
       return false, pos, EMPTY_TOKENS if rc == 0
-      view = MatchDataView.new(text, pattern.snapshot_ovector(text.bytesize))
-      return true, view.group_end(0), @actions.flat_map(&.emit(view, tokenizer))
+      if @busy
+        view = MatchDataView.new(text, pattern.snapshot_ovector(text.bytesize))
+        tokens = [] of Token
+        @actions.each(&.emit(view, tokenizer, tokens))
+      else
+        @bounds = pattern.snapshot_ovector(text.bytesize, @bounds)
+        view = MatchDataView.new(text, @bounds, rc * 2)
+        tokens = @tokens
+        tokens.clear
+        @busy = true
+        begin
+          @actions.each(&.emit(view, tokenizer, tokens))
+        ensure
+          @busy = false
+        end
+      end
+      return true, view.group_end(0), tokens
     end
 
     def initialize(node : XML::Node, multiline, dotall, ignorecase)
@@ -94,11 +128,20 @@ module Tartrazine
 
   # This rule includes another state. If any of the rules of the
   # included state matches, this rule matches.
-  struct IncludeStateRule < BaseRule
+  class IncludeStateRule < BaseRule
     @state : String = ""
 
+    # Resolved on first match: states are fixed after template parse,
+    # so the name lookup only needs to happen once
+    @resolved : State? = nil
+
     def match(text : Bytes, pos : Int32, tokenizer : Tokenizer) : Tuple(Bool, Int32, Array(Token))
-      tokenizer.state_for(@state).rules.each do |rule|
+      state = @resolved
+      unless state
+        state = tokenizer.state_for(@state)
+        @resolved = state
+      end
+      state.rules.each do |rule|
         matched, new_pos, new_tokens = rule.match(text, pos, tokenizer)
         return true, new_pos, new_tokens if matched
       end
@@ -115,11 +158,16 @@ module Tartrazine
   end
 
   # This rule always matches, unconditionally
-  struct UnconditionalRule < BaseRule
+  class UnconditionalRule < BaseRule
     NO_MATCH = MatchDataView.new(Bytes.empty)
 
+    @tokens = [] of Token
+
     def match(text, pos, tokenizer) : Tuple(Bool, Int32, Array(Token))
-      return true, pos, @actions.flat_map(&.emit(NO_MATCH, tokenizer))
+      tokens = @tokens
+      tokens.clear
+      @actions.each(&.emit(NO_MATCH, tokenizer, tokens))
+      return true, pos, tokens
     end
 
     def initialize(node : XML::Node)

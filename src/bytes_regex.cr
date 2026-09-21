@@ -40,12 +40,22 @@ module BytesRegex
     # sanitizing non-participating groups (marked by PCRE2 with an
     # unset value) to -1. The snapshot stays valid even if this
     # regex is matched again (eg. by reentrant tokenization).
-    def snapshot_ovector(text_bytesize : Int32) : Slice(Int32)
+    # When `into` is given and large enough it is filled and
+    # returned instead of allocating; the caller then needs the
+    # group count (group_count * 2) since the slice may be larger.
+    def snapshot_ovector(text_bytesize : Int32, into : Slice(Int32)? = nil) : Slice(Int32)
+      needed = @last_rc * 2
       ovector = LibPCRE2.get_ovector_pointer(@match_data)
-      Slice(Int32).new(@last_rc * 2) do |index|
+      buffer = if into && into.size >= needed
+                 into
+               else
+                 Slice(Int32).new(needed)
+               end
+      needed.times do |index|
         raw = ovector[index]
-        raw > text_bytesize ? -1 : raw.to_i32
+        buffer[index] = raw > text_bytesize ? -1 : raw.to_i32
       end
+      buffer
     end
 
     # Run a match and return the number of captured groups,
