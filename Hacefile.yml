@@ -57,6 +57,17 @@ tasks:
     phony: true
     always_run: true
 
+  perf:
+    dependencies:
+      - src
+      - spec
+      - shard.lock
+      - shard.yml
+    commands: |
+      TT_PERF=1 crystal spec spec/perf_spec.cr
+    phony: true
+    always_run: true
+
   lint:
     dependencies:
       - src
