@@ -1,5 +1,18 @@
+lib LibPCRE2
+  fun jit_match = pcre2_jit_match_8(code : Code*, subject : UInt8*,
+                                    length : LibC::SizeT, startoffset : LibC::SizeT, options : UInt32,
+                                    match_data : MatchData*, mcontext : MatchContext*) : Int
+end
+
 module BytesRegex
   extend self
+
+  # Shared JIT stack used by all regexes in this process
+  @@jit_stack : LibPCRE2::JITStack*?
+
+  def self.jit_stack : LibPCRE2::JITStack*
+    @@jit_stack ||= LibPCRE2.jit_stack_create(32_768, 1_048_576, nil)
+  end
 
   class Regex
     def initialize(pattern : String, multiline = false, dotall = false, ignorecase = false, anchored = false)
@@ -24,6 +37,11 @@ module BytesRegex
       end
       @match_data = LibPCRE2.match_data_create_from_pattern(@re, nil)
       @last_rc = 0
+      @jit = LibPCRE2.jit_compile(@re, LibPCRE2::JIT_COMPLETE) == 0
+      @context = LibPCRE2.match_context_create(nil)
+      if @context
+        LibPCRE2.jit_stack_assign(@context, ->(_data : Void*) { BytesRegex.jit_stack }, nil)
+      end
     end
 
     def finalize
@@ -62,14 +80,32 @@ module BytesRegex
     # or 0 if there was no match. Results stay available through
     # group_start/group_end until the next match on this Regex.
     def match!(text : Bytes, pos = 0) : Int32
-      rc = LibPCRE2.match(
-        @re,
-        text,
-        text.size,
-        pos,
-        LibPCRE2::NO_UTF_CHECK,
-        @match_data,
-        nil)
+      if @jit && @context
+        rc = LibPCRE2.jit_match(
+          @re,
+          text,
+          text.size,
+          pos,
+          LibPCRE2::NO_UTF_CHECK,
+          @match_data,
+          @context)
+        # Fall back to the interpreter on JIT runtime errors
+        # (-1 is just "no match")
+        if rc < -1
+          rc = LibPCRE2.match(
+            @re, text, text.size, pos,
+            LibPCRE2::NO_UTF_CHECK, @match_data, nil)
+        end
+      else
+        rc = LibPCRE2.match(
+          @re,
+          text,
+          text.size,
+          pos,
+          LibPCRE2::NO_UTF_CHECK,
+          @match_data,
+          nil)
+      end
       @last_rc = rc > 0 ? rc : 0
     end
 
