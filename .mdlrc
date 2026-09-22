@@ -2,4 +2,6 @@
 # reference URLs that cannot be wrapped.
 # MD029 (ordered list item prefix) is disabled because CommonMark
 # renders incremental numbering from any prefix.
-rules "~MD013", "~MD029"
+# MD024 (duplicate headers) is disabled because changelog sections
+# legitimately repeat (### Bug Fixes etc.) across versions.
+rules "~MD013", "~MD024", "~MD029"

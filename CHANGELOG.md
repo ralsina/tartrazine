@@ -2,6 +2,14 @@
 
 All notable changes to this project will be documented in this file.
 
+## [0.25.0] - 2026-09-22
+
+### ⚡ Performance
+
+- Use PCRE2 JIT for lexer rule matching (with interpreter fallback):
+  C header tokenization -34%, python -21%, html -19%, jinja+python
+  -14%, markdown -10%; end-to-end HTML formatting about 15% faster
+
 ## [0.24.0] - 2026-09-21
 
 ### ⚡ Performance
