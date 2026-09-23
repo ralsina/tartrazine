@@ -83,9 +83,10 @@ module Tartrazine
     end
 
     private def line_label(i : Int32) : String
-      line_label = "#{i + 1}".rjust(4).ljust(5)
+      line_number = @line_number_start + i
+      line_label = "#{line_number}".rjust(4).ljust(5)
       line_class = highlighted?(i + 1) ? "class=\"#{get_css_class("LineHighlight")}\"" : ""
-      line_id = linkable_line_numbers? ? "id=\"#{line_number_id_prefix}#{i + 1}\"" : ""
+      line_id = linkable_line_numbers? ? "id=\"#{line_number_id_prefix}#{line_number}\"" : ""
       "<span #{line_id} #{line_class} style=\"user-select: none;\">#{line_label} </span>"
     end
 

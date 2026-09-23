@@ -79,9 +79,10 @@ module Tartrazine
     end
 
     private def line_label(i : Int32, x : Int32, y : Int32) : String
-      line_label = "#{i + 1}".rjust(4).ljust(5)
+      line_number = @line_number_start + i
+      line_label = "#{line_number}".rjust(4).ljust(5)
       line_style = highlighted?(i + 1) ? "font-weight=\"#{@weight_of_bold}\"" : ""
-      line_id = linkable_line_numbers? ? "id=\"#{line_number_id_prefix}#{i + 1}\"" : ""
+      line_id = linkable_line_numbers? ? "id=\"#{line_number_id_prefix}#{line_number}\"" : ""
       %(<text #{line_style} #{line_id}  x="#{4*ystep}" y="#{y}" text-anchor="end">#{line_label}</text>)
     end
 

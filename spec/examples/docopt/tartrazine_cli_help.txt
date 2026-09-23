@@ -7,11 +7,13 @@ Keep in mind that not all formatters support all features.
 Usage:
   tartrazine (-h, --help)
   tartrazine FILE -f html [-t theme][--standalone [--template file]]
-                          [--line-numbers][-l lexer][-o output][--light|--dark]
+                          [--line-numbers][--line-number-start <n>][--highlight-lines <ranges>]
+                          [-l lexer][-o output][--light|--dark]
   tartrazine -f html -t theme --css
   tartrazine FILE -f terminal [-t theme][-l lexer][--line-numbers]
                               [-o output][--light|--dark]
   tartrazine FILE -f svg  [-t theme][--standalone][--line-numbers]
+                          [--line-number-start <n>][--highlight-lines <ranges>]
                           [-l lexer][-o output][--light|--dark]
   tartrazine FILE -f png  [-t theme][--line-numbers]
                           [-l lexer][-o output][--font-path path][--font-size size][--width w][--height h][--light|--dark]
@@ -45,6 +47,8 @@ Options:
                       (works with html and highlights formatters)
   --template <file>   Use a custom template for the HTML output [default: none]
   --line-numbers      Include line numbers in the output
+  --line-number-start <n>  First line number for line numbers
+  --highlight-lines <ranges>  Lines to highlight, e.g. 3-5,7
   --font-path <path>  Path to TrueType/OpenType font file (.ttf or .otf) for image output
                       (default: bundled JetBrains Mono)
   --font-size <size>  Font point size for image output (e.g. 14) [default: 14]

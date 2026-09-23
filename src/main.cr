@@ -11,11 +11,13 @@ HELP = <<-HELP
   Usage:
     tartrazine (-h, --help)
     tartrazine FILE -f html [-t theme][--standalone [--template file]]
-                            [--line-numbers][-l lexer][-o output][--light|--dark]
+                            [--line-numbers][--line-number-start <n>][--highlight-lines <ranges>]
+                            [-l lexer][-o output][--light|--dark]
     tartrazine -f html -t theme --css
     tartrazine FILE -f terminal [-t theme][-l lexer][--line-numbers]
                                 [-o output][--light|--dark]
     tartrazine FILE -f svg  [-t theme][--standalone][--line-numbers]
+                            [--line-number-start <n>][--highlight-lines <ranges>]
                             [-l lexer][-o output][--light|--dark]
     tartrazine FILE -f png  [-t theme][--line-numbers]
                             [-l lexer][-o output][--font-path path][--font-size size][--width w][--height h][--light|--dark]
@@ -49,6 +51,8 @@ HELP = <<-HELP
                         (works with html and highlights formatters)
     --template <file>   Use a custom template for the HTML output [default: none]
     --line-numbers      Include line numbers in the output
+    --line-number-start <n>  First line number for line numbers
+    --highlight-lines <ranges>  Lines to highlight, e.g. 3-5,7
     --font-path <path>  Path to TrueType/OpenType font file (.ttf or .otf) for image output
                         (default: bundled JetBrains Mono)
     --font-size <size>  Font point size for image output (e.g. 14) [default: 14]
@@ -151,6 +155,22 @@ begin
     template = nil
   end
 
+  # Line number start and highlighted line ranges, applied to the
+  # formatters that support them
+  line_number_start = options["--line-number-start"].try(&.to_s.to_i) || 1
+  highlight_lines = Array(Range(Int32, Int32)).new
+  if ranges = options["--highlight-lines"]?
+    ranges.to_s.split(",").each do |part|
+      next if part.empty?
+      highlight_lines << if dash = part.index('-')
+        (part[0...dash].to_i..part[(dash + 1)..].to_i)
+      else
+        number = part.to_i
+        (number..number)
+      end
+    end
+  end
+
   if options["-f"]
     formatter_name = options["-f"].as(String)
     formatter = uninitialized Tartrazine::Formatter
@@ -159,11 +179,19 @@ begin
       formatter = Tartrazine::Html.new
       formatter.standalone = options["--standalone"] != nil
       formatter.line_numbers = options["--line-numbers"] != nil
+      if formatter.responds_to?(:line_number_start=)
+        formatter.line_number_start = line_number_start
+        formatter.highlight_lines = highlight_lines
+      end
       formatter.theme = theme
       formatter.template = template if template
     when "terminal"
       formatter = Tartrazine::Ansi.new
       formatter.line_numbers = options["--line-numbers"] != nil
+      if formatter.responds_to?(:line_number_start=)
+        formatter.line_number_start = line_number_start
+        formatter.highlight_lines = highlight_lines
+      end
       formatter.theme = theme
     when "json"
       formatter = Tartrazine::Json.new
@@ -171,6 +199,10 @@ begin
       formatter = Tartrazine::Svg.new
       formatter.standalone = options["--standalone"] != nil
       formatter.line_numbers = options["--line-numbers"] != nil
+      if formatter.responds_to?(:line_number_start=)
+        formatter.line_number_start = line_number_start
+        formatter.highlight_lines = highlight_lines
+      end
       formatter.theme = theme
     when "png", "jpeg", "webp"
       font_path = options["--font-path"]?.try &.as(String)
@@ -278,6 +310,10 @@ begin
       formatter = Tartrazine::Highlights.new
       formatter.standalone = options["--standalone"] != nil
       formatter.line_numbers = options["--line-numbers"] != nil
+      if formatter.responds_to?(:line_number_start=)
+        formatter.line_number_start = line_number_start
+        formatter.highlight_lines = highlight_lines
+      end
       formatter.theme = theme
       formatter.template = template if template
     else

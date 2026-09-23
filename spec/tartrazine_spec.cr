@@ -120,6 +120,24 @@ describe Tartrazine do
     end
   end
 
+  describe "line number options" do
+    it "starts line numbers at line_number_start" do
+      lexer = Tartrazine.lexer("python")
+      formatter = Tartrazine::Html.new(line_numbers: true, line_number_start: 10)
+      output = formatter.format("a = 1\n", lexer)
+      output.should contain("line-10")
+      output.should_not contain("line-1\"")
+    end
+
+    it "highlights the configured lines" do
+      lexer = Tartrazine.lexer("python")
+      formatter = Tartrazine::Html.new(line_numbers: true, highlight_lines: [2..3])
+      output = formatter.format("a = 1\nb = 2\nc = 3\n", lexer)
+      # Lines 2 and 3 carry the LineHighlight class, line 1 does not
+      output.scan(/class="lh"/).size.should eq 2
+    end
+  end
+
   describe "utf8" do
     it "does not crash on invalid UTF-8 input" do
       # Regexes are compiled with UTF mode and NO_UTF_CHECK, which is

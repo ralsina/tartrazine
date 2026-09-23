@@ -104,7 +104,7 @@ module Tartrazine
     end
 
     private def line_label(i : Int32) : String
-      line_label = "#{i + 1}".rjust(4).ljust(5)
+      line_label = "#{@line_number_start + i}".rjust(4).ljust(5)
       "#{line_label} "
     end
 
