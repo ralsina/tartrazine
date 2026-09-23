@@ -231,16 +231,6 @@ module Tartrazine
       cached = @name_cache[token]?
       return cached if cached
 
-      if !theme.styles.has_key? token
-        # Themes don't contain information for each specific
-        # token type. However, they may contain information
-        # for a parent style. Worst case, we go to the root
-        # (Background) style.
-        parent = theme.style_parents(token).reverse.find do |dad|
-          theme.styles.has_key?(dad)
-        end
-        theme.styles[token] = theme.styles[parent]
-      end
       @name_cache[token] = class_prefix + Abbreviations[token]
     end
   end

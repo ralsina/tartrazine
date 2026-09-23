@@ -15,7 +15,7 @@ module Tartrazine
 
     # Cache of token type → (escape prefix, reset suffix), built
     # once per type instead of a Colorize::Object per token
-    @style_cache = {} of String => Tuple(String, String)
+    @escape_cache = {} of String => Tuple(String, String)
 
     def initialize(@theme : Theme = Tartrazine.theme("default-dark"), @line_numbers : Bool = false)
     end
@@ -32,7 +32,7 @@ module Tartrazine
       # content follows, so a trailing newline doesn't produce a
       # phantom line number for a nonexistent last line
       TokenStream.new(tokenizer).each do |token, more_content|
-        prefix, reset = style_for(token[:type])
+        prefix, reset = escape_pair(token[:type])
         outp << prefix << token[:value] << reset
         if token[:value].includes?("\n") && more_content
           i += 1
@@ -44,23 +44,11 @@ module Tartrazine
     # Resolve the ANSI escape pair for a token type, caching the
     # result. The pair is derived from a Colorize sample on an empty
     # string, so the emitted bytes match a per-token colorize call.
-    private def style_for(token : String) : Tuple(String, String)
-      cached = @style_cache[token]?
+    private def escape_pair(token : String) : Tuple(String, String)
+      cached = @escape_cache[token]?
       return cached if cached
 
-      if theme.styles.has_key?(token)
-        style = theme.styles[token]
-      else
-        # Themes don't contain information for each specific
-        # token type. However, they may contain information
-        # for a parent style. Worst case, we go to the root
-        # (Background) style.
-        parent = theme.style_parents(token).reverse.find do |dad|
-          theme.styles.has_key?(dad)
-        end
-        style = theme.styles[parent]
-        theme.styles[token] = style
-      end
+      style = style_for(token)
 
       colorized = "".colorize
       # Always emit ANSI codes: this is an explicit request for ANSI
@@ -80,7 +68,7 @@ module Tartrazine
                else
                  {"", ""}
                end
-      @style_cache[token] = result
+      @escape_cache[token] = result
       result
     end
   end

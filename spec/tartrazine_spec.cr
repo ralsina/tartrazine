@@ -120,6 +120,18 @@ describe Tartrazine do
     end
   end
 
+  describe "theme handling" do
+    it "does not mutate the theme when formatting" do
+      theme = Tartrazine.theme("default-dark")
+      size_before = theme.styles.size
+      defs_before = Tartrazine::Html.new(theme: theme).style_defs
+      formatter = Tartrazine::Html.new(theme: theme)
+      formatter.format("def x\nend\n", Tartrazine.lexer("ruby"))
+      theme.styles.size.should eq size_before
+      formatter.style_defs.should eq defs_before
+    end
+  end
+
   describe "line number options" do
     it "starts line numbers at line_number_start" do
       lexer = Tartrazine.lexer("python")

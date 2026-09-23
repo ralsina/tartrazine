@@ -30,7 +30,7 @@ module Tartrazine
 
     # Cache of token type → tspan style attributes, built once
     # per type instead of a String.build per token
-    @style_cache = {} of String => String
+    @attr_cache = {} of String => String
 
     def initialize(@theme : Theme = Tartrazine.theme("default-dark"), *,
                    @highlight_lines = [] of Range(Int32, Int32),
@@ -131,21 +131,11 @@ module Tartrazine
 
     # Given a token type, return the style.
     def get_style(token : String) : String
-      cached = @style_cache[token]?
+      cached = @attr_cache[token]?
       return cached if cached
 
-      if !theme.styles.has_key? token
-        # Themes don't contain information for each specific
-        # token type. However, they may contain information
-        # for a parent style. Worst case, we go to the root
-        # (Background) style.
-        parent = theme.style_parents(token).reverse.find do |dad|
-          theme.styles.has_key?(dad)
-        end
-        theme.styles[token] = theme.styles[parent]
-      end
       output = String.build do |outp|
-        style = theme.styles[token]
+        style = style_for(token)
         outp << " fill=\"##{style.color.try &.hex}\"" if style.color
         # No support for background color or border in SVG
 
@@ -156,7 +146,7 @@ module Tartrazine
         outp << " text-decoration=\"underline\"" if style.underline
         outp << " text-decoration=\"none\"" if style.underline == false
       end
-      @style_cache[token] = output
+      @attr_cache[token] = output
     end
   end
 end

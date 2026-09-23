@@ -170,17 +170,7 @@ module Tartrazine
       cached = @token_color_cache[token]?
       return {font_face, cached} if cached
 
-      if theme.styles.has_key?(token)
-        s = theme.styles[token]
-      else
-        # Themes don't contain information for each specific
-        # token type. However, they may contain information
-        # for a parent style. Worst case, we go to the root
-        # (Background) style.
-        s = theme.styles[theme.style_parents(token).reverse.find do |parent|
-          theme.styles.has_key?(parent)
-        end]
-      end
+      s = style_for(token)
 
       # Get the default text color
       color = hex_to_color(theme.styles["Background"].color.try &.hex)

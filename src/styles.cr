@@ -31,135 +31,70 @@ module Tartrazine
     {% end %}
   end
 
+  # Try to load an XML theme file; nil if missing or broken
+  private def self.xml_theme(file_name : String) : Theme?
+    Theme.from_xml(ThemeFiles.get("/#{file_name}.xml").gets_to_end)
+  rescue
+    nil
+  end
+
+  # Try the base16 light/dark variant of a theme. Only "theme not
+  # found" counts as a normal miss; other errors propagate.
+  private def self.base16_variant(base_name : String, wanted : String) : Theme?
+    sixteen_theme = wanted == "light" ? Sixteen.light_variant(base_name) : Sixteen.dark_variant(base_name)
+    Theme.from_base16(sixteen_theme.name)
+  rescue ex : Exception
+    raise ex unless ex.message.try &.includes? "Theme not found"
+    nil
+  end
+
+  # Try the base16 light/dark variant of a theme, kept under the
+  # requested name; nil if unavailable
+  private def self.sixteen_variant(name : String, wanted : String?) : Theme?
+    return unless wanted == "light" || wanted == "dark"
+    sixteen_theme = wanted == "light" ? Sixteen.light_variant(name) : Sixteen.dark_variant(name)
+    create_theme_from_sixteen(sixteen_theme, name)
+  rescue
+    nil
+  end
+
   def self.theme(name : String, variant : String? = nil) : Theme
-    # Normalize theme name by removing variant suffixes for base theme detection
     base_name = name.gsub(/-light$|-dark$/, "")
+    wanted = variant.try &.downcase
 
-    # Handle variant preference for base16 themes
-    if variant
-      case variant.downcase
-      when "light"
-        # Special handling for Catppuccin
-        if base_name == "catppuccin"
-          begin
-            return Theme.from_xml(ThemeFiles.get("/catppuccin-latte.xml").gets_to_end)
-          rescue
-            # Fallback to base16 if XML variant not found
-            begin
-              light_theme = Sixteen.light_variant(base_name)
-              return Theme.from_base16(light_theme.name)
-            rescue ex : Exception
-              raise ex unless ex.message.try &.includes? "Theme not found"
-            end
-          end
+    flavor = wanted == "light" ? "light" : (wanted == "dark" ? "dark" : nil)
+    if flavor
+      # Catppuccin keeps its variants in dedicated XML files
+      if base_name == "catppuccin"
+        special = wanted == "light" ? "catppuccin-latte" : "catppuccin-mocha"
+        if theme = xml_theme(special) || base16_variant(base_name, flavor)
+          return theme
         end
+      end
 
-        # Check if the requested theme is already the light variant
-        if name.ends_with?("-light")
-          begin
-            return Theme.from_xml(ThemeFiles.get("/#{name}.xml").gets_to_end)
-          rescue
-            # Continue with normal logic
-          end
-        end
+      # The requested name may already be the variant, or the theme
+      # may have an explicit variant file, a base file, or a base16
+      # variant, in that order of preference
+      if name.ends_with?("-#{flavor}") && (theme = xml_theme(name))
+        return theme
+      end
 
-        # For other themes, check if XML variant exists
-        xml_light_name = "#{base_name}-light"
-        begin
-          return Theme.from_xml(ThemeFiles.get("/#{xml_light_name}.xml").gets_to_end)
-        rescue
-          # Variant doesn't exist, try to load the base theme as fallback
-          begin
-            return Theme.from_xml(ThemeFiles.get("/#{base_name}.xml").gets_to_end)
-          rescue
-            # Fallback to base16 if base XML theme also doesn't exist
-            begin
-              light_theme = Sixteen.light_variant(base_name)
-              return Theme.from_base16(light_theme.name)
-            rescue ex : Exception
-              raise ex unless ex.message.try &.includes? "Theme not found"
-            end
-          end
-        end
-      when "dark"
-        # Special handling for Catppuccin
-        if base_name == "catppuccin"
-          begin
-            return Theme.from_xml(ThemeFiles.get("/catppuccin-mocha.xml").gets_to_end)
-          rescue
-            # Fallback to base16 if XML variant not found
-            begin
-              dark_theme = Sixteen.dark_variant(base_name)
-              return Theme.from_base16(dark_theme.name)
-            rescue ex : Exception
-              raise ex unless ex.message.try &.includes? "Theme not found"
-            end
-          end
-        end
-
-        # Check if the requested theme is already the dark variant
-        if name.ends_with?("-dark")
-          begin
-            return Theme.from_xml(ThemeFiles.get("/#{name}.xml").gets_to_end)
-          rescue
-            # Continue with normal logic
-          end
-        end
-
-        # For other themes, check if XML variant exists
-        xml_dark_name = "#{base_name}-dark"
-        begin
-          return Theme.from_xml(ThemeFiles.get("/#{xml_dark_name}.xml").gets_to_end)
-        rescue
-          # Variant doesn't exist, try to load the base theme as fallback
-          begin
-            return Theme.from_xml(ThemeFiles.get("/#{base_name}.xml").gets_to_end)
-          rescue
-            # Fallback to base16 if base XML theme also doesn't exist
-            begin
-              dark_theme = Sixteen.dark_variant(base_name)
-              return Theme.from_base16(dark_theme.name)
-            rescue ex : Exception
-              raise ex unless ex.message.try &.includes? "Theme not found"
-            end
-          end
-        end
+      if theme = xml_theme("#{base_name}-#{flavor}") ||
+                 xml_theme(base_name) ||
+                 base16_variant(base_name, flavor)
+        return theme
       end
     end
 
-    # Original theme loading logic - prefer XML themes first, then fallback to base16
-    begin
-      Theme.from_xml(ThemeFiles.get("/#{name}.xml").gets_to_end)
-    rescue ex : Exception
-      # XML theme not found, try base16
-      begin
-        if variant
-          # Try to load the specific variant first (sixteen auto-generates if needed)
-          case variant.downcase
-          when "light"
-            begin
-              light_theme = Sixteen.light_variant(name)
-              # Create theme directly from the variant theme object
-              return create_theme_from_sixteen(light_theme, name)
-            rescue
-              # If light variant fails, continue to base theme
-            end
-          when "dark"
-            begin
-              dark_theme = Sixteen.dark_variant(name)
-              # Create theme directly from the variant theme object
-              return create_theme_from_sixteen(dark_theme, name)
-            rescue
-              # If dark variant fails, continue to base theme
-            end
-          end
-        end
-        # If no variant or variant loading failed, try base theme
-        Theme.from_base16(name)
-      rescue ex : Exception
-        raise UnknownThemeError.new("Error loading theme #{name}: #{ex.message}")
-      end
+    # No variant requested, or the variant could not be resolved:
+    # prefer the XML theme, then the base16 theme under this name
+    if theme = xml_theme(name) || sixteen_variant(name, wanted)
+      return theme
     end
+
+    Theme.from_base16(name)
+  rescue ex : Exception
+    raise UnknownThemeError.new("Error loading theme #{name}: #{ex.message}")
   end
 
   # Create a Tartrazine theme from a Sixteen theme object

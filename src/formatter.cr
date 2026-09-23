@@ -32,6 +32,25 @@ module Tartrazine
       highlight_lines.any?(&.includes?(line))
     end
 
+    # Cache of token type → resolved Style. Themes don't define every
+    # specific token type: resolve the nearest parent style that is
+    # defined (worst case Background) without mutating the shared theme
+    @style_cache = {} of String => Style
+
+    def style_for(token : String) : Style
+      cached = @style_cache[token]?
+      return cached if cached
+
+      resolved = theme.styles[token]?
+      if resolved.nil?
+        parent = theme.style_parents(token).reverse.find do |name|
+          theme.styles.has_key?(name)
+        end
+        resolved = theme.styles[parent]
+      end
+      @style_cache[token] = resolved
+    end
+
     # Write bytes escaping HTML special characters without building
     # intermediate strings
     protected def escape_to_io(bytes : Bytes, io : IO) : Nil
