@@ -12,8 +12,10 @@ module Tartrazine
     Bygroups
     Combined
     Include
+    Mutators
     Pop
     Push
+    SublexerNameGroup
     Token
     Using
     Usingbygroup
@@ -31,7 +33,9 @@ module Tartrazine
     @states_to_push : Array(String) = [] of String
     @token_type : String = ""
     @type : ActionType = ActionType::Token
+    @sublexer_group_form : Bool = false
 
+    # ameba:disable Metrics/CyclomaticComplexity
     def initialize(t : String, xml : XML::Node?)
       @type = ActionType.parse(t.capitalize)
 
@@ -46,6 +50,10 @@ module Tartrazine
       # the using action matches the 3rd and shunts it to another lexer
       xml.children.each do |node|
         next unless node.element?
+        # The child-element form of usingbygroup carries group numbers
+        # and emitters instead of actions; parsed in the case below
+        next if @type == ActionType::Usingbygroup &&
+                {"sublexer_name_group", "code_group", "emitters"}.includes?(node.name)
         @actions << Action.new(node.name, node)
       end
 
@@ -67,8 +75,35 @@ module Tartrazine
           attrib.name == "state"
         end.map &.content
       when ActionType::Usingbygroup
-        @lexer_index = xml["lexer"].to_i
-        @content_index = xml["content"].split(",").map(&.to_i)
+        if xml["lexer"]?
+          @lexer_index = xml["lexer"].to_i
+          @content_index = xml["content"].split(",").map(&.to_i)
+        else
+          # Chroma's child-element form:
+          # <usingbygroup>
+          #   <sublexer_name_group>N</sublexer_name_group>
+          #   <code_group>M</code_group>
+          #   <emitters>...(one action per capture group)...</emitters>
+          # </usingbygroup>
+          # The group named by sublexer_name_group holds the name of the
+          # lexer to shunt the code_group's content to; every other group
+          # is emitted with its position's emitter.
+          @sublexer_group_form = true
+          xml.children.each do |node|
+            next unless node.element?
+            case node.name
+            when "sublexer_name_group"
+              @lexer_index = node.content.to_i
+            when "code_group"
+              @content_index = [node.content.to_i]
+            when "emitters"
+              node.children.each do |emitter|
+                next unless emitter.element?
+                @actions << Action.new(emitter.name, emitter)
+              end
+            end
+          end
+        end
       end
     end
 
@@ -130,9 +165,18 @@ module Tartrazine
         # Combine two or more states into one anonymous state
         new_state = tokenizer.combined_state(@states)
         tokenizer.state_stack << new_state.name
+      when ActionType::Mutators
+        # Run the state mutations, emit nothing
+        @actions.each do |action|
+          action.emit(match, tokenizer, tokens)
+        end
       when ActionType::Usingbygroup
         # Shunt to content-specified lexer
         return if match.empty?
+        if @sublexer_group_form
+          emit_sublexer_group_form(match, tokenizer, tokens)
+          return
+        end
         content = IO::Memory.new
         @content_index.each do |group_index|
           content.write(match.group(group_index))
@@ -150,6 +194,30 @@ module Tartrazine
         end
       else
         raise Exception.new("Unknown action type: #{@type}")
+      end
+    end
+
+    # Chroma's child-element usingbygroup: every capture group is
+    # emitted with the emitter at its position, except the code group,
+    # which is lexed with the lexer named by the sublexer-name group's
+    # content (that group itself is emitted like any other).
+    private def emit_sublexer_group_form(match : MatchDataView, tokenizer : Tokenizer, tokens : Array(Token))
+      content = String.new(match.group(@content_index.first))
+      lexer_name = String.new(match.group(@lexer_index))
+      sub_tokens = begin
+        Tartrazine.lexer(lexer_name).tokenizer(content, secondary: true).to_a
+      rescue
+        Tartrazine.lexer("text").tokenizer(content, secondary: true).to_a
+      end
+
+      @actions.each_with_index do |emitter, index|
+        group_index = index + 1
+        next if group_index > match.size || match.group_empty?(group_index)
+        if group_index == @content_index.first
+          tokens.concat(sub_tokens)
+        else
+          emitter.emit(match, tokenizer, tokens, group_index)
+        end
       end
     end
   end

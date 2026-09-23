@@ -329,16 +329,13 @@ module Tartrazine
   end
 
   # Return a list of all lexer names accepted by Tartrazine.lexer
-  # Bundled lexers that cannot load: their chroma XML uses regex
-  # constructs PCRE2 rejects (variable-length lookbehind, patterns too
-  # large, invalid syntax) or action types tartrazine does not
-  # implement. Excluded from the lexer list and language count so
-  # every listed name is usable; spec/load_spec.cr asserts this list
-  # stays exactly in sync with what actually fails to load.
+  # Bundled lexers that cannot load: their chroma XML contains regexes
+  # PCRE2 rejects (variable-length lookbehind, oversized patterns,
+  # invalid syntax). Excluded from the lexer list and language count
+  # so every listed name is usable; spec/load_spec.cr asserts this
+  # list stays exactly in sync with what actually fails to load.
   BROKEN_LEXERS = %w[
-    al arturo cassandra_cql fish fortranfixed lilypond
-    materialize_sql_dialect openedge_abl org_mode postgresql_sql_dialect
-    racket scss v_shell
+    al fish lilypond openedge_abl racket scss v_shell
   ]
 
   def self.lexers : Array(String)

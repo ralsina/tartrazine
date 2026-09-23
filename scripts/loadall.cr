@@ -2,7 +2,7 @@ require "../src/tartrazine"
 
 ok = 0
 broken = [] of {String, String}
-Tartrazine.lexers.each do |name|
+Tartrazine.lexers_with_broken.each do |name|
   Tartrazine.lexer(name)
   ok += 1
 rescue ex
