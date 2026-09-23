@@ -2,6 +2,16 @@
 
 All notable changes to this project will be documented in this file.
 
+## [0.25.1] - 2026-09-23
+
+### 🐛 Bug Fixes
+
+- Fix `TT_LEXERS=crystal,bash -Dnolexers` builds: the crystal lexer is
+  native code with no XML to bake, plaintext.xml and heuristics.yml are
+  always baked so nolexer builds keep a working fallback and
+  autodetection, and unknown names in TT_LEXERS fail with a clear
+  message
+
 ## [0.25.0] - 2026-09-22
 
 ### ⚡ Performance
