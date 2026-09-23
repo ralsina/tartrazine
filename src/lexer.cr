@@ -1,5 +1,8 @@
 require "./constants/lexers"
 require "./heuristics"
+{% if flag?(:hansa) %}
+  require "hansa"
+{% end %}
 require "baked_file_system"
 require "crystal/syntax_highlighter"
 
@@ -96,6 +99,49 @@ module Tartrazine
     raise UnknownLexerError.new("Unknown lexer: #{name}")
   end
 
+  # Content-based fallback for filenames that match no known pattern.
+  # Only compiled in with -Dhansa: classifier data is loaded lazily on
+  # first use but costs binary size.
+  # What to do when no filename pattern matched, or heuristics came
+  # up empty: hansa content classification when compiled with
+  # -Dhansa, otherwise the plaintext lexer
+  private def self.fallback_for(filename : String) : String
+    {% if flag?(:hansa) %}
+      hansa_guess(filename) || LEXERS_BY_NAME["plaintext"]
+    {% else %}
+      LEXERS_BY_NAME["plaintext"]
+    {% end %}
+  end
+
+  private def self.hansa_guess(filename : String) : String?
+    {% if flag?(:hansa) %}
+      language = Hansa.classify(File.read(filename))
+      LEXERS_BY_NAME.fetch(language.downcase, nil) ||
+        LEXERS_BY_NAME.fetch(HANSA_NAME_MAP.fetch(language, ""), nil)
+    {% else %}
+      nil
+    {% end %}
+  end
+
+  # hansa reports Linguist language names that don't normalize to a
+  # tartrazine lexer name
+  HANSA_NAME_MAP = {
+    "C#"                 => "csharp",
+    "C++"                => "cpp",
+    "F#"                 => "fsharp",
+    "Objective-C"        => "objective_c",
+    "Emacs Lisp"         => "emacslisp",
+    "Common Lisp"        => "common_lisp",
+    "Visual Basic"       => "vb.net",
+    "Vim Script"         => "viml",
+    "Shell"              => "bash",
+    "Perl 6"             => "raku",
+    "Dockerfile"         => "docker",
+    "JSON with Comments" => "json",
+    "XML Property List"  => "plist",
+    "Roff Manpage"       => "roff",
+  }
+
   private def self.lexer_by_filename(filename : String) : BaseLexer
     if filename.ends_with?(".cr")
       return CrystalLexer.new
@@ -108,11 +154,11 @@ module Tartrazine
 
     case candidates.size
     when 0
-      lexer_file_name = LEXERS_BY_NAME["plaintext"]
+      lexer_file_name = fallback_for(filename)
     when 1
       lexer_file_name = candidates.first
     else
-      lexer_file_name = lexer_by_content(filename)
+      lexer_file_name = lexer_by_content(filename) || fallback_for(filename)
       begin
         return lexer(lexer_file_name)
       rescue Exception
@@ -129,7 +175,7 @@ module Tartrazine
     result = @@heuristics.as(Linguist::Heuristic).run(fname, File.read(fname))
     case result
     when Nil
-      raise Exception.new "No lexer found for #{fname}"
+      nil
     when String
       result.as(String)
     when Array(String)

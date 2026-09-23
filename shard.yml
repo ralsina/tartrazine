@@ -9,6 +9,9 @@ targets:
     main: src/main.cr
 
 dependencies:
+  hansa:
+    github: ralsina/hansa
+    version: "~> 0.1.6"
   baked_file_system:
     github: ralsina/baked_file_system
     branch: master

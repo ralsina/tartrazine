@@ -128,6 +128,24 @@ tartrazine code.cr -f highlights -t github --standalone
 This means the highlights formatter cannot apply bold, italic, or
 border styling that the traditional HTML formatter supports.
 
+## Content-based language detection (optional)
+
+When compiled with `-Dhansa`, tartrazine gains a content-based fallback
+using [hansa](https://github.com/ralsina/hansa) (a port of go-enry's
+naive-Bayes classifier). It fires only when no filename pattern matches,
+or when filename ambiguity survives the Linguist heuristics — paths that
+would otherwise use the plaintext lexer or fail:
+
+```bash
+shards build -Dhansa
+./bin/tartrazine mystery_file.xyz -f html -l autodetect
+```
+
+The classifier data is loaded lazily on first fallback, costing ~85ms
+once per process, and adds ~1.6MB to the binary. Default builds are
+unchanged. Note the classifier works best on whole files; short
+snippets are often misclassified.
+
 ## Choosing what Lexers you want
 
 By default Tartrazine will support all its lexers by embedding
