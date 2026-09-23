@@ -1,4 +1,5 @@
 lib LibPCRE2
+  fun match_context_free = pcre2_match_context_free_8(mcontext : MatchContext*)
   fun jit_match = pcre2_jit_match_8(code : Code*, subject : UInt8*,
                                     length : LibC::SizeT, startoffset : LibC::SizeT, options : UInt32,
                                     match_data : MatchData*, mcontext : MatchContext*) : Int
@@ -16,6 +17,18 @@ module BytesRegex
     ptr = LibPCRE2.jit_stack_create(32_768, 1_048_576, nil)
     raise Exception.new("Error allocating JIT stack") if ptr.null?
     ::Crystal::ValueWithFinalizer.new(ptr, ->(value : LibPCRE2::JITStack*) { LibPCRE2.jit_stack_free(value) })
+  end
+
+  thread_local(current_match_context : ::Crystal::ValueWithFinalizer(LibPCRE2::MatchContext*)) do
+    ptr = LibPCRE2.match_context_create(nil)
+    raise Exception.new("Error allocating match context") if ptr.null?
+    context = ::Crystal::ValueWithFinalizer.new(ptr, ->(value : LibPCRE2::MatchContext*) { LibPCRE2.match_context_free(value) })
+    LibPCRE2.jit_stack_assign(ptr, ->(_data : Void*) { BytesRegex.current_jit_stack.value }, nil)
+    context
+  end
+
+  def self.match_context : LibPCRE2::MatchContext*
+    current_match_context.value
   end
 
   thread_local(current_match_data : ::Crystal::ValueWithFinalizer(LibPCRE2::MatchData*)) do
@@ -103,7 +116,7 @@ module BytesRegex
           pos,
           LibPCRE2::NO_UTF_CHECK,
           match_data,
-          nil)
+          BytesRegex.match_context)
         # Fall back to the interpreter on JIT runtime errors
         # (-1 is just "no match")
         if rc < -1
