@@ -90,8 +90,8 @@ module Tartrazine
     # when it is not registered as an alias; some lexer files have
     # mixed-case names (LiquidLexer, VelocityLexer)
     if lexer_file_name.nil? &&
-       (file = LexerFiles.files.find { |f| f.path.downcase == "/#{name.downcase}.xml" })
-      lexer_file_name = file.path[1...-4]
+       (lexer_file = LexerFiles.files.find { |candidate| candidate.path.downcase == "/#{name.downcase}.xml" })
+      lexer_file_name = lexer_file.path[1...-4]
     end
     return create_delegating_lexer(name) if lexer_file_name.nil? && name.includes? "+"
     raise UnknownLexerError.new("Unknown lexer: #{name}") if lexer_file_name.nil?
@@ -321,7 +321,29 @@ module Tartrazine
   end
 
   # Return a list of all lexer names accepted by Tartrazine.lexer
+  # Bundled lexers that cannot load: their chroma XML uses regex
+  # constructs PCRE2 rejects (variable-length lookbehind, patterns too
+  # large, invalid syntax) or action types tartrazine does not
+  # implement. Excluded from the lexer list and language count so
+  # every listed name is usable; spec/load_spec.cr asserts this list
+  # stays exactly in sync with what actually fails to load.
+  BROKEN_LEXERS = %w[
+    al arturo cassandra_cql fish fortranfixed lilypond
+    materialize_sql_dialect openedge_abl org_mode postgresql_sql_dialect
+    racket scss v_shell
+  ]
+
   def self.lexers : Array(String)
+    LexerFiles.files.map(&.path)
+      .select(&.ends_with?(".xml"))
+      .map { |path| File.basename(path, ".xml") }
+      .push("crystal")
+      .reject(&.in?(BROKEN_LEXERS))
+      .sort!
+  end
+
+  # All bundled lexer file stems, including the known-broken ones
+  def self.lexers_with_broken : Array(String)
     LexerFiles.files.map(&.path)
       .select(&.ends_with?(".xml"))
       .map { |path| File.basename(path, ".xml") }
