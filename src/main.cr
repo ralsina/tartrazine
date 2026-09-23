@@ -142,165 +142,173 @@ elsif options["--dark"]
   theme_variant = "dark"
 end
 
-theme = Tartrazine.theme(options["-t"].try(&.to_s) || "default-dark", theme_variant)
-template = options["--template"]?
-if template && template != "none" # Otherwise we will use the default template
-  template = File.open(template.as(String)).gets_to_end
-else
-  template = nil
-end
+begin
+  theme = Tartrazine.theme(options["-t"].try(&.to_s) || "default-dark", theme_variant)
+  template = options["--template"]?
+  if template && template != "none" # Otherwise we will use the default template
+    template = File.open(template.as(String)).gets_to_end
+  else
+    template = nil
+  end
 
-if options["-f"]
-  formatter_name = options["-f"].as(String)
-  formatter = uninitialized Tartrazine::Formatter
-  case formatter_name
-  when "html"
-    formatter = Tartrazine::Html.new
-    formatter.standalone = options["--standalone"] != nil
-    formatter.line_numbers = options["--line-numbers"] != nil
-    formatter.theme = theme
-    formatter.template = template if template
-  when "terminal"
-    formatter = Tartrazine::Ansi.new
-    formatter.line_numbers = options["--line-numbers"] != nil
-    formatter.theme = theme
-  when "json"
-    formatter = Tartrazine::Json.new
-  when "svg"
-    formatter = Tartrazine::Svg.new
-    formatter.standalone = options["--standalone"] != nil
-    formatter.line_numbers = options["--line-numbers"] != nil
-    formatter.theme = theme
-  when "png", "jpeg", "webp"
-    font_path = options["--font-path"]?.try &.as(String)
-    font_size = options["--font-size"]?.try &.as(String)
-    width = options["--width"]?.try &.as(String)
-    height = options["--height"]?.try &.as(String)
-    quality = options["--quality"]?.try &.as(String)
+  if options["-f"]
+    formatter_name = options["-f"].as(String)
+    formatter = uninitialized Tartrazine::Formatter
+    case formatter_name
+    when "html"
+      formatter = Tartrazine::Html.new
+      formatter.standalone = options["--standalone"] != nil
+      formatter.line_numbers = options["--line-numbers"] != nil
+      formatter.theme = theme
+      formatter.template = template if template
+    when "terminal"
+      formatter = Tartrazine::Ansi.new
+      formatter.line_numbers = options["--line-numbers"] != nil
+      formatter.theme = theme
+    when "json"
+      formatter = Tartrazine::Json.new
+    when "svg"
+      formatter = Tartrazine::Svg.new
+      formatter.standalone = options["--standalone"] != nil
+      formatter.line_numbers = options["--line-numbers"] != nil
+      formatter.theme = theme
+    when "png", "jpeg", "webp"
+      font_path = options["--font-path"]?.try &.as(String)
+      font_size = options["--font-size"]?.try &.as(String)
+      width = options["--width"]?.try &.as(String)
+      height = options["--height"]?.try &.as(String)
+      quality = options["--quality"]?.try &.as(String)
 
-    # Parse font size (single point size value)
-    parsed_font_size = 14 # default
-    if font_size
-      begin
-        parsed_font_size = font_size.to_i
-      rescue
-        puts "Invalid font size: #{font_size}. Must be a number (e.g., 14)"
-        exit 1
-      end
-    end
-
-    # Parse width
-    parsed_max_width = 0 # 0 means auto
-    if width
-      begin
-        parsed_max_width = width.to_i
-        if parsed_max_width < 0
-          puts "Width must be >= 0 (0 = auto)"
+      # Parse font size (single point size value)
+      parsed_font_size = 14 # default
+      if font_size
+        begin
+          parsed_font_size = font_size.to_i
+        rescue
+          puts "Invalid font size: #{font_size}. Must be a number (e.g., 14)"
           exit 1
         end
-      rescue
-        puts "Invalid width: #{width}. Must be a number (e.g., 800)"
-        exit 1
       end
-    end
 
-    # Parse height
-    parsed_max_height = 0 # 0 means auto
-    if height
-      begin
-        parsed_max_height = height.to_i
-        if parsed_max_height < 0
-          puts "Height must be >= 0 (0 = auto)"
+      # Parse width
+      parsed_max_width = 0 # 0 means auto
+      if width
+        begin
+          parsed_max_width = width.to_i
+          if parsed_max_width < 0
+            puts "Width must be >= 0 (0 = auto)"
+            exit 1
+          end
+        rescue
+          puts "Invalid width: #{width}. Must be a number (e.g., 800)"
           exit 1
         end
-      rescue
-        puts "Invalid height: #{height}. Must be a number (e.g., 600)"
-        exit 1
       end
-    end
 
-    # Parse quality (for JPEG/WebP)
-    parsed_quality = 90 # default
-    if quality
-      begin
-        parsed_quality = quality.to_i
-        if parsed_quality < 1 || parsed_quality > 100
-          puts "Quality must be between 1 and 100"
+      # Parse height
+      parsed_max_height = 0 # 0 means auto
+      if height
+        begin
+          parsed_max_height = height.to_i
+          if parsed_max_height < 0
+            puts "Height must be >= 0 (0 = auto)"
+            exit 1
+          end
+        rescue
+          puts "Invalid height: #{height}. Must be a number (e.g., 600)"
           exit 1
         end
-      rescue
-        puts "Invalid quality: #{quality}. Must be a number between 1 and 100"
+      end
+
+      # Parse quality (for JPEG/WebP)
+      parsed_quality = 90 # default
+      if quality
+        begin
+          parsed_quality = quality.to_i
+          if parsed_quality < 1 || parsed_quality > 100
+            puts "Quality must be between 1 and 100"
+            exit 1
+          end
+        rescue
+          puts "Invalid quality: #{quality}. Must be a number between 1 and 100"
+          exit 1
+        end
+      end
+
+      # Create the appropriate formatter
+      begin
+        case formatter_name
+        when "png"
+          formatter = Tartrazine::Png.new(
+            theme: theme,
+            line_numbers: options["--line-numbers"] != nil,
+            font_path: font_path,
+            font_size: parsed_font_size,
+            max_width: parsed_max_width,
+            max_height: parsed_max_height
+          )
+        when "jpeg"
+          formatter = Tartrazine::Jpeg.new(
+            theme: theme,
+            line_numbers: options["--line-numbers"] != nil,
+            font_path: font_path,
+            font_size: parsed_font_size,
+            max_width: parsed_max_width,
+            max_height: parsed_max_height,
+            quality: parsed_quality
+          )
+        when "webp"
+          formatter = Tartrazine::Webp.new(
+            theme: theme,
+            line_numbers: options["--line-numbers"] != nil,
+            font_path: font_path,
+            font_size: parsed_font_size,
+            max_width: parsed_max_width,
+            max_height: parsed_max_height,
+            quality: parsed_quality
+          )
+        end
+      rescue ex
+        puts "Error creating #{formatter_name.upcase} formatter: #{ex.message}"
+        puts "Note: --font-path is optional for image output (uses bundled JetBrains Mono by default)"
+        puts "      You can specify a custom font with --font-path pointing to a .ttf or .otf file"
         exit 1
       end
-    end
-
-    # Create the appropriate formatter
-    begin
-      case formatter_name
-      when "png"
-        formatter = Tartrazine::Png.new(
-          theme: theme,
-          line_numbers: options["--line-numbers"] != nil,
-          font_path: font_path,
-          font_size: parsed_font_size,
-          max_width: parsed_max_width,
-          max_height: parsed_max_height
-        )
-      when "jpeg"
-        formatter = Tartrazine::Jpeg.new(
-          theme: theme,
-          line_numbers: options["--line-numbers"] != nil,
-          font_path: font_path,
-          font_size: parsed_font_size,
-          max_width: parsed_max_width,
-          max_height: parsed_max_height,
-          quality: parsed_quality
-        )
-      when "webp"
-        formatter = Tartrazine::Webp.new(
-          theme: theme,
-          line_numbers: options["--line-numbers"] != nil,
-          font_path: font_path,
-          font_size: parsed_font_size,
-          max_width: parsed_max_width,
-          max_height: parsed_max_height,
-          quality: parsed_quality
-        )
-      end
-    rescue ex
-      puts "Error creating #{formatter_name.upcase} formatter: #{ex.message}"
-      puts "Note: --font-path is optional for image output (uses bundled JetBrains Mono by default)"
-      puts "      You can specify a custom font with --font-path pointing to a .ttf or .otf file"
+    when "highlights"
+      formatter = Tartrazine::Highlights.new
+      formatter.standalone = options["--standalone"] != nil
+      formatter.line_numbers = options["--line-numbers"] != nil
+      formatter.theme = theme
+      formatter.template = template if template
+    else
+      puts "Invalid formatter: #{formatter_name}"
+      puts "Available formatters: html, json, terminal, svg, png, jpeg, webp, highlights"
       exit 1
     end
-  when "highlights"
-    formatter = Tartrazine::Highlights.new
-    formatter.standalone = options["--standalone"] != nil
-    formatter.line_numbers = options["--line-numbers"] != nil
-    formatter.theme = theme
-    formatter.template = template if template
-  else
-    puts "Invalid formatter: #{formatter_name}"
-    puts "Available formatters: html, json, terminal, svg, png, jpeg, webp, highlights"
-    exit 1
-  end
 
-  if (formatter.is_a?(Tartrazine::Html) || formatter.is_a?(Tartrazine::Highlights)) && options["--css"]
-    File.open("#{options["-t"].try(&.to_s) || "default-dark"}.css", "w") do |outf|
-      outf << formatter.style_defs
+    if (formatter.is_a?(Tartrazine::Html) || formatter.is_a?(Tartrazine::Highlights)) && options["--css"]
+      File.open("#{options["-t"].try(&.to_s) || "default-dark"}.css", "w") do |outf|
+        outf << formatter.style_defs
+      end
+      exit 0
     end
-    exit 0
-  end
 
-  lexer = Tartrazine.lexer(name: options["-l"].try(&.to_s), filename: options["FILE"].to_s)
+    lexer = Tartrazine.lexer(name: options["-l"].try(&.to_s), filename: options["FILE"].to_s)
 
-  input = File.open(options["FILE"].as(String)).gets_to_end
+    input = File.open(options["FILE"].as(String)).gets_to_end
 
-  if options["-o"].nil?
-    formatter.format(input, lexer, STDOUT)
-  else
-    File.open(options["-o"].as(String), "w") do |outf|
-      formatter.format(input, lexer, outf)
+    if options["-o"].nil?
+      formatter.format(input, lexer, STDOUT)
+    else
+      File.open(options["-o"].as(String), "w") do |outf|
+        formatter.format(input, lexer, outf)
+      end
     end
   end
+rescue ex : File::NotFoundError
+  STDERR.puts "Error: file not found: #{ex.file}"
+  exit 1
+rescue ex : Tartrazine::UnknownLexerError | Tartrazine::UnknownThemeError
+  STDERR.puts "Error: #{ex.message}"
+  exit 1
 end

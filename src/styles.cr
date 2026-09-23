@@ -7,6 +7,10 @@ require "sixteen"
 require "xml"
 
 module Tartrazine
+  # Raised when a theme cannot be loaded
+  class UnknownThemeError < Exception
+  end
+
   alias Color = Sixteen::Color
 
   struct ThemeFiles
@@ -153,7 +157,7 @@ module Tartrazine
         # If no variant or variant loading failed, try base theme
         Theme.from_base16(name)
       rescue ex : Exception
-        raise Exception.new("Error loading theme #{name}: #{ex.message}")
+        raise UnknownThemeError.new("Error loading theme #{name}: #{ex.message}")
       end
     end
   end

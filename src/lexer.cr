@@ -4,6 +4,10 @@ require "baked_file_system"
 require "crystal/syntax_highlighter"
 
 module Tartrazine
+  # Raised when a lexer name/mimetype cannot be resolved
+  class UnknownLexerError < Exception
+  end
+
   class LexerFiles
     extend BakedFileSystem
 
@@ -67,7 +71,7 @@ module Tartrazine
 
   private def self.lexer_by_mimetype(mimetype : String) : BaseLexer
     lexer_file_name = LEXERS_BY_MIMETYPE.fetch(mimetype, nil)
-    raise Exception.new("Unknown mimetype: #{mimetype}") if lexer_file_name.nil?
+    raise UnknownLexerError.new("Unknown mimetype: #{mimetype}") if lexer_file_name.nil?
 
     create_from_template(lexer_file_name)
   end
@@ -79,12 +83,17 @@ module Tartrazine
       return @@lexer_mutex.synchronize { @@lexer_cache["crystal"] ||= CrystalLexer.new }
     end
     lexer_file_name = LEXERS_BY_NAME.fetch(name.downcase, nil)
+    # Accept a lexer's file name directly (eg. common_lisp), even
+    # when it is not registered as an alias
+    if lexer_file_name.nil? && LexerFiles.files.any? { |file| file.path == "/#{name.downcase}.xml" }
+      lexer_file_name = name.downcase
+    end
     return create_delegating_lexer(name) if lexer_file_name.nil? && name.includes? "+"
-    raise Exception.new("Unknown lexer: #{name}") if lexer_file_name.nil?
+    raise UnknownLexerError.new("Unknown lexer: #{name}") if lexer_file_name.nil?
 
     create_from_template(lexer_file_name)
   rescue BakedFileSystem::NoSuchFileError
-    raise Exception.new("Unknown lexer: #{name}")
+    raise UnknownLexerError.new("Unknown lexer: #{name}")
   end
 
   private def self.lexer_by_filename(filename : String) : BaseLexer
@@ -263,14 +272,13 @@ module Tartrazine
     end
   end
 
-  # Return a list of all lexers
+  # Return a list of all lexer names accepted by Tartrazine.lexer
   def self.lexers : Array(String)
-    file_map = LexerFiles.files.map(&.path)
-    xml_lexers = LEXERS_BY_NAME.keys.select { |k| file_map.includes?("/#{k}.xml") }.sort!
-
-    # Add crystal lexer as a special case
-    xml_lexers += ["crystal"]
-    xml_lexers.uniq.sort!
+    LexerFiles.files.map(&.path)
+      .select(&.ends_with?(".xml"))
+      .map { |path| File.basename(path, ".xml") }
+      .push("crystal")
+      .sort!
   end
 
   # Return file extensions for a specific lexer by name
