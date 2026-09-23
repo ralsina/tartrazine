@@ -513,63 +513,6 @@ module Tartrazine
       [] of String
     end
 
-    def self.from_xml(xml : String) : Lexer
-      l = RegexLexer.new
-      lexer = XML.parse(xml).first_element_child
-      if lexer
-        config = lexer.children.find do |node|
-          node.name == "config"
-        end
-        if config
-          l.config = {
-            name:             xml_to_s(config, name) || "",
-            priority:         xml_to_f(config, priority) || 0.0,
-            not_multiline:    xml_to_s(config, not_multiline) == "true",
-            dot_all:          xml_to_s(config, dot_all) == "true",
-            case_insensitive: xml_to_s(config, case_insensitive) == "true",
-            ensure_nl:        xml_to_s(config, ensure_nl) == "true",
-          }
-        end
-
-        rules = lexer.children.find do |node|
-          node.name == "rules"
-        end
-        if rules
-          # Rules contains states 🤷
-          rules.children.select do |node|
-            node.name == "state"
-          end.each do |state_node|
-            state = State.new
-            state.name = state_node["name"]
-            if l.states.has_key?(state.name)
-              raise Exception.new("Duplicate state: #{state.name}")
-            else
-              l.states[state.name] = state
-            end
-            # And states contain rules 🤷
-            state_node.children.select do |node|
-              node.name == "rule"
-            end.each do |rule_node|
-              case rule_node["pattern"]?
-              when nil
-                if rule_node.first_element_child.try &.name == "include"
-                  rule = IncludeStateRule.new(rule_node)
-                else
-                  rule = UnconditionalRule.new(rule_node)
-                end
-              else
-                rule = Rule.new(rule_node,
-                  multiline: !l.config[:not_multiline],
-                  dotall: l.config[:dot_all],
-                  ignorecase: l.config[:case_insensitive])
-              end
-              state.rules << rule
-            end
-          end
-        end
-      end
-      l
-    end
   end
 
   # A lexer that takes two lexers as arguments. A root lexer
