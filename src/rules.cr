@@ -117,6 +117,11 @@ module Tartrazine
   class IncludeStateRule < BaseRule
     @state : String = ""
 
+    # The state this rule includes (for template-time flattening)
+    def state_name : String
+      @state
+    end
+
     # Resolved on first match: states are fixed after template parse,
     # so the name lookup only needs to happen once
     @resolved : State? = nil

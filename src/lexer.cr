@@ -307,7 +307,44 @@ module Tartrazine
       states[state.name] = state
     end
 
+    flatten_includes(states)
     states
+  end
+
+  # Replace IncludeStateRule entries with the included state's rules
+  # at template build time: the include layer only forwards to another
+  # state's rules, and states are fixed after parse. Cycles (or
+  # unknown states) keep the dynamic rule as a fallback.
+  private def self.flatten_includes(states : Hash(String, State))
+    resolved = Set(String).new
+    states.each_key do |name|
+      flatten_state(name, states, resolved, Set(String).new)
+    end
+  end
+
+  private def self.flatten_state(name : String, states : Hash(String, State),
+                                 done : Set(String), visiting : Set(String))
+    return if done.includes?(name) || visiting.includes?(name)
+    visiting << name
+    state = states[name]?
+    if state
+      state.rules = state.rules.compact_map do |rule|
+        case rule
+        when IncludeStateRule
+          target = states[rule.state_name]?
+          if target && !visiting.includes?(rule.state_name)
+            flatten_state(rule.state_name, states, done, visiting)
+            target.rules
+          else
+            rule
+          end
+        else
+          rule
+        end
+      end.flatten
+    end
+    visiting.delete(name)
+    done << name
   end
 
   # Create a rule from XML node (factory method)
