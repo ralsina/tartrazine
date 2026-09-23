@@ -16,7 +16,12 @@ module BytesRegex
 
   class Regex
     def initialize(pattern : String, multiline = false, dotall = false, ignorecase = false, anchored = false)
-      flags = LibPCRE2::UTF | LibPCRE2::UCP | LibPCRE2::NO_UTF_CHECK
+      # NO_START_OPTIMIZE: every rule is matched ANCHORED, so PCRE2's
+      # start-of-match optimization (scanning forward for a required
+      # literal) can never succeed; on inputs missing that literal it
+      # scans to the JIT's cap on every failing attempt, which is
+      # quadratic on repetitive input
+      flags = LibPCRE2::UTF | LibPCRE2::UCP | LibPCRE2::NO_UTF_CHECK | LibPCRE2::NO_START_OPTIMIZE
       flags |= LibPCRE2::MULTILINE if multiline
       flags |= LibPCRE2::DOTALL if dotall
       flags |= LibPCRE2::CASELESS if ignorecase
