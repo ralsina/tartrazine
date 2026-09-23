@@ -23,7 +23,9 @@ module BytesRegex
     ptr = LibPCRE2.match_context_create(nil)
     raise Exception.new("Error allocating match context") if ptr.null?
     context = ::Crystal::ValueWithFinalizer.new(ptr, ->(value : LibPCRE2::MatchContext*) { LibPCRE2.match_context_free(value) })
-    LibPCRE2.jit_stack_assign(ptr, ->(_data : Void*) { BytesRegex.current_jit_stack.value }, nil)
+    # The context is per-thread already: hand PCRE2 the stack pointer
+    # directly instead of a callback it would invoke on every match
+    LibPCRE2.jit_stack_assign(ptr, nil, BytesRegex.current_jit_stack.value.as(Void*))
     context
   end
 
