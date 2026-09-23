@@ -6,7 +6,7 @@ with code in this repository.
 ## Project Overview
 
 Tartrazine is a Crystal language syntax highlighting library, ported from
-Pygments. It provides both a CLI tool and library supporting 282 languages (7 further bundled lexers are known-broken and excluded)
+Pygments. It provides both a CLI tool and library supporting 281 languages (7 further bundled lexers are known-broken and excluded)
 with hundreds of themes. The project uses XML-based lexer definitions ported
 from Chroma (Go's Pygments port) and focuses on performance optimizations.
 

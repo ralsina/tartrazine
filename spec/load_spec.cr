@@ -9,6 +9,12 @@ describe "every listed lexer loads" do
     it "loads #{name}" do
       Tartrazine.lexer(name).should_not be_nil
     end
+
+    it "tokenizes a sample with #{name}" do
+      lexer = Tartrazine.lexer(name)
+      tokens = lexer.tokenizer("hello world\nx = 1;\n").to_a
+      tokens.map(&.[:value]).join.size.should be > 0
+    end
   end
 end
 

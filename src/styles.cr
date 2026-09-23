@@ -269,7 +269,11 @@ module Tartrazine
     property name : String = ""
 
     property styles = {} of String => Style
-    property is_base16 : Bool = false # Whether this theme was loaded from base16
+    @is_base16 = false # Whether this theme was loaded from base16
+
+    def base16=(value : Bool) : Bool
+      @is_base16 = value
+    end
 
     def style_parents(token)
       parents = ["Background"]
@@ -345,7 +349,7 @@ module Tartrazine
     def self.create_theme_from_sixteen(sixteen_theme : Sixteen::Theme, theme_name : String? = nil) : Theme
       theme = Theme.new
       theme.name = theme_name || sixteen_theme.name
-      theme.is_base16 = true # Mark this as a base16 theme
+      theme.base16 = true # Mark this as a base16 theme
       # The color assignments are adapted from
       # https://github.com/mohd-akram/base16-pygments/
 
