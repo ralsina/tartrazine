@@ -8,8 +8,21 @@ module Tartrazine
     extend BakedFileSystem
 
     macro bake_selected_lexers
+      # Always bake the plaintext fallback and the autodetect
+      # heuristics so nolexer builds keep working when no specific
+      # lexer is requested or the filename is ambiguous
+      bake_file "plaintext.xml", {{ read_file "#{__DIR__}/../lexers/plaintext.xml" }}
+      bake_file "heuristics.yml", {{ read_file "#{__DIR__}/../lexers/heuristics.yml" }}
+
+      {% lexer_files = `ls -1 #{__DIR__}/../lexers`.split("\n") %}
       {% for lexer in env("TT_LEXERS").split "," %}
-      bake_file {{ lexer }}+".xml", {{ read_file "#{__DIR__}/../lexers/" + lexer + ".xml" }}
+        {% if lexer == "crystal" %}
+          # The crystal lexer is native Crystal code, there is no XML to bake
+        {% elsif !lexer_files.includes?(lexer + ".xml") %}
+          {% raise "Unknown lexer '#{lexer.id}' in TT_LEXERS: no file lexers/#{lexer.id}.xml" %}
+        {% else %}
+          bake_file {{ lexer }}+".xml", {{ read_file "#{__DIR__}/../lexers/" + lexer + ".xml" }}
+        {% end %}
       {% end %}
     end
 
