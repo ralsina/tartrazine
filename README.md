@@ -9,7 +9,7 @@ a port of [Pygments](https://pygments.org/) to
 
 It also provides a CLI tool which can be used to highlight many things in many styles.
 
-Currently Tartrazine supports 273 languages and has hundreds of themes
+Currently Tartrazine supports 288 languages and has hundreds of themes
 (69 from Chroma,
 the rest are base16 themes via [Sixteen](https://github.com/ralsina/sixteen)
 
@@ -26,7 +26,7 @@ and put them in your PATH.
 To build from source:
 
 1. Clone this repo
-2. Run `make` to build the `tartrazine` binary
+2. Run `shards build` to build the `tartrazine` binary
 3. Copy the binary somewhere in your PATH.
 
 ## Usage as a CLI tool
@@ -233,8 +233,9 @@ and a pile of test cases from Pygments, and I slapped them together
 until the tests passed and my code produced the same output as
 Chroma. Think of it as [*extreme TDD*](https://ralsina.me/weblog/posts/tartrazine-reimplementing-pygments.html)
 
-Currently the pass rate for tests in the supported languages
-is `96.8%`, which is *not bad for a couple days hacking*.
+The test suite tokenizes the same inputs and compares against
+Chroma's output for every supported language; a few known-bad
+cases are excluded with reasons in the spec.
 
 This only covers the RegexLexers, which are the most common ones,
 but it means the supported languages are a subset of Chroma's, which
