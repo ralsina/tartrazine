@@ -2,6 +2,26 @@
 
 All notable changes to this project will be documented in this file.
 
+## [0.26.2] - 2026-09-23
+
+### 🚀 Features
+
+- Support chroma's `using`/`usingself` `state` attribute: sub-lexers
+  can start in a specific state. Fixes a stack overflow on any
+  batchfile input (also through the `bat` alias); batchfile output
+  now matches chroma token for token. 36 lexer files use this
+
+### 🐛 Bug Fixes
+
+- Language count 282 -> 281; `spec/load_spec.cr` now tokenizes a
+  sample with every listed lexer, not just loads it
+
+### ⚡ Performance
+
+- Thread-local PCRE2 handles fetched once per tokenization instead
+  of per rule attempt; JIT stack assigned directly instead of a
+  callback; include states flattened at template build time
+
 ## [0.26.1] - 2026-09-23
 
 ### 🚀 Features
