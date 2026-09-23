@@ -2,6 +2,37 @@
 
 All notable changes to this project will be documented in this file.
 
+## [0.26.0] - 2026-09-23
+
+### 🚀 Features
+
+- Optional content-based language detection via hansa: builds with
+  `-Dhansa` classify unknown or ambiguous files by content instead of
+  falling through to plaintext (lazy-loaded, ~85ms once per process,
+  +1.6MB binary; default builds unchanged)
+- New CLI options `--line-number-start` and `--highlight-lines` for
+  the html, svg and highlights formatters
+
+### 🐛 Bug Fixes
+
+- Crash (signal 11) on non-UTF-8 input: the tokenizer now scrubs
+  invalid bytes instead of hitting PCRE2 undefined behavior
+- Quadratic tokenization on repetitive input: disabling PCRE2's
+  start-of-match optimization (useless for anchored rules) takes a
+  600KB repetitive file from 24.7s to 1.5s
+- `--list-lexers` now lists all 288 lexers (was 260) and every
+  listed name is accepted, including file stems like `common_lisp`
+- CLI errors (unknown lexer/theme, missing file) print a one-line
+  message instead of a stack trace
+
+### ♻️ Refactorings
+
+- Rule matching scratch moved into the Tokenizer so lexer templates
+  are immutable and safely shareable; dead code removed
+  (lexer_loader.cr, duplicate XML parser); theme style resolution
+  centralized without mutating the shared theme; Tartrazine.theme
+  simplified; docs refreshed
+
 ## [0.25.1] - 2026-09-23
 
 ### 🐛 Bug Fixes
