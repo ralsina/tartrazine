@@ -512,7 +512,6 @@ module Tartrazine
     rescue
       [] of String
     end
-
   end
 
   # A lexer that takes two lexers as arguments. A root lexer
