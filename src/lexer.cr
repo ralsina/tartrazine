@@ -87,9 +87,11 @@ module Tartrazine
     end
     lexer_file_name = LEXERS_BY_NAME.fetch(name.downcase, nil)
     # Accept a lexer's file name directly (eg. common_lisp), even
-    # when it is not registered as an alias
-    if lexer_file_name.nil? && LexerFiles.files.any? { |file| file.path == "/#{name.downcase}.xml" }
-      lexer_file_name = name.downcase
+    # when it is not registered as an alias; some lexer files have
+    # mixed-case names (LiquidLexer, VelocityLexer)
+    if lexer_file_name.nil? &&
+       (file = LexerFiles.files.find { |f| f.path.downcase == "/#{name.downcase}.xml" })
+      lexer_file_name = file.path[1...-4]
     end
     return create_delegating_lexer(name) if lexer_file_name.nil? && name.includes? "+"
     raise UnknownLexerError.new("Unknown lexer: #{name}") if lexer_file_name.nil?

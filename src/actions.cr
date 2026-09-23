@@ -58,7 +58,8 @@ module Tartrazine
           attrib.name == "state"
         end.map &.content
       when ActionType::Pop
-        @depth = xml["depth"].to_i
+        # Chroma allows a bare <pop/>, meaning depth 1
+        @depth = xml["depth"]?.try(&.to_i) || 1
       when ActionType::Using
         @lexer_name = xml["lexer"].downcase
       when ActionType::Combined

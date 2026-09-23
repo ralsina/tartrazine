@@ -16,6 +16,11 @@ module BytesRegex
 
   class Regex
     def initialize(pattern : String, multiline = false, dotall = false, ignorecase = false, anchored = false)
+      # Chroma patterns are written for Go's regexp, which supports
+      # \uXXXX unicode escapes; PCRE2 does not, but supports the
+      # equivalent \x{XXXX}. Translating can only turn compile
+      # failures into successes, since \u is not valid PCRE2 at all.
+      pattern = pattern.gsub(/\\u([0-9a-fA-F]{4})/, "\\x{\\1}")
       # NO_START_OPTIMIZE: every rule is matched ANCHORED, so PCRE2's
       # start-of-match optimization (scanning forward for a required
       # literal) can never succeed; on inputs missing that literal it
