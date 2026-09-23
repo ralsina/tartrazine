@@ -86,34 +86,20 @@ module Tartrazine
   class Rule < BaseRule
     property pattern : Regex = Regex.new ""
 
-    # Scratch accumulator reused across matches. Guarded by @busy
-    # because a usingself action can run this same rule reentrantly;
-    # the reentrant call gets fresh scratch instead.
-    @tokens = [] of Token
-    @bounds = Slice(Int32).new(8)
-    @busy = false
-
     def match(text : Bytes, pos, tokenizer) : Tuple(Bool, Int32, Array(Token))
       rc = pattern.match!(text, pos)
 
       # No match
       return false, pos, EMPTY_TOKENS if rc == 0
-      if @busy
-        view = MatchDataView.new(text, pattern.snapshot_ovector(text.bytesize))
-        tokens = [] of Token
-        @actions.each(&.emit(view, tokenizer, tokens))
-      else
-        @bounds = pattern.snapshot_ovector(text.bytesize, @bounds)
-        view = MatchDataView.new(text, @bounds, rc * 2)
-        tokens = @tokens
-        tokens.clear
-        @busy = true
-        begin
-          @actions.each(&.emit(view, tokenizer, tokens))
-        ensure
-          @busy = false
-        end
-      end
+      # The ovector snapshot and the token accumulator are per-tokenizer
+      # scratch: rules stay immutable, so lexer templates can be shared
+      # freely. Reentrant tokenization (usingself/using actions) runs on
+      # its own Tokenizer and cannot touch this scratch.
+      bounds = tokenizer.scratch_bounds = pattern.snapshot_ovector(text.bytesize, tokenizer.scratch_bounds)
+      view = MatchDataView.new(text, bounds, rc * 2)
+      tokens = tokenizer.scratch_tokens
+      tokens.clear
+      @actions.each(&.emit(view, tokenizer, tokens))
       return true, view.group_end(0), tokens
     end
 
@@ -161,10 +147,8 @@ module Tartrazine
   class UnconditionalRule < BaseRule
     NO_MATCH = MatchDataView.new(Bytes.empty)
 
-    @tokens = [] of Token
-
     def match(text, pos, tokenizer) : Tuple(Bool, Int32, Array(Token))
-      tokens = @tokens
+      tokens = tokenizer.scratch_tokens
       tokens.clear
       @actions.each(&.emit(NO_MATCH, tokenizer, tokens))
       return true, pos, tokens

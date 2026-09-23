@@ -301,6 +301,12 @@ module Tartrazine
     @dq = Deque(Token).new
     property state_stack = ["root"]
 
+    # Scratch reused across the steps of THIS tokenization (token
+    # accumulator and regex ovector snapshot), so rules and lexer
+    # templates stay immutable and shareable between tokenizations
+    property scratch_tokens = [] of Token
+    property scratch_bounds = Slice(Int32).new(8)
+
     # States created on the fly for this tokenization only (Combined),
     # kept off the shared lexer template to avoid unbounded growth
     @local_states = {} of String => State
