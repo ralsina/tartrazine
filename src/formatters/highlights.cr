@@ -15,10 +15,9 @@ module Tartrazine
   end
 
   class Highlights < Formatter
+    include LineOptions
     property class_prefix : String = ""
-    property highlight_lines : Array(Range(Int32, Int32)) = [] of Range(Int32, Int32)
     property line_number_id_prefix : String = "line-"
-    property line_number_start : Int32 = 1
     property tab_width = 8
     property? line_numbers : Bool = false
     property? linkable_line_numbers : Bool = true
@@ -40,17 +39,19 @@ module Tartrazine
     @name_cache = {} of String => String
 
     def initialize(@theme : Theme = Tartrazine.theme("default-dark"), *,
-                   @highlight_lines = [] of Range(Int32, Int32),
                    @class_prefix : String = "",
                    @line_number_id_prefix : String = "line-",
-                   @line_number_start : Int32 = 1,
                    @tab_width = 8,
                    @line_numbers : Bool = false,
+                   line_number_start : Int32 = 1,
+                   highlight_lines : Array(Range(Int32, Int32)) = [] of Range(Int32, Int32),
                    @linkable_line_numbers : Bool = true,
                    @standalone : Bool = false,
                    @surrounding_pre : Bool = true,
                    @wrap_long_lines : Bool = false,
                    @template : String = @template)
+      @line_number_start = line_number_start
+      @highlight_lines = highlight_lines
     end
 
     def format(text : String, lexer : Lexer) : String

@@ -32,6 +32,13 @@ module Tartrazine
       highlight_lines.any?(&.includes?(line))
     end
 
+    # Included in formatters that render line numbers: the CLI sets
+    # these options generically through respond_to?-free typing
+    module LineOptions
+      property line_number_start : Int32 = 1
+      property highlight_lines : Array(Range(Int32, Int32)) = [] of Range(Int32, Int32)
+    end
+
     # Cache of token type → resolved Style. Themes don't define every
     # specific token type: resolve the nearest parent style that is
     # defined (worst case Background) without mutating the shared theme

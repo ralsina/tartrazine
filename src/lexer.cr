@@ -40,7 +40,8 @@ module Tartrazine
     {% end %}
   end
 
-  # Thread-safe lexer template containing only static data (rules, states, config)
+  # Lexer template containing only static data (rules, states, config);
+  # immutable after parse
   struct LexerTemplate
     property config : Hash(Symbol, String | Bool | Float64)
     property states : Hash(String, State)
@@ -49,13 +50,16 @@ module Tartrazine
     end
   end
 
-  # Template cache for parsed lexer data - thread-safe for read access
+  # Template cache for parsed lexer data, mutex-guarded.
+  # Concurrency limits: see the note on the lexer instance cache.
   @@lexer_templates = {} of String => LexerTemplate
   @@template_mutex = Mutex.new
 
-  # Cache of lexer instances. Lexers are immutable after creation
-  # (all tokenization state lives in the Tokenizer), so a single
-  # instance can be shared by every user.
+  # Cache of lexer instances. Lexers are immutable after creation and
+  # all tokenization state lives in the Tokenizer, so instances can be
+  # shared by sequential and reentrant users. Concurrent tokenization
+  # of one lexer from multiple threads is NOT supported (each
+  # BytesRegex::Regex owns a single match_data).
   @@lexer_cache = {} of String => BaseLexer
   @@lexer_mutex = Mutex.new
 
@@ -127,22 +131,26 @@ module Tartrazine
 
   # hansa reports Linguist language names that don't normalize to a
   # tartrazine lexer name
-  HANSA_NAME_MAP = {
-    "C#"                 => "csharp",
-    "C++"                => "cpp",
-    "F#"                 => "fsharp",
-    "Objective-C"        => "objective_c",
-    "Emacs Lisp"         => "emacslisp",
-    "Common Lisp"        => "common_lisp",
-    "Visual Basic"       => "vb.net",
-    "Vim Script"         => "viml",
-    "Shell"              => "bash",
-    "Perl 6"             => "raku",
-    "Dockerfile"         => "docker",
-    "JSON with Comments" => "json",
-    "XML Property List"  => "plist",
-    "Roff Manpage"       => "roff",
-  }
+  {% if flag?(:hansa) %}
+    # hansa reports Linguist language names that don't normalize to a
+    # tartrazine lexer name
+    private HANSA_NAME_MAP = {
+      "C#"                 => "csharp",
+      "C++"                => "cpp",
+      "F#"                 => "fsharp",
+      "Objective-C"        => "objective_c",
+      "Emacs Lisp"         => "emacslisp",
+      "Common Lisp"        => "common_lisp",
+      "Visual Basic"       => "vb.net",
+      "Vim Script"         => "viml",
+      "Shell"              => "bash",
+      "Perl 6"             => "raku",
+      "Dockerfile"         => "docker",
+      "JSON with Comments" => "json",
+      "XML Property List"  => "plist",
+      "Roff Manpage"       => "roff",
+    }
+  {% end %}
 
   private def self.lexer_by_filename(filename : String) : BaseLexer
     if filename.ends_with?(".cr")
@@ -221,7 +229,7 @@ module Tartrazine
     end
   end
 
-  # Get or create a lexer template with thread-safe caching
+  # Get or create a lexer template, mutex-guarded
   private def self.get_or_create_template(lexer_file_name : String) : LexerTemplate
     # Fast path: template already cached (read-only access, thread-safe)
     return @@lexer_templates[lexer_file_name] if @@lexer_templates.has_key?(lexer_file_name)

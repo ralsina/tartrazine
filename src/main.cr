@@ -52,7 +52,9 @@ HELP = <<-HELP
     --template <file>   Use a custom template for the HTML output [default: none]
     --line-numbers      Include line numbers in the output
     --line-number-start <n>  First line number for line numbers
-    --highlight-lines <ranges>  Lines to highlight, e.g. 3-5,7
+    --highlight-lines <ranges>  Lines to highlight, e.g. 3-5,7 (real file
+                         line numbers, even if --line-number-start changes
+                         the displayed numbering)
     --font-path <path>  Path to TrueType/OpenType font file (.ttf or .otf) for image output
                         (default: bundled JetBrains Mono)
     --font-size <size>  Font point size for image output (e.g. 14) [default: 14]
@@ -156,19 +158,30 @@ begin
   end
 
   # Line number start and highlighted line ranges, applied to the
-  # formatters that support them
-  line_number_start = options["--line-number-start"].try(&.to_s.to_i) || 1
+  # formatters that support them. Highlight ranges refer to real file
+  # line numbers, like pygments' hl_lines, regardless of the number
+  # the first line is displayed with.
+  line_number_start = 1
   highlight_lines = Array(Range(Int32, Int32)).new
-  if ranges = options["--highlight-lines"]?
-    ranges.to_s.split(",").each do |part|
-      next if part.empty?
-      highlight_lines << if dash = part.index('-')
-        (part[0...dash].to_i..part[(dash + 1)..].to_i)
-      else
-        number = part.to_i
-        (number..number)
+  begin
+    if start = options["--line-number-start"]?
+      line_number_start = start.to_s.to_i
+      raise ArgumentError.new("must be >= 1") if line_number_start < 1
+    end
+    if ranges = options["--highlight-lines"]?
+      ranges.to_s.split(",").each do |part|
+        next if part.empty?
+        highlight_lines << if dash = part.index('-')
+          (part[0...dash].to_i..part[(dash + 1)..].to_i)
+        else
+          number = part.to_i
+          (number..number)
+        end
       end
     end
+  rescue ArgumentError
+    STDERR.puts "Error: invalid value for a line option: expected an integer or range like 3-5,7"
+    exit 1
   end
 
   if options["-f"]
@@ -188,10 +201,6 @@ begin
     when "terminal"
       formatter = Tartrazine::Ansi.new
       formatter.line_numbers = options["--line-numbers"] != nil
-      if formatter.responds_to?(:line_number_start=)
-        formatter.line_number_start = line_number_start
-        formatter.highlight_lines = highlight_lines
-      end
       formatter.theme = theme
     when "json"
       formatter = Tartrazine::Json.new
