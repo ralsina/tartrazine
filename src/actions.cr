@@ -34,6 +34,7 @@ module Tartrazine
     @token_type : String = ""
     @type : ActionType = ActionType::Token
     @sublexer_group_form : Bool = false
+    @initial_state : String = "root"
 
     # ameba:disable Metrics/CyclomaticComplexity
     def initialize(t : String, xml : XML::Node?)
@@ -68,8 +69,10 @@ module Tartrazine
       when ActionType::Pop
         # Chroma allows a bare <pop/>, meaning depth 1
         @depth = xml["depth"]?.try(&.to_i) || 1
-      when ActionType::Using
-        @lexer_name = xml["lexer"].downcase
+      when ActionType::Using, ActionType::Usingself
+        # Chroma allows starting the sub-lexer in a specific state
+        @initial_state = xml["state"]? || "root" if xml
+        @lexer_name = xml["lexer"].downcase if @type == ActionType::Using
       when ActionType::Combined
         @states = xml.attributes.select do |attrib|
           attrib.name == "state"
@@ -154,13 +157,14 @@ module Tartrazine
         return if match.empty?
         tokens.concat Tartrazine.lexer(@lexer_name).tokenizer(
           String.new(match.group(match_group)),
-          secondary: true).to_a
+          secondary: true, initial_state: @initial_state).to_a
       when ActionType::Usingself
-        # Shunt to another copy of this lexer
+        # Shunt to another copy of this lexer, optionally starting in
+        # a specific state (chroma's usingself state attribute)
         return if match.empty?
         tokens.concat tokenizer.lexer.tokenizer(
           String.new(match.group(match_group)),
-          secondary: true).to_a
+          secondary: true, initial_state: @initial_state).to_a
       when ActionType::Combined
         # Combine two or more states into one anonymous state
         new_state = tokenizer.combined_state(@states)

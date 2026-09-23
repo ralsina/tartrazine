@@ -88,9 +88,11 @@ module BytesRegex
     # When `into` is given and large enough it is filled and
     # returned instead of allocating; the caller then needs the
     # group count (group_count * 2) since the slice may be larger.
-    def snapshot_ovector(group_count : Int32, text_bytesize : Int32, into : Slice(Int32)? = nil) : Slice(Int32)
+    def snapshot_ovector(group_count : Int32, text_bytesize : Int32,
+                         match_data : LibPCRE2::MatchData* = BytesRegex.match_data,
+                         into : Slice(Int32)? = nil) : Slice(Int32)
       needed = group_count * 2
-      ovector = LibPCRE2.get_ovector_pointer(BytesRegex.match_data)
+      ovector = LibPCRE2.get_ovector_pointer(match_data)
       buffer = if into && into.size >= needed
                  into
                else
@@ -106,8 +108,8 @@ module BytesRegex
     # Run a match and return the number of captured groups,
     # or 0 if there was no match. Results stay available through
     # group_start/group_end until the next match on this Regex.
-    def match!(text : Bytes, pos = 0) : Int32
-      match_data = BytesRegex.match_data
+    def match!(text : Bytes, pos = 0, match_data : LibPCRE2::MatchData* = BytesRegex.match_data,
+               context : LibPCRE2::MatchContext* = BytesRegex.match_context) : Int32
       if @jit
         rc = LibPCRE2.jit_match(
           @re,
@@ -116,7 +118,7 @@ module BytesRegex
           pos,
           LibPCRE2::NO_UTF_CHECK,
           match_data,
-          BytesRegex.match_context)
+          context)
         # Fall back to the interpreter on JIT runtime errors
         # (-1 is just "no match")
         if rc < -1

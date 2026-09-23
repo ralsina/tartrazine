@@ -374,13 +374,17 @@ module Tartrazine
     property text : Bytes
     property pos : Int32 = 0
     @dq = Deque(Token).new
-    property state_stack = ["root"]
+    property state_stack : Array(String)
+    getter initial_state : String
 
     # Scratch reused across the steps of THIS tokenization (token
-    # accumulator and regex ovector snapshot), so rules and lexer
-    # templates stay immutable and shareable between tokenizations
+    # accumulator, regex ovector snapshot, and this thread's PCRE2
+    # handles), so rules and lexer templates stay immutable and
+    # shareable between tokenizations
     property scratch_tokens = [] of Token
     property scratch_bounds = Slice(Int32).new(8)
+    getter match_data : LibPCRE2::MatchData*
+    getter match_context : LibPCRE2::MatchContext*
 
     # States created on the fly for this tokenization only (Combined),
     # kept off the shared lexer template to avoid unbounded growth
@@ -418,7 +422,8 @@ module Tartrazine
       @local_states[state.name] = state
     end
 
-    def initialize(@lexer : BaseLexer, text : String, secondary = false)
+    def initialize(@lexer : BaseLexer, text : String, secondary = false,
+                   @initial_state = "root")
       # Rule regexes are compiled with UTF mode and NO_UTF_CHECK, which
       # is undefined behavior on invalid UTF-8: scrub it once so
       # matching is always valid
@@ -428,6 +433,12 @@ module Tartrazine
         text += "\n"
       end
       @text = text.to_slice
+      @state_stack = [initial_state]
+      # The thread-local PCRE2 handles are fetched once per
+      # tokenization: a tokenization never changes threads, and this
+      # keeps them out of the per-rule-attempt hot path
+      @match_data = BytesRegex.match_data
+      @match_context = BytesRegex.match_context
     end
 
     def next : Iterator::Stop | Token
@@ -515,8 +526,8 @@ module Tartrazine
     }
     property states = {} of String => State
 
-    def tokenizer(text : String, secondary = false) : BaseTokenizer
-      Tokenizer.new(self, text, secondary)
+    def tokenizer(text : String, secondary = false, initial_state = "root") : BaseTokenizer
+      Tokenizer.new(self, text, secondary, initial_state)
     end
 
     # Return the file extensions supported by this lexer
@@ -603,7 +614,7 @@ module Tartrazine
     def initialize(@language_lexer : BaseLexer, @root_lexer : BaseLexer)
     end
 
-    def tokenizer(text : String, secondary = false) : DelegatingTokenizer
+    def tokenizer(text : String, secondary = false, initial_state = "root") : DelegatingTokenizer
       DelegatingTokenizer.new(self, text, secondary)
     end
   end
@@ -740,7 +751,7 @@ module Tartrazine
   end
 
   class CrystalLexer < BaseLexer
-    def tokenizer(text : String, secondary = false) : BaseTokenizer
+    def tokenizer(text : String, secondary = false, initial_state = "root") : BaseTokenizer
       CrystalTokenizer.new(self, text, secondary)
     end
 
