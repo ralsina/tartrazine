@@ -2,6 +2,27 @@
 
 All notable changes to this project will be documented in this file.
 
+## [0.26.1] - 2026-09-23
+
+### 🚀 Features
+
+- Implement chroma's `sublexer_name_group` and `mutators` actions,
+  recovering six bundled lexers (arturo, cassandra_cql,
+  materialize_sql_dialect, org_mode, postgresql_sql_dialect,
+  fortranfixed)
+
+### 🐛 Bug Fixes
+
+- Concurrent tokenization of a shared lexer is now safe
+  (thread-local match data, JIT stack and match context, as in
+  Crystal's stdlib); a too-small JIT stack could also silently
+  fail long docstring matches
+- `\uXXXX` escapes in chroma patterns are translated to PCRE2's
+  `\x{XXXX}`, recovering three lexers (agda, objectpascal,
+  webgpu_shading_language)
+- Document the seven known-broken lexers; 282 of 288 bundled
+  lexers now load
+
 ## [0.26.0] - 2026-09-23
 
 ### 🚀 Features
