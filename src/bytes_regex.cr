@@ -7,11 +7,27 @@ end
 module BytesRegex
   extend self
 
-  # Shared JIT stack used by all regexes in this process
-  @@jit_stack : LibPCRE2::JITStack*?
+  # The JIT stack and match data are unique per thread, mirroring how
+  # Crystal's stdlib wraps PCRE2: a match call never yields, so nothing
+  # else on the same thread can touch them while they are in use, and
+  # other threads get their own. This makes concurrent tokenization of
+  # a shared lexer safe (the same guarantee as ::Regex).
+  thread_local(current_jit_stack : ::Crystal::ValueWithFinalizer(LibPCRE2::JITStack*)) do
+    ptr = LibPCRE2.jit_stack_create(32_768, 1_048_576, nil)
+    raise Exception.new("Error allocating JIT stack") if ptr.null?
+    ::Crystal::ValueWithFinalizer.new(ptr, ->(value : LibPCRE2::JITStack*) { LibPCRE2.jit_stack_free(value) })
+  end
 
-  def self.jit_stack : LibPCRE2::JITStack*
-    @@jit_stack ||= LibPCRE2.jit_stack_create(32_768, 1_048_576, nil)
+  thread_local(current_match_data : ::Crystal::ValueWithFinalizer(LibPCRE2::MatchData*)) do
+    # Maximum ovector so one buffer adapts to every pattern, like the
+    # stdlib does
+    ptr = LibPCRE2.match_data_create(65_535, nil)
+    raise Exception.new("Error allocating match data") if ptr.null?
+    ::Crystal::ValueWithFinalizer.new(ptr, ->(value : LibPCRE2::MatchData*) { LibPCRE2.match_data_free(value) })
+  end
+
+  def self.match_data : LibPCRE2::MatchData*
+    current_match_data.value
   end
 
   class Regex
@@ -45,23 +61,11 @@ module BytesRegex
         end
         raise Exception.new "Error #{msg} compiling regex at offset #{erroroffset}"
       end
-      @match_data = LibPCRE2.match_data_create_from_pattern(@re, nil)
-      @last_rc = 0
       @jit = LibPCRE2.jit_compile(@re, LibPCRE2::JIT_COMPLETE) == 0
-      @context = LibPCRE2.match_context_create(nil)
-      if @context
-        LibPCRE2.jit_stack_assign(@context, ->(_data : Void*) { BytesRegex.jit_stack }, nil)
-      end
     end
 
     def finalize
-      LibPCRE2.match_data_free(@match_data)
       LibPCRE2.code_free(@re)
-    end
-
-    # Number of captured groups of the last successful match
-    def group_count : Int32
-      @last_rc
     end
 
     # Copy the offsets of all captured groups of the last match,
@@ -71,9 +75,9 @@ module BytesRegex
     # When `into` is given and large enough it is filled and
     # returned instead of allocating; the caller then needs the
     # group count (group_count * 2) since the slice may be larger.
-    def snapshot_ovector(text_bytesize : Int32, into : Slice(Int32)? = nil) : Slice(Int32)
-      needed = @last_rc * 2
-      ovector = LibPCRE2.get_ovector_pointer(@match_data)
+    def snapshot_ovector(group_count : Int32, text_bytesize : Int32, into : Slice(Int32)? = nil) : Slice(Int32)
+      needed = group_count * 2
+      ovector = LibPCRE2.get_ovector_pointer(BytesRegex.match_data)
       buffer = if into && into.size >= needed
                  into
                else
@@ -90,21 +94,22 @@ module BytesRegex
     # or 0 if there was no match. Results stay available through
     # group_start/group_end until the next match on this Regex.
     def match!(text : Bytes, pos = 0) : Int32
-      if @jit && @context
+      match_data = BytesRegex.match_data
+      if @jit
         rc = LibPCRE2.jit_match(
           @re,
           text,
           text.size,
           pos,
           LibPCRE2::NO_UTF_CHECK,
-          @match_data,
-          @context)
+          match_data,
+          nil)
         # Fall back to the interpreter on JIT runtime errors
         # (-1 is just "no match")
         if rc < -1
           rc = LibPCRE2.match(
             @re, text, text.size, pos,
-            LibPCRE2::NO_UTF_CHECK, @match_data, nil)
+            LibPCRE2::NO_UTF_CHECK, match_data, nil)
         end
       else
         rc = LibPCRE2.match(
@@ -113,16 +118,16 @@ module BytesRegex
           text.size,
           pos,
           LibPCRE2::NO_UTF_CHECK,
-          @match_data,
+          match_data,
           nil)
       end
-      @last_rc = rc > 0 ? rc : 0
+      rc > 0 ? rc : 0
     end
 
     def match(str : Bytes, pos = 0) : Array(Match)
       rc = match!(str, pos)
       if rc > 0
-        ovector = LibPCRE2.get_ovector_pointer(@match_data)
+        ovector = LibPCRE2.get_ovector_pointer(BytesRegex.match_data)
         (0...rc).map do |i|
           m_start = ovector[2 * i]
           m_end = ovector[2 * i + 1]

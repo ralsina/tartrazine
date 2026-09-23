@@ -95,7 +95,7 @@ module Tartrazine
       # scratch: rules stay immutable, so lexer templates can be shared
       # freely. Reentrant tokenization (usingself/using actions) runs on
       # its own Tokenizer and cannot touch this scratch.
-      bounds = tokenizer.scratch_bounds = pattern.snapshot_ovector(text.bytesize, tokenizer.scratch_bounds)
+      bounds = tokenizer.scratch_bounds = pattern.snapshot_ovector(rc, text.bytesize, tokenizer.scratch_bounds)
       view = MatchDataView.new(text, bounds, rc * 2)
       tokens = tokenizer.scratch_tokens
       tokens.clear
