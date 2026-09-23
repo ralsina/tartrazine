@@ -330,6 +330,10 @@ module Tartrazine
     end
 
     def initialize(@lexer : BaseLexer, text : String, secondary = false)
+      # Rule regexes are compiled with UTF mode and NO_UTF_CHECK, which
+      # is undefined behavior on invalid UTF-8: scrub it once so
+      # matching is always valid
+      text = text.scrub
       # Respect the `ensure_nl` config option
       if text.size > 0 && text[-1] != '\n' && @lexer.config[:ensure_nl] && !secondary
         text += "\n"
@@ -686,6 +690,10 @@ module Tartrazine
     # delegate next, to: @iter
 
     def initialize(@lexer : BaseLexer, text : String, secondary = false)
+      # Rule regexes are compiled with UTF mode and NO_UTF_CHECK, which
+      # is undefined behavior on invalid UTF-8: scrub it once so
+      # matching is always valid
+      text = text.scrub
       # Respect the `ensure_nl` config option
       if text.size > 0 && text[-1] != '\n' && @lexer.config[:ensure_nl] && !secondary
         text += "\n"

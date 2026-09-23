@@ -121,6 +121,19 @@ describe Tartrazine do
   end
 
   describe "utf8" do
+    it "does not crash on invalid UTF-8 input" do
+      # Regexes are compiled with UTF mode and NO_UTF_CHECK, which is
+      # undefined behavior on invalid UTF-8; the tokenizer scrubs the
+      # input instead of crashing (signal 11 before the fix)
+      source = String.new(Bytes[0xff, 0xfe, 10, 120, 32, 61, 32, 49, 10])
+      lexer = Tartrazine.lexer("python")
+      tokens = lexer.tokenizer(source).to_a
+      tokens.each do |token|
+        token[:value].valid_encoding?.should be_true, "#{token.inspect} is not valid UTF-8"
+      end
+      tokens.map(&.[:value]).join.should contain("x = 1")
+    end
+
     it "does not split multi-byte characters into per-byte Error tokens" do
       # From https://github.com/ralsina/tartrazine/issues/22:
       # box-drawing characters after a quoted string ended up as
