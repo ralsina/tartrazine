@@ -21,6 +21,7 @@ dependencies:
     github: ralsina/sixteen
   docopt:
     github: ralsina/docopt.cr
+    version: "~> 0.4.0"
   crimage:
     github: naqvis/crimage
 

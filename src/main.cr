@@ -71,7 +71,11 @@ HELP = <<-HELP
 # pipe instead of crashing with an IO::Error stack trace
 Signal::PIPE.trap { exit 0 }
 
-options = Docopt.docopt(HELP, ARGV)
+# The usage text is parsed at compile time (docopt 0.4+), which saves
+# a couple of milliseconds of startup on every run
+COMPILED_HELP = Docopt.compile(HELP)
+
+options = Docopt.match(COMPILED_HELP, ARGV)
 
 # Handle version manually
 if options["--version"]
