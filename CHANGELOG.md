@@ -2,6 +2,12 @@
 
 All notable changes to this project will be documented in this file.
 
+## [0.26.4] - 2026-09-24
+
+### ⚡ Performance
+
+- Parse the CLI usage text at compile time with docopt 0.4
+
 ## [0.26.3] - 2026-09-24
 
 ### ⚡ Performance
