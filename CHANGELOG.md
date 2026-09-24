@@ -2,6 +2,16 @@
 
 All notable changes to this project will be documented in this file.
 
+## [0.26.3] - 2026-09-24
+
+### ⚡ Performance
+
+- First-byte prefilter: rule attempts whose first byte cannot start
+  a match are skipped without entering PCRE2 (82% of attempts on
+  Python, 51% on C). Tokenize 1.1-1.5x faster depending on lexer;
+  output verified identical, including a spec that compares tokens
+  with the filter on and off across nine languages
+
 ## [0.26.2] - 2026-09-23
 
 ### 🚀 Features
