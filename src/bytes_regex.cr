@@ -8,6 +8,11 @@ end
 module BytesRegex
   extend self
 
+  # Whether Regex#match! may skip attempts whose first byte cannot
+  # start a match. Only meant to be turned off by specs that check
+  # the prefilter never changes tokenization.
+  class_property? prefilter : Bool = true
+
   # The JIT stack and match data are unique per thread, mirroring how
   # Crystal's stdlib wraps PCRE2: a match call never yields, so nothing
   # else on the same thread can touch them while they are in use, and
@@ -77,6 +82,72 @@ module BytesRegex
         raise Exception.new "Error #{msg} compiling regex at offset #{erroroffset}"
       end
       @jit = LibPCRE2.jit_compile(@re, LibPCRE2::JIT_COMPLETE) == 0
+      load_first_byte_info(pattern, flags, ignorecase == true)
+    end
+
+    # 256-bit set of bytes that can start a match, or nil when PCRE2
+    # could not determine one. Kept as a heap Bytes on purpose: a
+    # nilable StaticArray would be copied on every read in match!,
+    # which costs more than the call it saves.
+    @first : Bytes?
+
+    # The pattern can only match at the start of a line or of the
+    # subject (PCRE2 "first code type" 2)
+    @line_start_only = false
+
+    # Rules are matched ANCHORED at a position, so a rule whose
+    # possible first bytes exclude text[pos] cannot match there and
+    # the call into PCRE2 can be skipped: on typical source about
+    # 80% of attempts fail this way. PCRE2 computes this information
+    # at compile time but only when start-of-match optimizations are
+    # enabled, and the real pattern needs NO_START_OPTIMIZE (see
+    # above), so a throwaway copy is compiled just to read it.
+    private def load_first_byte_info(pattern : String, flags : UInt32, ignorecase : Bool) : Nil
+      # PCRE2 reports the first code unit of one case only for
+      # caseless patterns, so those keep matching unconditionally
+      return if ignorecase
+      shadow = LibPCRE2.compile(pattern, pattern.bytesize, flags & ~LibPCRE2::NO_START_OPTIMIZE,
+        out errorcode, out erroroffset, nil)
+      return unless shadow
+      begin
+        first_type = 0_u32
+        LibPCRE2.pattern_info(shadow, LibPCRE2::INFO_FIRSTCODETYPE, pointerof(first_type).as(Void*))
+        case first_type
+        when 1
+          # A single fixed first code unit
+          first_unit = 0_u32
+          LibPCRE2.pattern_info(shadow, LibPCRE2::INFO_FIRSTCODEUNIT, pointerof(first_unit).as(Void*))
+          set = Bytes.new(32, 0_u8)
+          set[(first_unit & 0xff) >> 3] |= 1_u8 << (first_unit & 7)
+          @first = set
+        when 2
+          @line_start_only = true
+        else
+          # Possibly a bitmap of first code units (nil when PCRE2 has
+          # no information, eg. patterns that can match empty)
+          bitmap = Pointer(UInt8).null
+          LibPCRE2.pattern_info(shadow, LibPCRE2::INFO_FIRSTBITMAP, pointerof(bitmap).as(Void*))
+          unless bitmap.null?
+            set = Bytes.new(32, 0_u8)
+            set.to_unsafe.copy_from(bitmap, 32)
+            @first = set
+          end
+        end
+      ensure
+        LibPCRE2.code_free(shadow)
+      end
+    end
+
+    # True when the first-byte information proves no match can start
+    # at pos, so PCRE2 need not be called
+    @[AlwaysInline]
+    private def cannot_match_at?(text : Bytes, pos : Int32) : Bool
+      return false unless BytesRegex.prefilter? && pos < text.size
+      if set = @first
+        byte = text.to_unsafe[pos]
+        return (set.to_unsafe[byte >> 3] & (1_u8 << (byte & 7))) == 0
+      end
+      @line_start_only && pos > 0 && text.to_unsafe[pos - 1] != 10_u8
     end
 
     def finalize
@@ -112,6 +183,7 @@ module BytesRegex
     # group_start/group_end until the next match on this Regex.
     def match!(text : Bytes, pos = 0, match_data : LibPCRE2::MatchData* = BytesRegex.match_data,
                context : LibPCRE2::MatchContext* = BytesRegex.match_context) : Int32
+      return 0 if cannot_match_at?(text, pos)
       if @jit
         rc = LibPCRE2.jit_match(
           @re,
