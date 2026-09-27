@@ -68,8 +68,9 @@ module Tartrazine
   @@lexer_cache = {} of String => BaseLexer
   @@lexer_mutex = Mutex.new
 
-  # Lazily-parsed heuristics for lexer_by_content
+  # Lazily-parsed heuristics for lexer_by_content, mutex-guarded
   @@heuristics : Linguist::Heuristic?
+  @@heuristics_mutex = Mutex.new
 
   # Get the lexer object for a language name
   def self.lexer(name : String? = nil, filename : String? = nil, mimetype : String? = nil) : BaseLexer
@@ -186,8 +187,10 @@ module Tartrazine
 
   private def self.lexer_by_content(fname : String) : String?
     # Parsed once and shared: the heuristic rules never change
-    @@heuristics ||= Linguist::Heuristic.from_yaml(LexerFiles.get("/heuristics.yml").gets_to_end)
-    result = @@heuristics.as(Linguist::Heuristic).run(fname, File.read(fname))
+    heuristics = @@heuristics_mutex.synchronize do
+      @@heuristics ||= Linguist::Heuristic.from_yaml(LexerFiles.get("/heuristics.yml").gets_to_end)
+    end
+    result = heuristics.run(fname, File.read(fname))
     case result
     when Nil
       nil
@@ -202,9 +205,10 @@ module Tartrazine
     cached = @@lexer_cache[name]?
     return cached if cached
     language, root = name.split("+", 2)
+    # The component lexers are resolved outside the lock: they take
+    # the same mutex themselves and Mutex is not reentrant
     lexer = DelegatingLexer.new(lexer(language), lexer(root))
-    @@lexer_cache[name] = lexer
-    lexer
+    @@lexer_mutex.synchronize { @@lexer_cache[name] ||= lexer }
   end
 
   # Create a lexer instance from cached template data, caching the
@@ -618,15 +622,14 @@ module Tartrazine
     end
 
     # Return file extensions for this XML lexer. The XML parse is
-    # memoized per lexer name since extensions never change.
-    @@extensions_cache = {} of String => Array(String)
+    # memoized on the instance (instances are cached per lexer name)
+    # since extensions never change.
+    @extensions : Array(String)?
 
     def extensions : Array(String)
       return [] of String unless @config[:name]?
 
-      cached = @@extensions_cache[@config[:name]]?
-      return cached if cached
-      @@extensions_cache[@config[:name]] = parse_extensions
+      @extensions ||= parse_extensions
     end
 
     private def parse_extensions : Array(String)
@@ -643,7 +646,7 @@ module Tartrazine
           config.children.select { |node| node.name == "filename" }.map(&.content.to_s)
         end
       end || [] of String
-    rescue
+    rescue BakedFileSystem::NoSuchFileError | XML::Error
       [] of String
     end
   end

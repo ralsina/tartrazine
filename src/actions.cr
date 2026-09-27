@@ -190,7 +190,7 @@ module Tartrazine
           tokens.concat Tartrazine.lexer(lexer_name).tokenizer(
             content.to_s,
             secondary: true).to_a
-        rescue
+        rescue UnknownLexerError | LexerLoadError
           # Fallback to text lexer if requested lexer is not found
           tokens.concat Tartrazine.lexer("text").tokenizer(
             content.to_s,
@@ -210,7 +210,7 @@ module Tartrazine
       lexer_name = String.new(match.group(@lexer_index))
       sub_tokens = begin
         Tartrazine.lexer(lexer_name).tokenizer(content, secondary: true).to_a
-      rescue
+      rescue UnknownLexerError | LexerLoadError
         Tartrazine.lexer("text").tokenizer(content, secondary: true).to_a
       end
 

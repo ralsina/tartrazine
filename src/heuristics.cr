@@ -7,6 +7,14 @@ require "yaml"
 #
 # Consider this code (c) 2017 GitHub, Inc. even if I wrote it.
 module Linguist
+  # Heuristic patterns are compiled once and shared across runs
+  @@regex_cache = {} of String => ::Regex
+  @@regex_mutex = Mutex.new
+
+  def self.regex(pattern : String) : ::Regex
+    @@regex_mutex.synchronize { @@regex_cache[pattern] ||= ::Regex.new(pattern) }
+  end
+
   class Heuristic
     include YAML::Serializable
 
@@ -55,13 +63,13 @@ module Linguist
         p_arr = [] of String
         p_arr << pattern.as(String) if pattern.is_a? String
         p_arr = pattern.as(Array(String)) if pattern.is_a? Array(String)
-        return true if p_arr.any? { |pat| ::Regex.new(pat).matches?(content) }
+        return true if p_arr.any? { |pat| Linguist.regex(pat).matches?(content) }
       end
       if negative_pattern
         p_arr = [] of String
         p_arr << negative_pattern.as(String) if negative_pattern.is_a? String
         p_arr = negative_pattern.as(Array(String)) if negative_pattern.is_a? Array(String)
-        return true if p_arr.none? { |pat| ::Regex.new(pat).matches?(content) }
+        return true if p_arr.none? { |pat| Linguist.regex(pat).matches?(content) }
       end
       if named_pattern
         p_arr = [] of String
@@ -70,7 +78,7 @@ module Linguist
         else
           p_arr = named_patterns[named_pattern].as(Array(String))
         end
-        result = p_arr.any? { |pat| ::Regex.new(pat).matches?(content) }
+        result = p_arr.any? { |pat| Linguist.regex(pat).matches?(content) }
       end
       if and
         result = and.as(Array(LangRule)).all?(&.match(content, named_patterns))
