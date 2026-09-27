@@ -12,18 +12,26 @@ dependencies:
   hansa:
     github: ralsina/hansa
     version: "~> 0.1.6"
+  # hansa requires this on branch master, so it cannot be pinned to a
+  # version here without a dependency conflict
   baked_file_system:
     github: ralsina/baked_file_system
     branch: master
   base58:
     github: crystal-china/base58.cr
+    commit: 0e2c44d16a8098b00d8bf0b74add8bb9ea2f1c5f
+  # sixteen 0.8+ depends on baked_file_system by version, which shards
+  # cannot reconcile with hansa's branch requirement above, so 0.7 is
+  # the newest release that resolves
   sixteen:
     github: ralsina/sixteen
+    version: "~> 0.7.0"
   docopt:
     github: ralsina/docopt.cr
     version: "~> 1.4"
   crimage:
     github: naqvis/crimage
+    commit: 7d3244a3850646e3d398cef071f7c3e3f52c7518
 
 crystal: ">= 1.20.0"
 
