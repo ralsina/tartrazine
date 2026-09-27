@@ -1,0 +1,30 @@
+---input---
+package demo
+
+import groovy.transform.ToString
+
+@ToString
+class Person {
+    String name
+    int age
+
+    boolean isAdult() { age >= 18 }
+}
+
+def people = [new Person(name: 'Ann', age: 30), new Person(name: 'Bob', age: 12)]
+def adults = people.findAll { it.adult }
+println "adults: ${adults*.name.join(', ')}"
+
+def map = [a: 1, b: 2]
+map.each { k, v -> println "$k=$v" }
+
+switch (people.size()) {
+    case 0: println 'none'; break
+    case { it > 1 }: println "many"; break
+    default: println 'one'
+}
+
+String multi = """line one
+line two ${1 + 1}"""
+assert multi.contains('two')
+---tokens---

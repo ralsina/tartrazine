@@ -1,0 +1,36 @@
+---input---
+using System;
+using System.Collections.Generic;
+using System.Linq;
+
+namespace Demo
+{
+    /// <summary>A tiny record.</summary>
+    public record Point(double X, double Y);
+
+    public interface IShape { double Area { get; } }
+
+    public sealed class Circle : IShape
+    {
+        private readonly double _radius;
+        public Circle(double radius) => _radius = radius;
+        public double Area => Math.PI * _radius * _radius;
+    }
+
+    internal static class Program
+    {
+        private static async Task Main(string[] args)
+        {
+            var shapes = new List<IShape> { new Circle(1.0), new Circle(2.5) };
+            foreach (var s in shapes.Where(x => x.Area > 1))
+            {
+                Console.WriteLine($"area: {s.Area:F2}");
+            }
+            int? maybe = null;
+            var text = @"verbatim \path";
+            await Task.Delay(10);
+            Console.WriteLine(maybe ?? 0x2A);
+        }
+    }
+}
+---tokens---

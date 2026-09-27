@@ -1,0 +1,25 @@
+---input---
+import 'dart:math';
+
+abstract class Shape {
+  double get area;
+}
+
+class Circle extends Shape {
+  final double radius;
+  const Circle(this.radius);
+
+  @override
+  double get area => pi * radius * radius;
+}
+
+void main() async {
+  final shapes = <Shape>[Circle(1.0), Circle(2.5)];
+  for (var s in shapes) {
+    print('area: ${s.area.toStringAsFixed(2)}');
+  }
+  var total = shapes.map((s) => s.area).reduce((a, b) => a + b);
+  await Future.delayed(Duration(milliseconds: 10));
+  print("total $total");
+}
+---tokens---

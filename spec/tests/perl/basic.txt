@@ -1,0 +1,30 @@
+---input---
+#!/usr/bin/perl
+use strict;
+use warnings;
+
+my %count;
+my @words = qw(apple banana apple cherry);
+
+foreach my $w (@words) {
+    $count{$w}++;
+}
+
+for my $key (sort keys %count) {
+    printf "%-10s %d\n", $key, $count{$key};
+}
+
+sub greet {
+    my ($name) = @_;
+    return "Hello, $name!";
+}
+
+print greet("perl"), "\n";
+my $text = "the quick brown fox";
+if ($text =~ /quick\s+(\w+)/) {
+    print "matched: $1\n";
+}
+$text =~ s/fox/dog/g;
+my $ref = { list => [1, 2, 3], code => sub { $_[0] * 2 } };
+print $ref->{code}->(21), "\n";
+---tokens---

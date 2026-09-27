@@ -1,0 +1,23 @@
+---input---
+-module(counter).
+-export([start/0, loop/1]).
+
+%% A tiny counter process
+start() ->
+    spawn(fun() -> loop(0) end).
+
+loop(N) ->
+    receive
+        {inc, From} ->
+            From ! {ok, N + 1},
+            loop(N + 1);
+        {get, From} ->
+            From ! {value, N},
+            loop(N);
+        stop ->
+            ok
+    after 5000 ->
+        io:format("idle ~p~n", [N]),
+        loop(N)
+    end.
+---tokens---

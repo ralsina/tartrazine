@@ -1,0 +1,39 @@
+---input---
+# minimal reverse proxy
+user  www-data;
+worker_processes  auto;
+
+events {
+    worker_connections  1024;
+}
+
+http {
+    include       mime.types;
+    default_type  application/octet-stream;
+    sendfile      on;
+    keepalive_timeout 65;
+
+    upstream backend {
+        server 127.0.0.1:8080 weight=3;
+        server 127.0.0.1:8081;
+    }
+
+    server {
+        listen       80;
+        server_name  example.com www.example.com;
+
+        location / {
+            proxy_pass http://backend;
+            proxy_set_header Host $host;
+            proxy_set_header X-Real-IP $remote_addr;
+        }
+
+        location ~ \.(png|jpg)$ {
+            expires 30d;
+            add_header Cache-Control "public";
+        }
+
+        error_page 500 502 503 504 /50x.html;
+    }
+}
+---tokens---

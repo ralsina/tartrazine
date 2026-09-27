@@ -1,0 +1,27 @@
+---input---
+CC ?= gcc
+CFLAGS := -O2 -Wall -Wextra
+SRC = $(wildcard src/*.c)
+OBJ = $(SRC:.c=.o)
+
+.PHONY: all clean test
+
+all: app
+
+app: $(OBJ)
+	$(CC) $(CFLAGS) -o $@ $^
+
+%.o: %.c include/app.h
+	$(CC) $(CFLAGS) -c $< -o $@
+
+test: app
+	./app --self-test || exit 1
+
+clean:
+	rm -f app $(OBJ)
+
+# comment at the end
+ifeq ($(DEBUG),1)
+CFLAGS += -g
+endif
+---tokens---

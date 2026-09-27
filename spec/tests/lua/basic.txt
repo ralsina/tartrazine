@@ -1,0 +1,20 @@
+---input---
+-- fibonacci with memoization
+local memo = {}
+
+local function fib(n)
+  if n < 2 then return n end
+  if memo[n] then return memo[n] end
+  local value = fib(n - 1) + fib(n - 2)
+  memo[n] = value
+  return value
+end
+
+for i = 1, 10 do
+  print(string.format("fib(%d) = %d", i, fib(i)))
+end
+
+local t = { name = "lua", version = 5.4, ["key with spaces"] = true }
+print(#t, t.name, 0x1F, 1e3, [[long
+string]])
+---tokens---

@@ -1,0 +1,29 @@
+# schema and a query
+type User implements Node {
+  id: ID!
+  name: String
+  posts(first: Int = 10, after: String): [Post!]!
+}
+
+enum Role { ADMIN USER }
+
+input NewPost {
+  title: String!
+  tags: [String!]
+}
+
+query GetUser($id: ID!, $withPosts: Boolean = false) {
+  user(id: $id) {
+    ...UserFields
+    posts(first: 5) @include(if: $withPosts) {
+      title
+    }
+  }
+}
+
+fragment UserFields on User {
+  id
+  name
+}
+
+mutation { createPost(input: { title: "hi", tags: ["a", "b"] }) { id } }

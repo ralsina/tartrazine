@@ -1,0 +1,25 @@
+---input---
+import std/[strutils, sequtils]
+
+type
+  Shape = ref object of RootObj
+    name: string
+  Circle = ref object of Shape
+    radius: float
+
+method area(s: Shape): float {.base.} = 0.0
+method area(c: Circle): float = 3.14159 * c.radius * c.radius
+
+proc describe(s: Shape): string =
+  result = s.name & ": " & $s.area()
+
+let shapes = @[Circle(name: "c1", radius: 1.0), Circle(name: "c2", radius: 2.0)]
+for s in shapes:
+  echo describe(s)
+
+var total = 0
+for i in 1..10:
+  if i mod 2 == 0:
+    total += i
+echo "total = ", total, " ", 0xFF, " ", 1'i8, " ", "a".repeat(3)
+---tokens---

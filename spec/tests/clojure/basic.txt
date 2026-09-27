@@ -1,0 +1,22 @@
+---input---
+(ns demo.core
+  (:require [clojure.string :as str]))
+
+;; a simple map over a vector
+(defn square [x] (* x x))
+
+(def numbers [1 2 3 4 5])
+
+(println (map square numbers))
+
+(defn greet
+  "Greets someone."
+  [{:keys [name] :or {name "world"}}]
+  (str "Hello, " (str/upper-case name) "!"))
+
+(let [x 10
+      y 2.5
+      k :keyword]
+  (when (> x y)
+    (println k #{1 2} 'sym \a)))
+---tokens---

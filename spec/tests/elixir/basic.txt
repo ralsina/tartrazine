@@ -1,0 +1,22 @@
+---input---
+defmodule Greeter do
+  @moduledoc "Says hello."
+  @default "world"
+
+  def hello(name \\ @default) do
+    "Hello, #{name}!"
+  end
+
+  def sum(list) when is_list(list), do: Enum.reduce(list, 0, &+/2)
+
+  defp private_helper(%{key: value} = map) do
+    case value do
+      :ok -> {:ok, map}
+      _ -> {:error, "bad"}
+    end
+  end
+end
+
+IO.puts Greeter.hello("elixir")
+[1, 2, 3] |> Enum.map(fn x -> x * 2 end) |> IO.inspect()
+---tokens---

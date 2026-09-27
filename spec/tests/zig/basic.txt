@@ -1,0 +1,28 @@
+---input---
+const std = @import("std");
+
+const Point = struct {
+    x: f32,
+    y: f32,
+
+    pub fn dist(self: Point, other: Point) f32 {
+        const dx = self.x - other.x;
+        const dy = self.y - other.y;
+        return @sqrt(dx * dx + dy * dy);
+    }
+};
+
+pub fn main() !void {
+    var gpa = std.heap.GeneralPurposeAllocator(.{}){};
+    defer _ = gpa.deinit();
+    const a = Point{ .x = 0.0, .y = 0.0 };
+    const b = Point{ .x = 3.0, .y = 4.0 };
+    var list = std.ArrayList(u8).init(gpa.allocator());
+    defer list.deinit();
+    try list.appendSlice("hello");
+    std.debug.print("dist={d} len={} hex=0x{x}\n", .{ a.dist(b), list.items.len, 255 });
+    comptime {
+        if (@sizeOf(Point) != 8) @compileError("bad size");
+    }
+}
+---tokens---

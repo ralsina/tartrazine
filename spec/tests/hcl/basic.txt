@@ -1,0 +1,25 @@
+---input---
+# generic HCL config
+service "web" {
+  listen  = "0.0.0.0:8080"
+  workers = 4
+  debug   = false
+
+  limits {
+    max_connections = 1024
+    timeout         = "30s"
+  }
+
+  env = {
+    LOG_LEVEL = "info"
+    REGION    = var.region
+  }
+
+  tags = ["a", "b", 3]
+  name = "svc-${var.env}-${upper("x")}"
+}
+
+variable "region" {
+  default = "eu-west-1"
+}
+---tokens---
