@@ -84,9 +84,9 @@ COMPLETIONS = {
 }
 
 completion_scripts = {
-  "--completion-bash" => ->{ puts Docopt.bash_completion("tartrazine", HELP, COMPLETIONS) },
-  "--completion-fish" => ->{ puts Docopt.fish_completion("tartrazine", HELP, COMPLETIONS) },
-  "--completion-zsh"  => ->{ puts Docopt.zsh_completion("tartrazine", HELP, COMPLETIONS) },
+  "--completion-bash" => -> { puts Docopt.bash_completion("tartrazine", HELP, COMPLETIONS) },
+  "--completion-fish" => -> { puts Docopt.fish_completion("tartrazine", HELP, COMPLETIONS) },
+  "--completion-zsh"  => -> { puts Docopt.zsh_completion("tartrazine", HELP, COMPLETIONS) },
 }
 if ARGV.size == 1 && (completion = completion_scripts[ARGV[0]?]?)
   completion.call
