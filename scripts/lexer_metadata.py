@@ -3,6 +3,7 @@
 # all the lexers to get the information.
 
 import glob
+import sys
 from collections import defaultdict
 
 lexer_by_name = {}
@@ -56,7 +57,11 @@ for fname in sorted(glob.glob("lexers/*.xml")):
 # lexers (nu, systemd) also claim it
 lexer_by_mimetype["text/plain"] = "plaintext"
 
-with open("src/constants/lexers.cr", "w") as f:
+# The output path can be overridden (the spec suite regenerates into a
+# temporary file to check the committed constants are current)
+output = sys.argv[1] if len(sys.argv) > 1 else "src/constants/lexers.cr"
+
+with open(output, "w") as f:
     # Crystal doesn't come from a xml file
     lexer_by_name["crystal"] = "crystal"
     lexer_by_name["cr"] = "crystal"
