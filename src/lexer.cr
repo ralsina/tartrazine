@@ -383,7 +383,7 @@ module Tartrazine
   # so every listed name is usable; spec/load_spec.cr asserts this
   # list stays exactly in sync with what actually fails to load.
   BROKEN_LEXERS = %w[
-    al fish lilypond openedge_abl racket scss v_shell
+    al fish lilypond openedge_abl racket scss v v_shell
   ]
 
   def self.lexers : Array(String)

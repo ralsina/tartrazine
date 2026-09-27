@@ -9,7 +9,7 @@ a port of [Pygments](https://pygments.org/) to
 
 It also provides a CLI tool which can be used to highlight many things in many styles.
 
-Currently Tartrazine supports 281 languages and has hundreds of themes
+Currently Tartrazine supports 280 languages and has hundreds of themes
 (69 from Chroma,
 the rest are base16 themes via [Sixteen](https://github.com/ralsina/sixteen)
 
@@ -148,9 +148,9 @@ snippets are often misclassified.
 
 ## Known-broken lexers
 
-Seven bundled lexers fail to load because their Chroma XML contains regexes
-PCRE2 rejects (variable-length lookbehind assertions in `fish`, `scss` and
-`v_shell`; patterns over PCRE2's compiled-size limit in `racket` and
+Eight bundled lexers fail to load because their Chroma XML contains regexes
+PCRE2 rejects (variable-length lookbehind assertions in `fish`, `scss`, `v`
+and `v_shell`; patterns over PCRE2's compiled-size limit in `racket` and
 `openedge_abl`; invalid syntax in `al` and `lilypond`). They are excluded
 from `--list-lexers` and the language count; selecting them by name reports
 an error. The list is guarded by `spec/load_spec.cr`.
