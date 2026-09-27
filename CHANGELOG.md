@@ -2,6 +2,40 @@
 
 All notable changes to this project will be documented in this file.
 
+## [0.27.0] - 2026-09-27
+
+### 🚀 Features
+
+- Upgrade to docopt 0.8, fix flag semantics, add shell completion
+- Color our own help with our own docopt lexer
+
+### 🐛 Bug Fixes
+
+- One error line for unloadable lexers and unwritable output files
+- Resolve alias and mimetype collisions like chroma, mark the V lexer broken
+
+### 📚 Documentation
+
+- The -Dnolexers + TT_LEXERS=docopt recipe for docopt-only consumers
+- The HTML template placeholder is {{body}}, not {{code}}
+
+### 🎨 Styling
+
+- Crystal format main.cr
+
+### 🧪 Testing
+
+- Token comparison inputs for twenty lexers that had none
+
+### ⚙️ Miscellaneous Tasks
+
+- Remove a stray debug file
+
+### Build
+
+- Pin dependencies to what a fresh install can resolve
+- Pin baked_file_system, hansa and sixteen by version
+
 ## [0.26.4] - 2026-09-24
 
 ### ⚡ Performance
