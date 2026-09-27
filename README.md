@@ -211,7 +211,7 @@ for the output. The template is a string where the following
 placeholders will be replaced:
 
 - `{{style_defs}}` will be replaced by the CSS styles needed for the theme
-- `{{code}}` will be replaced by the highlighted code
+- `{{body}}` will be replaced by the highlighted code
 
 This is an example template that changes the padding around the code:
 

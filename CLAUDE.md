@@ -111,7 +111,7 @@ features:
 - Multiple output formats: html, terminal, json, svg, png
 - Theme selection and CSS generation
 - Line numbering and standalone HTML support
-- Custom HTML templates with placeholders (`{{style_defs}}`, `{{code}}`)
+- Custom HTML templates with placeholders (`{{style_defs}}`, `{{body}}`)
 - Language auto-detection and manual lexer selection
 
 ## Important Development Notes
