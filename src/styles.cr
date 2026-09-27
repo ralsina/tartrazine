@@ -31,11 +31,17 @@ module Tartrazine
     {% end %}
   end
 
-  # Try to load an XML theme file; nil if missing or broken
+  # Try to load a bundled XML theme file; nil if there is none
   private def self.xml_theme(file_name : String) : Theme?
     Theme.from_xml(ThemeFiles.get("/#{file_name}.xml").gets_to_end)
-  rescue
+  rescue BakedFileSystem::NoSuchFileError
     nil
+  end
+
+  # Sixteen reports a missing theme with a plain Exception, so "not
+  # found" has to be told apart from other errors by message
+  def self.sixteen_theme_missing?(ex : Exception) : Bool
+    ex.message.try(&.includes?("Theme not found")) || false
   end
 
   # Try the base16 light/dark variant of a theme. Only "theme not
@@ -44,7 +50,7 @@ module Tartrazine
     sixteen_theme = wanted == "light" ? Sixteen.light_variant(base_name) : Sixteen.dark_variant(base_name)
     Theme.from_base16(sixteen_theme.name)
   rescue ex : Exception
-    raise ex unless ex.message.try &.includes? "Theme not found"
+    raise ex unless sixteen_theme_missing?(ex)
     nil
   end
 
@@ -54,7 +60,8 @@ module Tartrazine
     return unless wanted == "light" || wanted == "dark"
     sixteen_theme = wanted == "light" ? Sixteen.light_variant(name) : Sixteen.dark_variant(name)
     create_theme_from_sixteen(sixteen_theme, name)
-  rescue
+  rescue ex : Exception
+    raise ex unless sixteen_theme_missing?(ex)
     nil
   end
 
@@ -164,7 +171,7 @@ module Tartrazine
           theme = Tartrazine.theme(base_name)
           base_is_light = theme.light?
           base_is_dark = theme.dark?
-        rescue
+        rescue UnknownThemeError
           # If we can't determine, assume it's not a variant
         end
       end
@@ -292,8 +299,9 @@ module Tartrazine
         begin
           sixteen_theme = Sixteen.theme(@name)
           return sixteen_theme.variant == "light"
-        rescue
-          # Fallback to analysis if metadata fails
+        rescue ex : Exception
+          # Fallback to analysis if the theme has no metadata
+          raise ex unless Tartrazine.sixteen_theme_missing?(ex)
         end
       end
 
@@ -317,8 +325,9 @@ module Tartrazine
         begin
           sixteen_theme = Sixteen.theme(@name)
           return sixteen_theme.variant == "dark"
-        rescue
-          # Fallback to analysis if metadata fails
+        rescue ex : Exception
+          # Fallback to analysis if the theme has no metadata
+          raise ex unless Tartrazine.sixteen_theme_missing?(ex)
         end
       end
 
@@ -449,12 +458,16 @@ module Tartrazine
         s.underline = true if style.includes?("underline")
         s.underline = false if style.includes?("nounderline")
 
-        s.color = style.find(&.starts_with?("#")).try { |v| Color.new v.split("#").last }
-        s.background = style.find(&.starts_with?("bg:#")).try { |v| Color.new v.split("#").last }
-        s.border = style.find(&.starts_with?("border:#")).try { |v| Color.new v.split("#").last }
+        s.color = style.find(&.starts_with?("#")).try { |v| hex_color(v.split("#").last) }
+        s.background = style.find(&.starts_with?("bg:#")).try { |v| hex_color(v.split("#").last) }
+        s.border = style.find(&.starts_with?("border:#")).try { |v| hex_color(v.split("#").last) }
 
         theme.styles[node["type"]] = s
       end
+      # Every style lookup falls back to Background in the end, so a
+      # theme that does not define it (pygments, onesenterprise) gets
+      # an empty one
+      theme.styles["Background"] ||= Style.new
       # We really want a LineHighlight class
       if !theme.styles.has_key?("LineHighlight")
         theme.styles["LineHighlight"] = Style.new
@@ -462,6 +475,12 @@ module Tartrazine
         theme.styles["LineHighlight"].bold = true
       end
       theme
+    end
+
+    # Chroma styles may use CSS-style 3-digit colours (#f00 in rrt)
+    private def self.hex_color(hex : String) : Color
+      hex = hex.each_char.join { |char| "#{char}#{char}" } if hex.size == 3
+      Color.new(hex)
     end
 
     # If the color is dark, make it brighter and viceversa
