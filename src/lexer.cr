@@ -11,6 +11,11 @@ module Tartrazine
   class UnknownLexerError < Exception
   end
 
+  # Raised when a lexer exists but its definition cannot be loaded
+  # (eg. a pattern PCRE2 rejects, see BROKEN_LEXERS)
+  class LexerLoadError < Exception
+  end
+
   class LexerFiles
     extend BakedFileSystem
 
@@ -211,7 +216,13 @@ module Tartrazine
       cached = @@lexer_cache[lexer_file_name]?
       return cached if cached
 
-      template = get_or_create_template(lexer_file_name)
+      template = begin
+        get_or_create_template(lexer_file_name)
+      rescue ex : BakedFileSystem::NoSuchFileError
+        raise ex
+      rescue ex
+        raise LexerLoadError.new("Lexer #{lexer_file_name} cannot be loaded: #{ex.message}")
+      end
 
       # Create lexer instance with cached data
       lexer = RegexLexer.new

@@ -371,15 +371,21 @@ begin
     if options["-o"].nil?
       formatter.format(input, lexer, STDOUT)
     else
-      File.open(options["-o"].as(String), "w") do |outf|
-        formatter.format(input, lexer, outf)
+      output_path = options["-o"].as(String)
+      begin
+        File.open(output_path, "w") do |outf|
+          formatter.format(input, lexer, outf)
+        end
+      rescue ex : File::Error
+        STDERR.puts "Error: cannot write output file #{output_path}: #{ex.message}"
+        exit 1
       end
     end
   end
 rescue ex : File::NotFoundError
   STDERR.puts "Error: file not found: #{ex.file}"
   exit 1
-rescue ex : Tartrazine::UnknownLexerError | Tartrazine::UnknownThemeError
+rescue ex : Tartrazine::UnknownLexerError | Tartrazine::UnknownThemeError | Tartrazine::LexerLoadError
   STDERR.puts "Error: #{ex.message}"
   exit 1
 end

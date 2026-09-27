@@ -19,6 +19,13 @@ describe "every listed lexer loads" do
 end
 
 describe "known-broken lexers" do
+  it "raise LexerLoadError with the lexer name" do
+    error = expect_raises(Tartrazine::LexerLoadError) do
+      Tartrazine.lexer(Tartrazine::BROKEN_LEXERS.first)
+    end
+    error.message.to_s.should contain(Tartrazine::BROKEN_LEXERS.first)
+  end
+
   it "matches exactly the set that fails to load" do
     actually_broken = Tartrazine.lexers_with_broken.select do |name|
       Tartrazine.lexer(name)
