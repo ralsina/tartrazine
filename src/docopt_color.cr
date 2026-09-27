@@ -11,6 +11,15 @@ require "docopt"
 #
 # The gating lives in docopt (terminals only, NO_COLOR respected);
 # this side just implements the hook with our docopt lexer.
+#
+# Applications that only want docopt highlighting can shrink their
+# binary by baking just this lexer: build with -Dnolexers and
+# TT_LEXERS=docopt in the environment of the compiler, e.g.
+#
+#     TT_LEXERS=docopt crystal build -Dnolexers src/myapp.cr
+#
+# (the flag is "nolexers", one word; TT_LEXERS is read at compile
+# time and always includes the plaintext fallback).
 
 module Docopt
   # Install a colorizer that runs text through tartrazine's docopt
