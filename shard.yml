@@ -1,5 +1,5 @@
 name: tartrazine
-version: 0.26.4
+version: 0.27.0
 
 authors:
   - Roberto Alsina <roberto.alsina@gmail.com>
@@ -21,7 +21,7 @@ dependencies:
     github: ralsina/sixteen
   docopt:
     github: ralsina/docopt.cr
-    version: "~> 0.8.0"
+    version: "~> 1.4"
   crimage:
     github: naqvis/crimage
 

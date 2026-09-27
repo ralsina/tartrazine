@@ -1,4 +1,5 @@
 require "docopt"
+require "./docopt_color"
 require "./tartrazine"
 
 HELP = <<-HELP
@@ -70,6 +71,9 @@ HELP = <<-HELP
 # Exit quietly when downstream readers (head, less, ...) close the
 # pipe instead of crashing with an IO::Error stack trace
 Signal::PIPE.trap { exit 0 }
+
+# Highlight our own help with our own docopt lexer
+Docopt.use_tartrazine_color
 
 # The usage text is parsed at compile time (docopt 0.4+), which saves
 # a couple of milliseconds of startup on every run
