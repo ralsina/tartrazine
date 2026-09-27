@@ -75,6 +75,24 @@ Signal::PIPE.trap { exit 0 }
 # a couple of milliseconds of startup on every run
 COMPILED_HELP = Docopt.compile(HELP)
 
+# Shell completion scripts covering the whole interface; values for
+# the list-like options come from tartrazine itself.
+COMPLETIONS = {
+  "-f" => "html terminal json svg png jpeg webp highlights",
+  "-t" => "$(tartrazine --list-themes)",
+  "-l" => "$(tartrazine --list-lexers)",
+}
+
+completion_scripts = {
+  "--completion-bash" => ->{ puts Docopt.bash_completion("tartrazine", HELP, COMPLETIONS) },
+  "--completion-fish" => ->{ puts Docopt.fish_completion("tartrazine", HELP, COMPLETIONS) },
+  "--completion-zsh"  => ->{ puts Docopt.zsh_completion("tartrazine", HELP, COMPLETIONS) },
+}
+if ARGV.size == 1 && (completion = completion_scripts[ARGV[0]?]?)
+  completion.call
+  exit 0
+end
+
 options = Docopt.match(COMPILED_HELP, ARGV)
 
 # Handle version manually
@@ -194,8 +212,8 @@ begin
     case formatter_name
     when "html"
       formatter = Tartrazine::Html.new
-      formatter.standalone = options["--standalone"] != nil
-      formatter.line_numbers = options["--line-numbers"] != nil
+      formatter.standalone = options["--standalone"].as(Bool)
+      formatter.line_numbers = options["--line-numbers"].as(Bool)
       if formatter.responds_to?(:line_number_start=)
         formatter.line_number_start = line_number_start
         formatter.highlight_lines = highlight_lines
@@ -204,14 +222,14 @@ begin
       formatter.template = template if template
     when "terminal"
       formatter = Tartrazine::Ansi.new
-      formatter.line_numbers = options["--line-numbers"] != nil
+      formatter.line_numbers = options["--line-numbers"].as(Bool)
       formatter.theme = theme
     when "json"
       formatter = Tartrazine::Json.new
     when "svg"
       formatter = Tartrazine::Svg.new
-      formatter.standalone = options["--standalone"] != nil
-      formatter.line_numbers = options["--line-numbers"] != nil
+      formatter.standalone = options["--standalone"].as(Bool)
+      formatter.line_numbers = options["--line-numbers"].as(Bool)
       if formatter.responds_to?(:line_number_start=)
         formatter.line_number_start = line_number_start
         formatter.highlight_lines = highlight_lines
@@ -286,7 +304,7 @@ begin
         when "png"
           formatter = Tartrazine::Png.new(
             theme: theme,
-            line_numbers: options["--line-numbers"] != nil,
+            line_numbers: options["--line-numbers"].as(Bool),
             font_path: font_path,
             font_size: parsed_font_size,
             max_width: parsed_max_width,
@@ -295,7 +313,7 @@ begin
         when "jpeg"
           formatter = Tartrazine::Jpeg.new(
             theme: theme,
-            line_numbers: options["--line-numbers"] != nil,
+            line_numbers: options["--line-numbers"].as(Bool),
             font_path: font_path,
             font_size: parsed_font_size,
             max_width: parsed_max_width,
@@ -305,7 +323,7 @@ begin
         when "webp"
           formatter = Tartrazine::Webp.new(
             theme: theme,
-            line_numbers: options["--line-numbers"] != nil,
+            line_numbers: options["--line-numbers"].as(Bool),
             font_path: font_path,
             font_size: parsed_font_size,
             max_width: parsed_max_width,
@@ -321,8 +339,8 @@ begin
       end
     when "highlights"
       formatter = Tartrazine::Highlights.new
-      formatter.standalone = options["--standalone"] != nil
-      formatter.line_numbers = options["--line-numbers"] != nil
+      formatter.standalone = options["--standalone"].as(Bool)
+      formatter.line_numbers = options["--line-numbers"].as(Bool)
       if formatter.responds_to?(:line_number_start=)
         formatter.line_number_start = line_number_start
         formatter.highlight_lines = highlight_lines

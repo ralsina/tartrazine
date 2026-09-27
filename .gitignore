@@ -18,3 +18,4 @@ aur-tartrazine/
 # We use the internal crystal lexer
 lexers/crystal.xml
 .hace/
+.zcode/
