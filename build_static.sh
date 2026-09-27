@@ -21,9 +21,20 @@ echo "==> Cross-compiling aarch64 object file"
 crystal build src/main.cr --release --static --cross-compile \
   --target aarch64-linux-musl -o build/tartrazine-aarch64.o
 
+# Build a linker image unless it already exists; `docker rmi` it to
+# force a rebuild after changing Dockerfile.link
+linker_image() {
+  local arch=$1
+  if docker image inspect "tartrazine-linker-$arch" >/dev/null 2>&1; then
+    echo "==> Using existing linker image tartrazine-linker-$arch"
+  else
+    docker build -q . -f Dockerfile.link --platform "linux/$arch" -t "tartrazine-linker-$arch"
+  fi
+}
+
 echo "==> Building linker images"
-docker build -q . -f Dockerfile.link --platform linux/amd64 -t tartrazine-linker-amd64
-docker build -q . -f Dockerfile.link --platform linux/arm64 -t tartrazine-linker-arm64
+linker_image amd64
+linker_image arm64
 
 LINK_FLAGS="-static -rdynamic -lgc -lpcre2-8 -lyaml -lxml2 -lz -llzma -lpthread -ldl -lm"
 
