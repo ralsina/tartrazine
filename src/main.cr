@@ -8,6 +8,9 @@ HELP = <<-HELP
   You can use the CLI to generate HTML, terminal, JSON, SVG, PNG, JPEG or WebP output
   from a source file using different themes.
   Keep in mind that not all formatters support all features.
+  Image output (png, jpeg, webp) rasterizes every glyph and is much slower
+  than the text formatters: expect seconds rather than milliseconds for
+  inputs over 100 KB.
 
   Usage:
     tartrazine (-h, --help)
@@ -98,6 +101,22 @@ if ARGV.size == 1 && (completion = completion_scripts[ARGV[0]?]?)
 end
 
 options = Docopt.match(COMPILED_HELP, ARGV)
+
+# Parse an integer option, or exit with one error line when it is not
+# a number or is outside [min, max]
+def int_option(value : String?, default : Int32, name : String, min : Int32, max : Int32 = Int32::MAX) : Int32
+  return default if value.nil?
+  number = value.to_i
+  if number < min || number > max
+    range = max == Int32::MAX ? ">= #{min}" : "between #{min} and #{max}"
+    STDERR.puts "Error: #{name} must be #{range}, got #{value}"
+    exit 1
+  end
+  number
+rescue ArgumentError
+  STDERR.puts "Error: invalid #{name}: #{value}. Must be a number"
+  exit 1
+end
 
 # Handle version manually
 if options["--version"]
@@ -218,10 +237,8 @@ begin
       formatter = Tartrazine::Html.new
       formatter.standalone = options["--standalone"].as(Bool)
       formatter.line_numbers = options["--line-numbers"].as(Bool)
-      if formatter.responds_to?(:line_number_start=)
-        formatter.line_number_start = line_number_start
-        formatter.highlight_lines = highlight_lines
-      end
+      formatter.line_number_start = line_number_start
+      formatter.highlight_lines = highlight_lines
       formatter.theme = theme
       formatter.template = template if template
     when "terminal"
@@ -234,10 +251,8 @@ begin
       formatter = Tartrazine::Svg.new
       formatter.standalone = options["--standalone"].as(Bool)
       formatter.line_numbers = options["--line-numbers"].as(Bool)
-      if formatter.responds_to?(:line_number_start=)
-        formatter.line_number_start = line_number_start
-        formatter.highlight_lines = highlight_lines
-      end
+      formatter.line_number_start = line_number_start
+      formatter.highlight_lines = highlight_lines
       formatter.theme = theme
     when "png", "jpeg", "webp"
       font_path = options["--font-path"]?.try &.as(String)
@@ -246,61 +261,10 @@ begin
       height = options["--height"]?.try &.as(String)
       quality = options["--quality"]?.try &.as(String)
 
-      # Parse font size (single point size value)
-      parsed_font_size = 14 # default
-      if font_size
-        begin
-          parsed_font_size = font_size.to_i
-        rescue
-          puts "Invalid font size: #{font_size}. Must be a number (e.g., 14)"
-          exit 1
-        end
-      end
-
-      # Parse width
-      parsed_max_width = 0 # 0 means auto
-      if width
-        begin
-          parsed_max_width = width.to_i
-          if parsed_max_width < 0
-            puts "Width must be >= 0 (0 = auto)"
-            exit 1
-          end
-        rescue
-          puts "Invalid width: #{width}. Must be a number (e.g., 800)"
-          exit 1
-        end
-      end
-
-      # Parse height
-      parsed_max_height = 0 # 0 means auto
-      if height
-        begin
-          parsed_max_height = height.to_i
-          if parsed_max_height < 0
-            puts "Height must be >= 0 (0 = auto)"
-            exit 1
-          end
-        rescue
-          puts "Invalid height: #{height}. Must be a number (e.g., 600)"
-          exit 1
-        end
-      end
-
-      # Parse quality (for JPEG/WebP)
-      parsed_quality = 90 # default
-      if quality
-        begin
-          parsed_quality = quality.to_i
-          if parsed_quality < 1 || parsed_quality > 100
-            puts "Quality must be between 1 and 100"
-            exit 1
-          end
-        rescue
-          puts "Invalid quality: #{quality}. Must be a number between 1 and 100"
-          exit 1
-        end
-      end
+      parsed_font_size = int_option(font_size, 14, "font size", 1)
+      parsed_max_width = int_option(width, 0, "width", 0)    # 0 means auto
+      parsed_max_height = int_option(height, 0, "height", 0) # 0 means auto
+      parsed_quality = int_option(quality, 90, "quality", 1, 100)
 
       # Create the appropriate formatter
       begin
@@ -345,10 +309,8 @@ begin
       formatter = Tartrazine::Highlights.new
       formatter.standalone = options["--standalone"].as(Bool)
       formatter.line_numbers = options["--line-numbers"].as(Bool)
-      if formatter.responds_to?(:line_number_start=)
-        formatter.line_number_start = line_number_start
-        formatter.highlight_lines = highlight_lines
-      end
+      formatter.line_number_start = line_number_start
+      formatter.highlight_lines = highlight_lines
       formatter.theme = theme
       formatter.template = template if template
     else
