@@ -13,6 +13,10 @@ jobs:
     steps:
       - name: Download source
         uses: actions/checkout@v4
+      # The runner images ship stale apt lists; install-crystal installs
+      # its dependencies without refreshing them and fails on 404s
+      - name: Update apt package index
+        run: sudo apt-get update
       - name: Install Crystal
         uses: crystal-lang/install-crystal@v1
       - name: Run tests
@@ -32,6 +36,8 @@ jobs:
     steps:
       - name: Download source
         uses: actions/checkout@v4
+      - name: Update apt package index
+        run: sudo apt-get update
       - name: Install Crystal
         uses: crystal-lang/install-crystal@v1
       - name: Run perf regression tests
