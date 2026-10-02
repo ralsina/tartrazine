@@ -2,6 +2,26 @@
 
 All notable changes to this project will be documented in this file.
 
+## [0.27.1] - 2026-10-02
+
+### 🐛 Bug Fixes
+
+- Load the pygments, rrt and onesenterprise themes, stop swallowing theme errors
+- Parse the usage help at runtime by default
+
+### 🚜 Refactor
+
+- Narrow the remaining bare rescues and guard shared caches
+- One helper for the integer image options, note image output speed
+
+### 🧪 Testing
+
+- Fail when src/constants/lexers.cr is out of date
+
+### Build
+
+- Reuse existing linker images, push main when releasing
+
 ## [0.27.0] - 2026-09-27
 
 ### 🚀 Features
