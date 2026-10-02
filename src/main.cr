@@ -78,9 +78,15 @@ Signal::PIPE.trap { exit 0 }
 # Highlight our own help with our own docopt lexer
 Docopt.use_tartrazine_color
 
-# The usage text is parsed at compile time (docopt 0.4+), which saves
-# a couple of milliseconds of startup on every run
-COMPILED_HELP = Docopt.compile(HELP)
+# The usage text can be parsed at compile time (docopt 1.4+), which
+# saves a few milliseconds of startup on every run. But Docopt.compile
+# uses Crystal's macro runner ({{ run(...) }}), and that fails in
+# sandboxed build environments (Fedora Mock/Koji, openSUSE OBS,
+# Debian sbuild, rootless Docker/Podman with seccomp), so runtime
+# parsing is the default. Build with -Dcompile_time_help to opt into
+# the compile-time parse.
+# See https://github.com/ralsina/tartrazine/issues/39
+HELP_PATTERN = {% if flag?(:compile_time_help) %} Docopt.compile(HELP) {% else %} Docopt.parse(HELP) {% end %}
 
 # Shell completion scripts covering the whole interface; values for
 # the list-like options come from tartrazine itself.
@@ -100,7 +106,7 @@ if ARGV.size == 1 && (completion = completion_scripts[ARGV[0]?]?)
   exit 0
 end
 
-options = Docopt.match(COMPILED_HELP, ARGV)
+options = Docopt.match(HELP_PATTERN, ARGV)
 
 # Parse an integer option, or exit with one error line when it is not
 # a number or is outside [min, max]
