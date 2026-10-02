@@ -82,6 +82,10 @@ with open(output, "w") as f:
     f.write("  LEXERS_BY_FILENAME = {\n")
     for k in sorted(lexer_by_filename.keys()):
         v = lexer_by_filename[k]
-        f.write(f'"{k}" => {str(sorted(list(v))).replace("'", "\"")}, \n')
+        # No backslash escapes inside the f-string expression: those
+        # are a SyntaxError before Python 3.12, which is what the CI
+        # images ship
+        quoted = str(sorted(list(v))).replace("'", '"')
+        f.write(f'"{k}" => {quoted}, \n')
     f.write("}\n")
     f.write("end\n")
