@@ -144,10 +144,12 @@ module Tartrazine
 
     # Given a token type, return the CSS class to use.
     def get_css_class(token : String) : String
-      cached = @class_cache[token]?
-      return cached if cached
+      @cache_lock.synchronize do
+        cached = @class_cache[token]?
+        return cached if cached
 
-      @class_cache[token] = class_prefix + Abbreviations[token]
+        @class_cache[token] = class_prefix + Abbreviations[token]
+      end
     end
   end
 end

@@ -44,18 +44,24 @@ module Tartrazine
     # defined (worst case Background) without mutating the shared theme
     @style_cache = {} of String => Style
 
-    def style_for(token : String) : Style
-      cached = @style_cache[token]?
-      return cached if cached
+    # Guards the formatter's caches, so one formatter can format from
+    # several threads at once (a Hash read racing an insert can crash)
+    @cache_lock = Mutex.new
 
-      resolved = theme.styles[token]?
-      if resolved.nil?
-        parent = theme.style_parents(token).reverse.find do |name|
-          theme.styles.has_key?(name)
+    def style_for(token : String) : Style
+      @cache_lock.synchronize do
+        cached = @style_cache[token]?
+        return cached if cached
+
+        resolved = theme.styles[token]?
+        if resolved.nil?
+          parent = theme.style_parents(token).reverse.find do |name|
+            theme.styles.has_key?(name)
+          end
+          resolved = theme.styles[parent]
         end
-        resolved = theme.styles[parent]
+        @style_cache[token] = resolved
       end
-      @style_cache[token] = resolved
     end
 
     # Write bytes escaping HTML special characters without building
