@@ -2,6 +2,18 @@
 
 All notable changes to this project will be documented in this file.
 
+## [0.27.2] - 2026-10-06
+
+### 🐛 Bug Fixes
+
+- Keep lexer_metadata.py compatible with Python 3.10
+- Make shared formatters and the lexer caches thread-safe
+- Refresh per-thread PCRE2 handles per token; lock-free formatter tables
+
+### ⚙️ Miscellaneous Tasks
+
+- Refresh the apt package index before installing Crystal
+
 ## [0.27.1] - 2026-10-02
 
 ### 🐛 Bug Fixes
