@@ -55,16 +55,17 @@ module Tartrazine
     end
   end
 
-  # Template cache for parsed lexer data, mutex-guarded.
-  # Concurrency limits: see the note on the lexer instance cache.
+  # Template cache for parsed lexer data. Every access, reads
+  # included, holds @@template_mutex: a Hash read racing an insert
+  # (which may resize it) can crash or return garbage.
   @@lexer_templates = {} of String => LexerTemplate
   @@template_mutex = Mutex.new
 
   # Cache of lexer instances. Lexers are immutable after creation and
-  # all tokenization state lives in the Tokenizer, so instances can be
-  # shared by sequential and reentrant users. Concurrent tokenization
-  # of one lexer from multiple threads is NOT supported (each
-  # BytesRegex::Regex owns a single match_data).
+  # all tokenization state lives in the Tokenizer (match data is
+  # per-thread), so one instance can tokenize from several threads
+  # at once. Every access to the cache itself holds @@lexer_mutex,
+  # for the same reason as the template cache.
   @@lexer_cache = {} of String => BaseLexer
   @@lexer_mutex = Mutex.new
 
@@ -91,8 +92,6 @@ module Tartrazine
 
   private def self.lexer_by_name(name : String) : BaseLexer
     if name == "crystal"
-      cached = @@lexer_cache["crystal"]?
-      return cached if cached
       return @@lexer_mutex.synchronize { @@lexer_cache["crystal"] ||= CrystalLexer.new }
     end
     lexer_file_name = LEXERS_BY_NAME.fetch(name.downcase, nil)
@@ -202,7 +201,7 @@ module Tartrazine
   end
 
   private def self.create_delegating_lexer(name : String) : BaseLexer
-    cached = @@lexer_cache[name]?
+    cached = @@lexer_mutex.synchronize { @@lexer_cache[name]? }
     return cached if cached
     language, root = name.split("+", 2)
     # The component lexers are resolved outside the lock: they take
@@ -214,8 +213,6 @@ module Tartrazine
   # Create a lexer instance from cached template data, caching the
   # instance itself (lexers are immutable after creation)
   private def self.create_from_template(lexer_file_name : String) : BaseLexer
-    cached = @@lexer_cache[lexer_file_name]?
-    return cached if cached
     @@lexer_mutex.synchronize do
       cached = @@lexer_cache[lexer_file_name]?
       return cached if cached
@@ -246,13 +243,10 @@ module Tartrazine
 
   # Get or create a lexer template, mutex-guarded
   private def self.get_or_create_template(lexer_file_name : String) : LexerTemplate
-    # Fast path: template already cached (read-only access, thread-safe)
-    return @@lexer_templates[lexer_file_name] if @@lexer_templates.has_key?(lexer_file_name)
-
-    # Slow path: need to parse XML and create template (requires lock)
     @@template_mutex.synchronize do
-      # Double-check in case another thread created it while we waited
-      return @@lexer_templates[lexer_file_name] if @@lexer_templates.has_key?(lexer_file_name)
+      if cached = @@lexer_templates[lexer_file_name]?
+        return cached
+      end
 
       # Parse XML and extract only the static data
       xml = LexerFiles.get("/#{lexer_file_name}.xml").gets_to_end
@@ -430,13 +424,20 @@ module Tartrazine
     getter initial_state : String
 
     # Scratch reused across the steps of THIS tokenization (token
-    # accumulator, regex ovector snapshot, and this thread's PCRE2
-    # handles), so rules and lexer templates stay immutable and
-    # shareable between tokenizations
+    # accumulator, regex ovector snapshot), so rules and lexer
+    # templates stay immutable and shareable between tokenizations
     property scratch_tokens = [] of Token
     property scratch_bounds = Slice(Int32).new(8)
-    getter match_data : LibPCRE2::MatchData*
-    getter match_context : LibPCRE2::MatchContext*
+
+    # The current thread's PCRE2 handles, refreshed at the start of
+    # every `next`. A tokenization is a lazy iterator, and in a
+    # parallel execution context a fiber that suspends between two
+    # tokens can resume on another thread: handles kept from the first
+    # thread would then be used by two threads at once. Within one
+    # `next` nothing suspends, so the rule attempts it makes share one
+    # lookup.
+    getter match_data : LibPCRE2::MatchData* = Pointer(LibPCRE2::MatchData).null
+    getter match_context : LibPCRE2::MatchContext* = Pointer(LibPCRE2::MatchContext).null
 
     # States created on the fly for this tokenization only (Combined),
     # kept off the shared lexer template to avoid unbounded growth
@@ -486,14 +487,11 @@ module Tartrazine
       end
       @text = text.to_slice
       @state_stack = [initial_state]
-      # The thread-local PCRE2 handles are fetched once per
-      # tokenization: a tokenization never changes threads, and this
-      # keeps them out of the per-rule-attempt hot path
-      @match_data = BytesRegex.match_data
-      @match_context = BytesRegex.match_context
     end
 
     def next : Iterator::Stop | Token
+      @match_data = BytesRegex.match_data
+      @match_context = BytesRegex.match_context
       while @dq.size == 0
         return stop if pos == @text.size
         step
