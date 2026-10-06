@@ -34,10 +34,6 @@ module Tartrazine
 
     property theme : Theme
 
-    # Cache of token type → highlight name, to skip the
-    # parent-style resolution on every token
-    @name_cache = {} of String => String
-
     def initialize(@theme : Theme = Tartrazine.theme("default-dark"), *,
                    @class_prefix : String = "",
                    @line_number_id_prefix : String = "line-",
@@ -229,10 +225,7 @@ module Tartrazine
     # Given a token type, return the highlight name to use.
     # This needs to be a valid CSS custom highlight name
     def get_highlight_name(token : String) : String
-      cached = @name_cache[token]?
-      return cached if cached
-
-      @name_cache[token] = class_prefix + Abbreviations[token]
+      class_name_for(class_prefix, token)
     end
   end
 end

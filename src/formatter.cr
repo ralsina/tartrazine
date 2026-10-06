@@ -39,29 +39,69 @@ module Tartrazine
       property highlight_lines : Array(Range(Int32, Int32)) = [] of Range(Int32, Int32)
     end
 
-    # Cache of token type → resolved Style. Themes don't define every
-    # specific token type: resolve the nearest parent style that is
-    # defined (worst case Background) without mutating the shared theme
-    @style_cache = {} of String => Style
+    # Lookup tables for every known token type, built on first use and
+    # never modified afterwards: one formatter can then format from
+    # several threads at once, and the per-token lookups take no lock.
+    # A table is replaced (not updated) when the theme or class prefix
+    # it was built for changes. Two threads may both build one; either
+    # result is correct.
+    @resolved_styles = Atomic(ResolvedStyles?).new(nil)
+    @class_names = Atomic(ClassNames?).new(nil)
 
-    # Guards the formatter's caches, so one formatter can format from
-    # several threads at once (a Hash read racing an insert can crash)
-    @cache_lock = Mutex.new
+    # :nodoc:
+    class ResolvedStyles
+      # The theme's own styles Hash: Theme is a struct, so this
+      # reference is what tells whether the formatter's theme changed
+      getter source : Hash(String, Style)
+      getter styles = {} of String => Style
+
+      def initialize(theme : Theme)
+        @source = theme.styles
+        Abbreviations.each_key do |token|
+          if style = Formatter.resolve_style?(theme, token)
+            @styles[token] = style
+          end
+        end
+      end
+    end
+
+    # :nodoc:
+    class ClassNames
+      getter prefix : String
+      getter names : Hash(String, String)
+
+      def initialize(@prefix : String)
+        @names = Abbreviations.to_h { |token, abbrev| {token, prefix + abbrev} }
+      end
+    end
+
+    # Themes don't define every specific token type: resolve the
+    # nearest parent style that is defined (worst case Background)
+    # without mutating the shared theme
+    def self.resolve_style?(theme : Theme, token : String) : Style?
+      theme.styles[token]? || theme.style_parents(token).reverse.find do |name|
+        theme.styles.has_key?(name)
+      end.try { |parent| theme.styles[parent] }
+    end
 
     def style_for(token : String) : Style
-      @cache_lock.synchronize do
-        cached = @style_cache[token]?
-        return cached if cached
-
-        resolved = theme.styles[token]?
-        if resolved.nil?
-          parent = theme.style_parents(token).reverse.find do |name|
-            theme.styles.has_key?(name)
-          end
-          resolved = theme.styles[parent]
-        end
-        @style_cache[token] = resolved
+      table = @resolved_styles.get
+      unless table && table.source.same?(theme.styles)
+        table = ResolvedStyles.new(theme)
+        @resolved_styles.set(table)
       end
+      table.styles[token]? || Formatter.resolve_style?(theme, token) ||
+        raise KeyError.new("No style for #{token} in theme #{theme.name}")
+    end
+
+    # The CSS class (or highlight) name for a token type
+    protected def class_name_for(prefix : String, token : String) : String
+      table = @class_names.get
+      unless table && table.prefix == prefix
+        table = ClassNames.new(prefix)
+        @class_names.set(table)
+      end
+      table.names[token]? || (prefix + Abbreviations[token])
     end
 
     # Write bytes escaping HTML special characters without building

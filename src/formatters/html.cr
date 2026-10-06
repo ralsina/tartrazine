@@ -37,8 +37,6 @@ module Tartrazine
 
     property theme : Theme
 
-    @class_cache = {} of String => String
-
     def initialize(@theme : Theme = Tartrazine.theme("default-dark"), *,
                    @class_prefix : String = "",
                    @line_number_id_prefix = "line-",
@@ -144,12 +142,7 @@ module Tartrazine
 
     # Given a token type, return the CSS class to use.
     def get_css_class(token : String) : String
-      @cache_lock.synchronize do
-        cached = @class_cache[token]?
-        return cached if cached
-
-        @class_cache[token] = class_prefix + Abbreviations[token]
-      end
+      class_name_for(class_prefix, token)
     end
   end
 end

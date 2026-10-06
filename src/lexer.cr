@@ -424,13 +424,20 @@ module Tartrazine
     getter initial_state : String
 
     # Scratch reused across the steps of THIS tokenization (token
-    # accumulator, regex ovector snapshot, and this thread's PCRE2
-    # handles), so rules and lexer templates stay immutable and
-    # shareable between tokenizations
+    # accumulator, regex ovector snapshot), so rules and lexer
+    # templates stay immutable and shareable between tokenizations
     property scratch_tokens = [] of Token
     property scratch_bounds = Slice(Int32).new(8)
-    getter match_data : LibPCRE2::MatchData*
-    getter match_context : LibPCRE2::MatchContext*
+
+    # The current thread's PCRE2 handles, refreshed at the start of
+    # every `next`. A tokenization is a lazy iterator, and in a
+    # parallel execution context a fiber that suspends between two
+    # tokens can resume on another thread: handles kept from the first
+    # thread would then be used by two threads at once. Within one
+    # `next` nothing suspends, so the rule attempts it makes share one
+    # lookup.
+    getter match_data : LibPCRE2::MatchData* = Pointer(LibPCRE2::MatchData).null
+    getter match_context : LibPCRE2::MatchContext* = Pointer(LibPCRE2::MatchContext).null
 
     # States created on the fly for this tokenization only (Combined),
     # kept off the shared lexer template to avoid unbounded growth
@@ -480,14 +487,11 @@ module Tartrazine
       end
       @text = text.to_slice
       @state_stack = [initial_state]
-      # The thread-local PCRE2 handles are fetched once per
-      # tokenization: a tokenization never changes threads, and this
-      # keeps them out of the per-rule-attempt hot path
-      @match_data = BytesRegex.match_data
-      @match_context = BytesRegex.match_context
     end
 
     def next : Iterator::Stop | Token
+      @match_data = BytesRegex.match_data
+      @match_context = BytesRegex.match_context
       while @dq.size == 0
         return stop if pos == @text.size
         step
